@@ -1,8 +1,8 @@
 defmodule Raxx.Adapters.Cowboy.Handler do
-  def init({:tcp, :http}, req, opts = {router, pid, []}) do
+  def init({:tcp, :http}, req, opts = {router, raxx_opts}) do
     headers = [{"content-type", "text/plain"}]
     raxx_request = normalise_request(req)
-    %{status: status, headers: _headers, body: body} = router.call(raxx_request, pid)
+    %{status: status, headers: _headers, body: body} = router.call(raxx_request, raxx_opts)
     {:ok, resp} = :cowboy_req.reply(200, headers, body, req)
     {:ok, resp, opts}
   end

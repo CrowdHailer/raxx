@@ -52,7 +52,8 @@ defmodule Raxx.CowboyTest do
     {:ok, _resp} = HTTPoison.post("localhost:#{port}", body)
     assert_receive %{headers: %{"content-type" => type}, body: body}
     assert "multipart/form-data;" <> _ = type
-    assert %{"foo" => "bar", "file" => _file} = body
+    assert %{"foo" => "bar", "file" => file} = body
+    assert file.contents
   end
 
   test "setup cowboy", %{port: port} do

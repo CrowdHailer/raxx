@@ -86,9 +86,13 @@ defmodule Raxx.Adapters.Cowboy.Handler do
       {:data, field_name} ->
         {:ok, field_value, cowboy_req} = :cowboy_req.part_body(cowboy_req)
         {:ok, [{field_name, field_value}], cowboy_req}
-      {:file, field_name, file_name, _CType, _CTransferEncoding} ->
+      {:file, field_name, filename, content_type, content_transfer_encoding} ->
         {:ok, file_contents, cowboy_req} = stream_file(cowboy_req)
-        {:ok, [{field_name, file_contents}], cowboy_req}
+        {:ok, [{field_name, %{
+          filename: filename,
+          content_type: content_type,
+          contents: file_contents
+        }}], cowboy_req}
     end
   end
 

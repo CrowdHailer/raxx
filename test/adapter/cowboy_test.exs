@@ -38,17 +38,21 @@ defmodule Raxx.CowboyTest do
     )
   end
 
-  test "other", %{port: port} do
-    {:ok, _pid} = raxx_up(port)
-    assert true
-  end
-
   test "post simple form encoding", %{port: port} do
     {:ok, _pid} = raxx_up(port)
-    {:ok, resp} = HTTPoison.post("localhost:#{port}", {:form, [{"foo", "bar"}]})
+    {:ok, _resp} = HTTPoison.post("localhost:#{port}", {:form, [{"foo", "bar"}]})
     assert_receive %{headers: %{"content-type" => type}, body: body}
     assert "application/x-www-form-urlencoded" <> _ = type
     assert %{"foo" => "bar"} == body
+  end
+
+  test "post multipart form with file", %{port: port} do
+    {:ok, _pid} = raxx_up(port)
+    body = {:multipart, [{"foo", "bar"}, {:file, "/etc/hosts"}]}
+    {:ok, _resp} = HTTPoison.post("localhost:#{port}", body)
+    assert_receive %{headers: %{"content-type" => type}, body: body}
+    assert "multipart/form-data;" <> _ = type
+    assert %{"foo" => "bar", "file" => _file} = body
   end
 
   test "setup cowboy", %{port: port} do

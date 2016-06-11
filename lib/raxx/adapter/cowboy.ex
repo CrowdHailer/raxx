@@ -3,7 +3,7 @@ defmodule Raxx.Adapters.Cowboy.Handler do
     headers = [{"content-type", "text/plain"}]
     raxx_request = normalise_request(req)
     %{status: status, headers: _headers, body: body} = router.call(raxx_request, raxx_opts)
-    {:ok, resp} = :cowboy_req.reply(200, headers, body, req)
+    {:ok, resp} = :cowboy_req.reply(status, headers, body, req)
     {:ok, resp, opts}
   end
 
@@ -34,8 +34,8 @@ defmodule Raxx.Adapters.Cowboy.Handler do
     headers = Enum.into(headers, %{})
 
     # Body
-    {:ok, body_qs, _}  = :cowboy_req.body_qs(req, []) # options kw_args [length: bits]
-    body = Enum.into(body_qs, %{})
+    {:ok, content_type, req} = :cowboy_req.parse_header("content-type", req)
+    {:ok, body, _req} = parse_req_body(req, content_type)
 
     # {peer, req} = :cowboy_req.peer req
 
@@ -51,11 +51,53 @@ defmodule Raxx.Adapters.Cowboy.Handler do
     }
   end
 
-  # def parse_body(body, %{"content-type" => "application/x-www-form-urlencoded; charset=utf-8"}) do
-  #   URI.decode_www_form(body) |> URI.decode_query
-  # end
-  # def parse_body(body, _) do
-  #   body
-  # end
+  def parse_req_body(cowboy_req, :undefined) do
+    {:ok, nil, cowboy_req}
+  end
+  def parse_req_body(cowboy_req, {"application", "octet-stream", []}) do
+    {:ok, :todo, cowboy_req}
+  end
+  def parse_req_body(cowboy_req, {"application", "x-www-form-urlencoded", [{"charset", "utf-8"}]}) do
+    {:ok, body_qs, cowboy_req}  = :cowboy_req.body_qs(cowboy_req, [])
+    body = Enum.into(body_qs, %{})
+    {:ok, body, cowboy_req}
+  end
+  def parse_req_body(cowboy_req, {"multipart", "form-data", _}) do
+    {:ok, body, cowboy_req} = multipart(cowboy_req)
+    {:ok, body, cowboy_req}
+  end
+  def parse_req_body(_cowboy_req, content_type) do
+    {:error, :unknown_content_type, content_type}
+  end
 
+  def multipart(cowboy_req, body \\ []) do
+    case :cowboy_req.part(cowboy_req) do
+      # DEBT why is this called headers
+      {:ok, headers, cowboy_req} ->
+        {:ok, part, cowboy_req} = handle_part(headers, cowboy_req)
+        multipart(cowboy_req, body ++ part)
+      {:done, cowboy_req} ->
+        {:ok, Enum.into(body, %{}), cowboy_req}
+    end
+  end
+
+  def handle_part(headers, cowboy_req) do
+    case :cow_multipart.form_data(headers) do
+      {:data, field_name} ->
+        {:ok, field_value, cowboy_req} = :cowboy_req.part_body(cowboy_req)
+        {:ok, [{field_name, field_value}], cowboy_req}
+      {:file, field_name, file_name, _CType, _CTransferEncoding} ->
+        {:ok, file_contents, cowboy_req} = stream_file(cowboy_req)
+        {:ok, [{field_name, file_contents}], cowboy_req}
+    end
+  end
+
+  def stream_file(cowboy_req, contents \\ []) do
+    case :cowboy_req.part_body(cowboy_req) do
+      {:ok, body, cowboy_req} ->
+        {:ok, contents ++ [body], cowboy_req}
+      {:more, body, cowboy_req} ->
+        stream_file(cowboy_req, contents ++ body)
+    end
+  end
 end

@@ -92,4 +92,25 @@ defmodule Raxx.CowboyTest do
     # {:ok, _resp} = HTTPoison.get("localhost:10001/?some-search")
     # assert_receive %{query: "?some-search"
   end
+
+  test "mounting on sub path", %{port: port} do
+    routes = [
+      {"/sub/app/[...]", Raxx.Adapters.Cowboy.Handler, {Forwarder, self}}
+    ]
+    dispatch = :cowboy_router.compile([{:_, routes}])
+    env = [dispatch: dispatch]
+    {:ok, _pid} = :cowboy.start_http(
+      :"test_on_#{port}",
+      2,
+      [port: port],
+      [env: env]
+    )
+
+    {:ok, resp} = HTTPoison.get("localhost:#{port}/sub/app/path")
+    assert 200 == resp.status_code
+    assert_receive %{path: ["path"], mount: ["sub", "app"]}
+    {:ok, resp} = HTTPoison.get("localhost:#{port}/sub/app/sub/path")
+    assert 200 == resp.status_code
+    assert_receive %{path: ["sub", "path"], mount: ["sub", "app"]}
+  end
 end

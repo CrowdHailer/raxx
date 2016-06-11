@@ -17,6 +17,9 @@ It takes two arguments, a raxx request and an application specific environment.
 The return value is a map with three keys, the status, the headers, and the body.
 
 ### Minimal
+
+With the power of Elixirs pattern matching against maps it is possible to handle request routing without a dsl.
+
 ```elixir
 defmodule BasicRouter do
   # handle the root path

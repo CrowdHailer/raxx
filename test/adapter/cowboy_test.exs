@@ -56,6 +56,16 @@ defmodule Raxx.CowboyTest do
     assert file.contents
   end
 
+  test "assumed content type is html", %{port: port} do
+    {:ok, _pid} = raxx_up(port)
+    {:ok, resp} = HTTPoison.get("localhost:#{port}")
+    {"content-type", content_type} = Enum.find(resp.headers, fn
+      ({"content-type", _}) -> true
+      _ -> false
+    end)
+    assert "text/html" == content_type
+  end
+
   test "setup cowboy", %{port: port} do
     {:ok, _pid} = raxx_up(port)
     {:ok, _resp} = HTTPoison.get("localhost:#{port}")

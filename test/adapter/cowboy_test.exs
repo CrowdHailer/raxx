@@ -2,6 +2,12 @@ defmodule Forwarder do
   import Raxx.Response
   def call(request, pid) do
     send(pid, request)
+    ok("done")
+  end
+end
+defmodule FakeHeader do
+  import Raxx.Response
+  def call(request, _env) do
     ok("done", %{"custom-header" => "my-value"})
   end
 end
@@ -24,9 +30,9 @@ defmodule Raxx.CowboyTest do
     {:ok, %{port: 10_000 + id}}
   end
 
-  def raxx_up(port) do
+  def raxx_up(port, app \\ {Forwarder, self}) do
     routes = [
-      {:_, Raxx.Adapters.Cowboy.Handler, {Forwarder, self}}
+      {:_, Raxx.Adapters.Cowboy.Handler, app}
     ]
     dispatch = :cowboy_router.compile([{:_, routes}])
     env = [dispatch: dispatch]
@@ -39,7 +45,7 @@ defmodule Raxx.CowboyTest do
   end
 
   test "add custom headers to request", %{port: port} do
-    {:ok, _pid} = raxx_up(port)
+    {:ok, _pid} = raxx_up(port, {FakeHeader, %{}})
     {:ok, %{headers: headers}} = HTTPoison.get("localhost:#{port}")
     header = Enum.find(headers, fn
       ({"custom-header", _}) -> true

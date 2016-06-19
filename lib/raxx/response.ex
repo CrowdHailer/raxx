@@ -1,7 +1,7 @@
 defmodule Raxx.Response do
   defstruct [
     status: 0,
-    headers: [],
+    headers: %{},
     body: []
     # Return page object so you can test on the contents
   ]
@@ -70,7 +70,7 @@ defmodule Raxx.Response do
   ]
 
   for {atom, code} <- statuses do
-    def unquote(atom)(body, headers \\ []) do
+    def unquote(atom)(body, headers \\ %{}) do
       %{status: unquote(code), body: body, headers: headers}
      end
   end

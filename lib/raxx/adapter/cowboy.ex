@@ -2,7 +2,7 @@ defmodule Raxx.Adapters.Cowboy.Handler do
   def init({:tcp, :http}, req, opts = {router, raxx_opts}) do
     default_headers = %{"content-type" => "text/html"}
     raxx_request = normalise_request(req)
-    %{status: status, headers: headers, body: body} = router.call(raxx_request, raxx_opts)
+    %{status: status, headers: headers, body: body} = parse_response(router.call(raxx_request, raxx_opts))
     headers = Map.merge(default_headers, headers) |> Enum.map(fn (x) -> x end)
     {:ok, resp} = :cowboy_req.reply(status, headers, body, req)
     {:ok, resp, opts}
@@ -50,6 +50,13 @@ defmodule Raxx.Adapters.Cowboy.Handler do
       headers: headers,
       body: body
     }
+  end
+
+  defp parse_response(body) when is_binary body do
+    Raxx.Response.ok(body)
+  end
+  defp parse_response(response) do
+    response
   end
 
   def parse_req_body(cowboy_req, :undefined) do

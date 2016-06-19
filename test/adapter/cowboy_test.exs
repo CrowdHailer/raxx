@@ -11,6 +11,13 @@ defmodule FakeHeader do
     ok("done", %{"custom-header" => "my-value"})
   end
 end
+
+defmodule StringReply do
+  def call(request, %{body: body}) do
+    body
+  end
+end
+
 defmodule Raxx.CowboyTest do
   use ExUnit.Case, async: true
 
@@ -42,6 +49,14 @@ defmodule Raxx.CowboyTest do
       [port: port],
       [env: env]
     )
+  end
+
+  test "a returned string is interpreted as the body of an ok response", %{port: port} do
+    body = "page body"
+    {:ok, _pid} = raxx_up(port, {StringReply, %{body: body}})
+    {:ok, %{status_code: code, body: returned}} = HTTPoison.get("localhost:#{port}")
+    assert code == 200
+    assert body == returned
   end
 
   test "add custom headers to request", %{port: port} do

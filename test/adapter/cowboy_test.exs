@@ -2,7 +2,7 @@ defmodule Forwarder do
   import Raxx.Response
   def call(request, pid) do
     send(pid, request)
-    ok("done")
+    ok("done", %{"custom-header" => "my-value"})
   end
 end
 defmodule Raxx.CowboyTest do
@@ -36,6 +36,16 @@ defmodule Raxx.CowboyTest do
       [port: port],
       [env: env]
     )
+  end
+
+  test "add custom headers to request", %{port: port} do
+    {:ok, _pid} = raxx_up(port)
+    {:ok, %{headers: headers}} = HTTPoison.get("localhost:#{port}")
+    header = Enum.find(headers, fn
+      ({"custom-header", _}) -> true
+      _ -> false
+    end)
+    assert {_, "my-value"} = header
   end
 
   test "post simple form encoding", %{port: port} do

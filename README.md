@@ -88,7 +88,7 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 
   2. Raxx apps/routers needs to be mounted Elixir/erlang server using one of the provided adapters. Instructions for this are found in each adapters README
 
-    - [cowboy]() TODO for current setup see adapter tests.
+    - [cowboy](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example). Currently just follow example.
 
 
 ### Principles

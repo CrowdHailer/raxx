@@ -97,3 +97,4 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 - Handling other communication patterns as plug intends to do just adds complexity which is unnecessary on a whole class of applications.
 - Use Ruby rack and Clojure ring as inspiration for naming but be happy to break away from historic CGI-style header names.
 - Surface utilities so that it can be used in general HTTP based applications
+- Only return json if json is asked for.

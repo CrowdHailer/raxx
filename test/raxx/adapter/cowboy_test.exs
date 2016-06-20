@@ -18,6 +18,18 @@ defmodule StringReply do
   end
 end
 
+defmodule RedirectRequest do
+  import Raxx.Response
+  def call(%{path: ["ping"]}, %{}) do
+    redirect("/pong")
+  end
+
+  def call(request, _env) do
+    IO.inspect request
+    ok("pong")
+  end
+end
+
 defmodule Raxx.CowboyTest do
   use ExUnit.Case, async: true
 
@@ -67,6 +79,12 @@ defmodule Raxx.CowboyTest do
       _ -> false
     end)
     assert {_, "my-value"} = header
+  end
+
+  test "redirection", %{port: port} do
+    {:ok, _pid} = raxx_up(port, {RedirectRequest, %{}})
+    {:ok, %{body: body}} = HTTPoison.get("localhost:#{port}/ping", %{}, [follow_redirect: true])
+    assert "pong" == body
   end
 
   test "post simple form encoding", %{port: port} do

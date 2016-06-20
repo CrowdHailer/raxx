@@ -74,4 +74,37 @@ defmodule Raxx.Response do
       %{status: unquote(code), body: body, headers: headers}
      end
   end
+
+  def redirect(path) do
+    # Plug checks that the path does not begin with '//' or no '/'
+    %{
+      status: 302,
+      headers: %{"location" => path},
+      body: redirect_page(path)
+    }
+  end
+
+  defp redirect_page(path) do
+    """
+      <html><body>You are being <a href=\"#{ escape(path) }\">redirected</a>.</body></html>
+    """
+  end
+
+  @escapes [
+    {?<, "&lt;"},
+    {?>, "&gt;"},
+    {?&, "&amp;"},
+    {?", "&quot;"},
+    {?', "&#39;"}
+  ]
+
+  Enum.each @escapes, fn { match, insert } ->
+    defp escape_char(unquote(match)), do: unquote(insert)
+  end
+
+  defp escape_char(char), do: << char >>
+
+  def escape(buffer) do
+    IO.iodata_to_binary(for <<char <- buffer>>, do: escape_char(char))
+  end
 end

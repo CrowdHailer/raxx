@@ -70,6 +70,12 @@ defmodule Raxx.Adapters.Cowboy.Handler do
     body = Enum.into(body_qs, %{})
     {:ok, body, cowboy_req}
   end
+  # Untested, consider case without charset.
+  def parse_req_body(cowboy_req, {"application", "x-www-form-urlencoded", []}) do
+    {:ok, body_qs, cowboy_req}  = :cowboy_req.body_qs(cowboy_req, [])
+    body = Enum.into(body_qs, %{})
+    {:ok, body, cowboy_req}
+  end
   def parse_req_body(cowboy_req, {"multipart", "form-data", _}) do
     {:ok, body, cowboy_req} = multipart(cowboy_req)
     {:ok, body, cowboy_req}

@@ -14,7 +14,8 @@ defmodule Raxx.Adapters.Cowboy.Handler do
     end
   end
   # FIXME test what happens when a request that does not accept text/event-stream is sent to a SSE endpoint
-  
+  # Send an open or failure message to the SSE Handler
+  # Might want the failure message to just be part of a generalised error handler
 
   def info(message, req, state = {router, raxx_opts}) do
     case router.info(message, raxx_opts) do

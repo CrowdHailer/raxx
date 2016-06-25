@@ -13,6 +13,31 @@ defmodule ServerSentEvents.Router do
     not_found("Page not found")
   end
 
+  def info(:open_connection, _opts) do
+    Process.send_after(self, 0, 1000)
+    {:send, "hello"}
+  end
+  def info(10, _opts) do
+    {:close, "bye"}
+  end
+  def info(i, _opts) when rem(i, 2) == 0 do
+    Process.send_after(self, i + 1, 1000)
+    {:send, "counted #{i}"}
+  end
+  def info(i, _opts) do
+    Process.send_after(self, i + 1, 1000)
+    :nosend
+  end
+
+  # FIXME decide a Raxx.ServerSentEvents format for reply messages
+  defp sse_reply(data) when is_binary(data) do
+    "data: #{data}\n\n"
+  end
+  defp sse_reply(data, opts) when is_binary(data) do
+    "data: #{data}\n\nevent: #{opts.type}\n\n"
+
+  end
+
   defp home_page do
     """
 <!DOCTYPE html>

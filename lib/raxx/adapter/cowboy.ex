@@ -2,10 +2,26 @@ defmodule Raxx.Adapters.Cowboy.Handler do
   def init({:tcp, :http}, req, opts = {router, raxx_opts}) do
     default_headers = %{"content-type" => "text/html"}
     raxx_request = normalise_request(req)
-    %{status: status, headers: headers, body: body} = parse_response(router.call(raxx_request, raxx_opts))
-    headers = Map.merge(default_headers, headers) |> Enum.map(fn (x) -> x end)
-    {:ok, resp} = :cowboy_req.reply(status, headers, body, req)
-    {:ok, resp, opts}
+    case parse_response(router.call(raxx_request, raxx_opts)) do
+      %{status: status, headers: headers, body: body} ->
+      headers = Map.merge(default_headers, headers) |> Enum.map(fn (x) -> x end)
+      {:ok, resp} = :cowboy_req.reply(status, headers, body, req)
+      {:ok, resp, opts}
+      {:upgrade, _something} ->
+        {:ok, req} = :cowboy_req.chunked_reply(200, [{"content-type", "text/event-stream"}], req)
+        Process.send_after(self, "prompt", 4000)
+        {:loop, req, opts}
+    end
+  end
+
+  def info(message, req, state) do
+    IO.inspect(message)
+    IO.inspect(req)
+    IO.inspect(state)
+    :ok = :cowboy_req.chunk(message, req)
+    :ok = :cowboy_req.chunk(<<12121>>, req)
+    Process.send_after(self, "prompt", 4000)
+    {:loop, req, state}
   end
 
   def handle(req, state) do

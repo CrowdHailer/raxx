@@ -7,13 +7,13 @@ defmodule Forwarder do
 end
 defmodule FakeHeader do
   import Raxx.Response
-  def call(request, _env) do
+  def call(_request, _env) do
     ok("done", %{"custom-header" => "my-value"})
   end
 end
 
 defmodule StringReply do
-  def call(request, %{body: body}) do
+  def call(_request, %{body: body}) do
     body
   end
 end

@@ -29,10 +29,14 @@ defmodule ServerSentEvents.Router do
 			}
 			function setupEventSource() {
 				var source = new EventSource('/sse');
+        source.onmessage = function(e){
+          console.log(e)
+        }
 				source.addEventListener('message', function(event) {
 					addStatus("server sent the following: '" + event.data + "'");
 					}, false);
 					source.addEventListener('open', function(event) {
+            console.log(event)
 						addStatus('eventsource connected.')
 					}, false);
 					source.addEventListener('error', function(event) {
@@ -47,6 +51,10 @@ defmodule ServerSentEvents.Router do
 				= document.getElementById('status').innerHTML
 				+ date + ": " + text + "<br/>";
 			}
+      setTimeout(function(){
+
+      addStatus("banana")
+        }, 1000)
 		</script>
 	</head>
 	<body onload="ready();">

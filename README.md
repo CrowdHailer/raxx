@@ -83,6 +83,7 @@ See sever sent events in examples directory.
 ```elixir
 defmodule ServerSentEvents.Router do
   import Raxx.Response
+  # Can't use ServerSentEvents Handler in same module as other Streaming handlers.
   import Raxx.ServerSentEvents
 
   def call(%{path: [], method: "GET"}, _opts) do
@@ -120,8 +121,15 @@ defmodule ServerSentEvents.Router do
     """
   end
 end
-
 ```
+
+Some outstanding questions about Server Sent Events functionality.
+
+- [ ] Disallow event of type error.
+- [ ] Handle long poll pollyfill.
+- [ ] Raxx client.
+- [ ] Any shared functionality with file streaming, long pole.
+- [ ] What to do if message handler throws error.
 
 ## Installation
 

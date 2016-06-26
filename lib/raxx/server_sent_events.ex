@@ -26,6 +26,8 @@ defmodule Raxx.ServerSentEvents do
     valid
   end
 
+  # FIXME call event to chunk and use Streaming functionality
+  # Does streaming stop by sending empy chunk
   def event_to_string(%{data: ""}) do
     ""
   end

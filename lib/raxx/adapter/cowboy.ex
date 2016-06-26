@@ -3,7 +3,7 @@ defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
     # If invalid content headers should return a 501
     # http://ninenines.eu/docs/en/cowboy/1.0/guide/rest_flowcharts/
     # If not a get method should return 405
-    # ^^^ This logic should be in Raxx.SSE not in the adapter as same for all servers 
+    # ^^^ This logic should be in Raxx.SSE not in the adapter as same for all servers
     {:ok, req1} = :cowboy_req.chunked_reply(
       200,
       [{"content-type", "text/event-stream"},

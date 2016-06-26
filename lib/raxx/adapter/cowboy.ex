@@ -9,19 +9,6 @@ defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
     send(self, {Raxx.ServerSentEvents, :open})
     {:loop, req1, {handler, options}}
   end
-end
-
-defmodule Raxx.Adapters.Cowboy.Handler do
-  def init({:tcp, :http}, req, opts = {router, raxx_options}) do
-    case router.call(normalise_request(req), raxx_options) do
-      %{status: status, headers: headers, body: body} ->
-        headers = Map.merge(%{"content-type" => "text/html"}, headers) |> Enum.map(fn (x) -> x end)
-        {:ok, resp} = :cowboy_req.reply(status, headers, body, req)
-        {:ok, resp, opts}
-      upgrade = %{upgrade: Raxx.ServerSentEvents} ->
-        Raxx.Adapters.Cowboy.ServerSentEvents.upgrade(req, upgrade)
-    end
-  end
   # FIXME test what happens when a request that does not accept text/event-stream is sent to a SSE endpoint
   # Send an open or failure message to the SSE Handler
   # Might want the failure message to just be part of a generalised error handler
@@ -42,6 +29,21 @@ defmodule Raxx.Adapters.Cowboy.Handler do
         {:ok, req, state}
     end
   end
+end
+
+defmodule Raxx.Adapters.Cowboy.Handler do
+  def init({:tcp, :http}, req, opts = {router, raxx_options}) do
+    case router.call(normalise_request(req), raxx_options) do
+      upgrade = %{upgrade: Raxx.ServerSentEvents} ->
+        Raxx.Adapters.Cowboy.ServerSentEvents.upgrade(req, upgrade)
+      response ->
+        respond(req, response, opts)
+    end
+  end
+
+  def info(message, req, state) do
+    Raxx.Adapters.Cowboy.ServerSentEvents.info(message, req, state)
+  end
 
   def handle(req, state) do
     # FIXME work out if this is needed anywhere
@@ -51,6 +53,12 @@ defmodule Raxx.Adapters.Cowboy.Handler do
   def terminate(_reason, _req, _state) do
     # TODO closing message on SSE events
     :ok
+  end
+
+  def respond(cowboy_request, %{status: status, headers: headers, body: body}, opts) do
+    headers = Map.merge(%{"content-type" => "text/html"}, headers) |> Enum.map(fn (x) -> x end)
+    {:ok, resp} = :cowboy_req.reply(status, headers, body, cowboy_request)
+    {:ok, resp, opts}
   end
 
   defp normalise_request(req) do

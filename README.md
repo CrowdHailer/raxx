@@ -77,66 +77,50 @@ end
 ```
 
 ### Raxx Server Sent Events
+
+See sever sent events in examples directory.
+
 ```elixir
-defmodule Router do
-  def call(request = %{path: ["events" | rest]}, env) do
-    EventsController.call(%{request | path: rest}, env)
+defmodule ServerSentEvents.Router do
+  import Raxx.Response
+  import Raxx.ServerSentEvents
+
+  def call(%{path: [], method: "GET"}, _opts) do
+    ok(home_page)
+  end
+
+  def call(%{path: ["events"], method: "GET"}, opts) do
+    upgrade(opts, __MODULE__)
+  end
+
+  def call(_request, _opts) do
+    not_found("Page not found")
+  end
+
+  def open(_options) do
+    Process.send_after(self, 0, 1000)
+    event("hello")
+  end
+
+  def info(10, _opts) do
+    close()
+  end
+  def info(i, _opts) when rem(i, 2) == 0 do
+    Process.send_after(self, i + 1, 1000)
+    event(Integer.to_string(i))
+  end
+  def info(i, _opts) do
+    Process.send_after(self, i + 1, 1000)
+    no_event
+  end
+
+  defp home_page do
+    """
+    The page. see example.
+    """
   end
 end
 
-defmodule EventsController do
-  use Raxx.ServerSentEvents
-
-  # Used to be call but probably worth clarifying in having multiple handlers
-  def request(_r, env) do
-    upgrade(env)
-  end
-
-  # TODO somewhere here tackle message id
-  def open(request, env) do
-    {:send, message("hello"), :some_state}
-    {:nosend, :some_state}
-    {:close, :some_state}
-    {:close, message("hello"), :some_state}
-    # OR
-    send("hello", :state)
-    send(event(type: "welcome", data: "my_greeting"), :state)
-    nosend(:state)
-    close(:state)
-    close("hello", :state)
-  end
-
-  # Consider stateless handling of request, might be neccessary with long poll poly fill
-  # Stateless might also be helpful for restart with dropped connections
-  def info(request, env) do
-    send("hello", :state)
-    send(event(type: "welcome", data: "my_greeting"), :state)
-    nosend(:state)
-    close(:state)
-    close("hello", :state)
-  end
-
-  # Might need req in here.
-  # Separate SSE clode from normal request terminate
-  # Error handling
-  def close(reason, opts) do
-    :ok
-  end
-end
-
-defmodule Raxx.ServerSentEvents do
-  def __using__ do
-    quote do
-      def upgrate(options, module \\ __MODULE__) do
-        %{
-          upgrade: unquote(__MODULE__),
-          module: module,
-          options: options
-        }
-      end
-    end
-  end
-end
 ```
 
 ## Installation

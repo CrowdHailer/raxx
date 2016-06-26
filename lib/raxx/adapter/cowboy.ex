@@ -1,28 +1,32 @@
 defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
   def upgrade(cowboy_request, %{handler: handler, options: options}) do
+    # If invalid content headers should return a 501
+    # http://ninenines.eu/docs/en/cowboy/1.0/guide/rest_flowcharts/
+    # If not a get method should return 405
+    # ^^^ This logic should be in Raxx.SSE not in the adapter as same for all servers 
     {:ok, req1} = :cowboy_req.chunked_reply(
       200,
-      [{"content-type", "text/event-stream"}],
+      [{"content-type", "text/event-stream"},
+      {"cache-control", "no-cache"},
+      {"connection", "keep-alive"}],
       cowboy_request
     )
 
-    send(self, {Raxx.ServerSentEvents, :open})
+
+    case handler.open(options) do
+      # Possibly return list of events so we can send each an noop is empty list
+      :nil -> :no_op
+      #  FIXME event untested
+      event ->
+        :ok = :cowboy_req.chunk(Raxx.ServerSentEvents.event_to_string(event), cowboy_request)
+      # FIXME if closes connection at this point should return 204
+    end
     {:loop, req1, {handler, options}}
   end
   # FIXME test what happens when a request that does not accept text/event-stream is sent to a SSE endpoint
   # Send an open or failure message to the SSE Handler
   # Might want the failure message to just be part of a generalised error handler
 
-  def info({Raxx.ServerSentEvents, :open}, req, state = {handler, options}) do
-    case handler.open(options) do
-      :nil ->
-        {:loop, req, state}
-      #  FIXME event untested
-      event ->
-        :ok = :cowboy_req.chunk(Raxx.ServerSentEvents.event_to_string(event), req)
-        {:loop, req, state}
-    end
-  end
   def info(message, req, state = {router, raxx_options}) do
     case router.info(message, raxx_options) do
       # FIXME nil untested

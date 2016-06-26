@@ -15,18 +15,23 @@ defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
 
   def info({Raxx.ServerSentEvents, :open}, req, state = {handler, options}) do
     case handler.open(options) do
-      :noevent ->
+      :nil ->
+        {:loop, req, state}
+      #  FIXME event untested
+      event ->
+        :ok = :cowboy_req.chunk(Raxx.ServerSentEvents.event_to_string(event), req)
         {:loop, req, state}
     end
   end
   def info(message, req, state = {router, raxx_options}) do
     case router.info(message, raxx_options) do
-      {:event, data} ->
-        :ok = :cowboy_req.chunk("data: #{data}\n\n", req)
+      # FIXME nil untested
+      :nil ->
         {:loop, req, state}
-      :close ->
-        :ok = :cowboy_req.chunk("", req)
-        {:ok, req, state}
+      event ->
+        :ok = :cowboy_req.chunk(Raxx.ServerSentEvents.event_to_string(event), req)
+        # Empty string closes communication from client end so loop is fine return value here
+        {:loop, req, state}
     end
   end
 end

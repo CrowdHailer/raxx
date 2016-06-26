@@ -41,6 +41,21 @@ defmodule Raxx.Adapter.Cowboy.ServerSentEventsTest do
     assert_receive %{id: ^ref}, 1_000
   end
 
+  test "server sent events with objects" do
+    headers = %{"accept" => "text/event-stream",
+      "cache-control" => "no-cache",
+      "connection" => "keep-alive"}
+    port = 10_101
+    {:ok, _pid} = raxx_up(port, {Router, [%{event: "notify", data: "sup!"}]})
+    {:ok, %{id: ref}} = HTTPoison.get("localhost:#{port}", headers, stream_to: self)
+    assert_receive %{code: 200, id: ^ref}
+    assert_receive %{headers: _headers, id: ^ref}, 1_000
+    assert_receive %{chunk: message, id: ^ref}, 1_000
+    assert "event: notify\ndata: sup!\n\n" == message
+    assert_receive %{chunk: _, id: ^ref}, 1_000
+    assert_receive %{id: ^ref}, 1_000
+  end
+
   defp raxx_up(port, app) do
     case Application.ensure_all_started(:cowboy) do
       {:ok, _} ->

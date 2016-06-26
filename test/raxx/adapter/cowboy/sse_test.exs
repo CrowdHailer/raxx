@@ -1,7 +1,7 @@
 defmodule SSERouter do
   import Raxx.ServerSentEvents
 
-  def call(request, opts) do
+  def call(_request, opts) do
     upgrade(opts ++ ["3"], __MODULE__)
   end
 
@@ -41,7 +41,7 @@ defmodule Raxx.Adapter.Cowboy.ServerSentEventsTest do
     assert_receive %{id: ^ref}, 1_000
   end
 
-  defp raxx_up(port, app \\ {Forwarder, self}) do
+  defp raxx_up(port, app) do
     case Application.ensure_all_started(:cowboy) do
       {:ok, _} ->
         {:ok, :started}

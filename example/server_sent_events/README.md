@@ -1,6 +1,6 @@
 # ServerSentEvents
 
-**TODO: Add description**
+**Example Raxx application with a subscription to server sent events**
 
 ## Installation
 
@@ -21,4 +21,3 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
       [applications: [:server_sent_events]]
     end
     ```
-

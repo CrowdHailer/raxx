@@ -31,10 +31,12 @@ defmodule Raxx.Adapters.Cowboy.Handler do
   end
 
   def handle(req, state) do
+    # FIXME work out if this is needed anywhere
     {:ok, req, state}
   end
 
   def terminate(_reason, _req, _state) do
+    # TODO closing message on SSE events
     :ok
   end
 

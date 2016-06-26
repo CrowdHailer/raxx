@@ -23,23 +23,18 @@ defmodule Raxx.Adapters.Cowboy.Handler do
 
   def info({Raxx.ServerSentEvents, :open}, req, state = {handler, options}) do
     case handler.open(options) do
-      {:nosend, _state} ->
+      :noevent ->
         {:loop, req, state}
     end
   end
   def info(message, req, state = {router, raxx_opts}) do
     case router.info(message, raxx_opts) do
-      {:send, data} ->
+      {:event, data} ->
         :ok = :cowboy_req.chunk("data: #{data}\n\n", req)
         {:loop, req, state}
-      {:send, data, _state} ->
-        :ok = :cowboy_req.chunk("data: #{data}\n\n", req)
-        {:loop, req, state}
-      {:close, state} ->
+      :close ->
         :ok = :cowboy_req.chunk("", req)
         {:ok, req, state}
-      :nosend ->
-        {:loop, req, state}
     end
   end
 

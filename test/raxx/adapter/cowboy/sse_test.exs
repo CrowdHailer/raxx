@@ -1,23 +1,21 @@
 defmodule SSERouter do
+  import Raxx.ServerSentEvents
+
   def call(request, opts) do
-    %{
-      upgrade: Raxx.ServerSentEvents,
-      handler: __MODULE__,
-      options: opts ++ ["3"]
-    }
+    upgrade(opts ++ ["3"], __MODULE__)
   end
 
   def open(options) do
     Process.send_after(self, {:count, options}, 100)
-    {:nosend, :some_state}
+    no_event()
   end
 
-  def info({:count, [n | rest]}, state) do
+  def info({:count, [n | rest]}, _options) do
     Process.send_after(self, {:count, rest}, 100)
-    {:send, n, state}
+    event(n)
   end
-  def info({:count, []}, state) do
-    {:close, state}
+  def info({:count, []}, _options) do
+    close()
   end
 end
 defmodule Router do
@@ -34,25 +32,13 @@ defmodule Raxx.Adapter.Cowboy.ServerSentEventsTest do
       "connection" => "keep-alive"}
     port = 10_100
     {:ok, _pid} = raxx_up(port, {Router, ["1", "2"]})
-    HTTPoison.get("localhost:#{port}", headers, stream_to: self)
-    receive do
-      a -> IO.inspect(a)
-    end
-    receive do
-      a -> IO.inspect(a)
-    end
-    receive do
-      a -> IO.inspect(a)
-    end
-    receive do
-      a -> IO.inspect(a)
-    end
-    receive do
-      a -> IO.inspect(a)
-    end
-    receive do
-      a -> IO.inspect(a)
-    end
+    {:ok, %{id: ref}} = HTTPoison.get("localhost:#{port}", headers, stream_to: self)
+    assert_receive %{code: 200, id: ^ref}
+    assert_receive %{headers: _headers, id: ^ref}, 1_000
+    assert_receive %{chunk: _, id: ^ref}, 1_000
+    assert_receive %{chunk: _, id: ^ref}, 1_000
+    assert_receive %{chunk: _, id: ^ref}, 1_000
+    assert_receive %{id: ^ref}, 1_000
   end
 
   defp raxx_up(port, app \\ {Forwarder, self}) do

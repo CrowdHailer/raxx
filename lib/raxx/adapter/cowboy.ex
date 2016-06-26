@@ -11,19 +11,32 @@ defmodule Raxx.Adapters.Cowboy.Handler do
         {:ok, req1} = :cowboy_req.chunked_reply(200, [{"content-type", "text/event-stream"}], req)
         Process.send_after(self, :open_connection, 0)
         {:loop, req1, opts}
+      %{upgrade: Raxx.ServerSentEvents, handler: handler, options: options} ->
+        {:ok, req1} = :cowboy_req.chunked_reply(200, [{"content-type", "text/event-stream"}], req)
+        Process.send_after(self, {Raxx.ServerSentEvents, :open}, 0)
+        {:loop, req1, {handler, options}}
     end
   end
   # FIXME test what happens when a request that does not accept text/event-stream is sent to a SSE endpoint
   # Send an open or failure message to the SSE Handler
   # Might want the failure message to just be part of a generalised error handler
 
+  def info({Raxx.ServerSentEvents, :open}, req, state = {handler, options}) do
+    case handler.open(options) do
+      {:nosend, _state} ->
+        {:loop, req, state}
+    end
+  end
   def info(message, req, state = {router, raxx_opts}) do
     case router.info(message, raxx_opts) do
       {:send, data} ->
         :ok = :cowboy_req.chunk("data: #{data}\n\n", req)
         {:loop, req, state}
-      {:close, data} ->
+      {:send, data, _state} ->
         :ok = :cowboy_req.chunk("data: #{data}\n\n", req)
+        {:loop, req, state}
+      {:close, state} ->
+        :ok = :cowboy_req.chunk("", req)
         {:ok, req, state}
       :nosend ->
         {:loop, req, state}

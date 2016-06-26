@@ -1,16 +1,25 @@
+defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
+  def upgrade(cowboy_request, %{handler: handler, options: options}) do
+    {:ok, req1} = :cowboy_req.chunked_reply(
+      200,
+      [{"content-type", "text/event-stream"}],
+      cowboy_request
+    )
+
+    send(self, {Raxx.ServerSentEvents, :open})
+    {:loop, req1, {handler, options}}
+  end
+end
+
 defmodule Raxx.Adapters.Cowboy.Handler do
-  def init({:tcp, :http}, req, opts = {router, raxx_opts}) do
-    default_headers = %{"content-type" => "text/html"}
-    raxx_request = normalise_request(req)
-    case router.call(raxx_request, raxx_opts) do
+  def init({:tcp, :http}, req, opts = {router, raxx_options}) do
+    case router.call(normalise_request(req), raxx_options) do
       %{status: status, headers: headers, body: body} ->
-      headers = Map.merge(default_headers, headers) |> Enum.map(fn (x) -> x end)
-      {:ok, resp} = :cowboy_req.reply(status, headers, body, req)
-      {:ok, resp, opts}
-      %{upgrade: Raxx.ServerSentEvents, handler: handler, options: options} ->
-        {:ok, req1} = :cowboy_req.chunked_reply(200, [{"content-type", "text/event-stream"}], req)
-        Process.send_after(self, {Raxx.ServerSentEvents, :open}, 0)
-        {:loop, req1, {handler, options}}
+        headers = Map.merge(%{"content-type" => "text/html"}, headers) |> Enum.map(fn (x) -> x end)
+        {:ok, resp} = :cowboy_req.reply(status, headers, body, req)
+        {:ok, resp, opts}
+      upgrade = %{upgrade: Raxx.ServerSentEvents} ->
+        Raxx.Adapters.Cowboy.ServerSentEvents.upgrade(req, upgrade)
     end
   end
   # FIXME test what happens when a request that does not accept text/event-stream is sent to a SSE endpoint
@@ -23,8 +32,8 @@ defmodule Raxx.Adapters.Cowboy.Handler do
         {:loop, req, state}
     end
   end
-  def info(message, req, state = {router, raxx_opts}) do
-    case router.info(message, raxx_opts) do
+  def info(message, req, state = {router, raxx_options}) do
+    case router.info(message, raxx_options) do
       {:event, data} ->
         :ok = :cowboy_req.chunk("data: #{data}\n\n", req)
         {:loop, req, state}

@@ -76,6 +76,65 @@ defmodule FooRouter do
 end
 ```
 
+### Raxx Server Sent Events
+
+See sever sent events in examples directory.
+
+```elixir
+defmodule ServerSentEvents.Router do
+  import Raxx.Response
+  # Can't use ServerSentEvents Handler in same module as other Streaming handlers.
+  import Raxx.ServerSentEvents
+
+  def call(%{path: [], method: "GET"}, _opts) do
+    ok(home_page)
+  end
+
+  def call(%{path: ["events"], method: "GET"}, opts) do
+    upgrade(opts, __MODULE__)
+  end
+
+  def call(_request, _opts) do
+    not_found("Page not found")
+  end
+
+  def open(_options) do
+    Process.send_after(self, 0, 1000)
+    event("hello")
+  end
+
+  def info(10, _opts) do
+    close()
+  end
+  def info(i, _opts) when rem(i, 2) == 0 do
+    Process.send_after(self, i + 1, 1000)
+    event(Integer.to_string(i))
+  end
+  def info(i, _opts) do
+    Process.send_after(self, i + 1, 1000)
+    no_event
+  end
+
+  defp home_page do
+    """
+    The page. see example.
+    """
+  end
+end
+```
+
+Some outstanding questions about Server Sent Events functionality.
+
+- [ ] Disallow event of type error.
+- [ ] Handle long poll pollyfill.
+- [ ] Raxx client.
+- [ ] Any shared functionality with file streaming, long pole.
+- [ ] What to do if message handler throws error.
+
+[Link to implementing server in node.js](http://www.html5rocks.com/en/tutorials/eventsource/basics/)
+
+[HTML living standard](https://html.spec.whatwg.org/multipage/comms.html#server-sent-events)
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:

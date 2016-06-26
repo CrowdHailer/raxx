@@ -7,10 +7,6 @@ defmodule Raxx.Adapters.Cowboy.Handler do
       headers = Map.merge(default_headers, headers) |> Enum.map(fn (x) -> x end)
       {:ok, resp} = :cowboy_req.reply(status, headers, body, req)
       {:ok, resp, opts}
-      {:upgrade, _something} ->
-        {:ok, req1} = :cowboy_req.chunked_reply(200, [{"content-type", "text/event-stream"}], req)
-        Process.send_after(self, :open_connection, 0)
-        {:loop, req1, opts}
       %{upgrade: Raxx.ServerSentEvents, handler: handler, options: options} ->
         {:ok, req1} = :cowboy_req.chunked_reply(200, [{"content-type", "text/event-stream"}], req)
         Process.send_after(self, {Raxx.ServerSentEvents, :open}, 0)

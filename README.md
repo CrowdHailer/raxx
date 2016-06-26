@@ -76,6 +76,69 @@ defmodule FooRouter do
 end
 ```
 
+### Raxx Server Sent Events
+```elixir
+defmodule Router do
+  def call(request = %{path: ["events" | rest]}, env) do
+    EventsController.call(%{request | path: rest}, env)
+  end
+end
+
+defmodule EventsController do
+  use Raxx.ServerSentEvents
+
+  # Used to be call but probably worth clarifying in having multiple handlers
+  def request(_r, env) do
+    upgrade(env)
+  end
+
+  # TODO somewhere here tackle message id
+  def open(request, env) do
+    {:send, message("hello"), :some_state}
+    {:nosend, :some_state}
+    {:close, :some_state}
+    {:close, message("hello"), :some_state}
+    # OR
+    send("hello", :state)
+    send(event(type: "welcome", data: "my_greeting"), :state)
+    nosend(:state)
+    close(:state)
+    close("hello", :state)
+  end
+
+  # Consider stateless handling of request, might be neccessary with long poll poly fill
+  # Stateless might also be helpful for restart with dropped connections
+  def info(request, env) do
+    send("hello", :state)
+    send(event(type: "welcome", data: "my_greeting"), :state)
+    nosend(:state)
+    close(:state)
+    close("hello", :state)
+  end
+
+  # Might need req in here.
+  # Separate SSE clode from normal request terminate
+  # Error handling
+  def close(reason, opts) do
+    :ok
+  end
+end
+
+defmodule Raxx.ServerSentEvents do
+  def __using__ do
+    quote do
+      def upgrate(options, module \\ __MODULE__) do
+        %{
+          upgrade: unquote(__MODULE__),
+          module: module,
+          options: options
+        }
+      end
+    end
+  end
+end
+```
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:

@@ -157,3 +157,4 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 - Use Ruby rack and Clojure ring as inspiration for naming but be happy to break away from historic CGI-style header names.
 - Surface utilities so that it can be used in general HTTP based applications
 - Only return json if json is asked for.
+- [Your server as a function](https://monkey.org/~marius/funsrv.pdf)

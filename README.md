@@ -149,6 +149,11 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 
     - [cowboy](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example). Currently just follow example.
 
+## Contributing
+
+If you have Elixir installed on your machine then you can treat this project as a normal mix project and run tests via `mix test`.
+
+If required a development environment can be created using [Vagrant](www.vagrantup.com).
 
 ### Principles
 

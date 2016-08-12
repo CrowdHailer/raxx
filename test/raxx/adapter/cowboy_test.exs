@@ -25,7 +25,6 @@ defmodule RedirectRequest do
   end
 
   def call(request, _env) do
-    IO.inspect request
     ok("pong")
   end
 end
@@ -87,6 +86,14 @@ defmodule Raxx.CowboyTest do
     {:ok, _pid} = raxx_up(port, {RedirectRequest, %{}})
     {:ok, %{body: body}} = HTTPoison.get("localhost:#{port}/ping", %{}, [follow_redirect: true])
     assert "pong" == body
+  end
+
+  test "post some unknown binary content", %{port: port} do
+    {:ok, _pid} = raxx_up(port)
+    {:ok, _resp} = HTTPoison.post("localhost:#{port}", "blah blah", [{"content-type", "unknown/stuff"}])
+    assert_receive %{headers: %{"content-type" => type}, body: body}
+    assert "unknown/stuff" == type
+    assert "blah blah" == body
   end
 
   test "post simple form encoding", %{port: port} do

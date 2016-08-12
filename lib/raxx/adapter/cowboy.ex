@@ -127,8 +127,9 @@ defmodule Raxx.Adapters.Cowboy.Handler do
     {:ok, body, cowboy_req} = multipart(cowboy_req)
     {:ok, body, cowboy_req}
   end
-  def parse_req_body(_cowboy_req, content_type) do
-    {:error, :unknown_content_type, content_type}
+  def parse_req_body(cowboy_req, content_type) do
+    {:ok, body, cowboy_req}  = :cowboy_req.body(cowboy_req, [])
+    {:ok, body, cowboy_req}
   end
 
   def multipart(cowboy_req, body \\ []) do
@@ -147,7 +148,7 @@ defmodule Raxx.Adapters.Cowboy.Handler do
       {:data, field_name} ->
         {:ok, field_value, cowboy_req} = :cowboy_req.part_body(cowboy_req)
         {:ok, [{field_name, field_value}], cowboy_req}
-      {:file, field_name, filename, content_type, content_transfer_encoding} ->
+      {:file, field_name, filename, content_type, _content_transfer_encoding} ->
         {:ok, file_contents, cowboy_req} = stream_file(cowboy_req)
         {:ok, [{field_name, %{
           filename: filename,

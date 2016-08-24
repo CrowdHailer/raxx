@@ -1,12 +1,12 @@
 defmodule CowboyExample.Router do
   import Raxx.Response
 
-  def call(%{path: [], method: "GET"}, _opts) do
+  def handle_request(%{path: [], method: "GET"}, _opts) do
     "Home page"
   end
 
   # TODO move to stats controller.
-  def call(%{
+  def handle_request(%{
     host: host,
     port: port,
     method: method,
@@ -45,7 +45,7 @@ defmodule CowboyExample.Router do
     (quote do: unquote(term)) |> Macro.to_string
   end
 
-  def call(_request, _opts) do
+  def handle_request(_request, _opts) do
     not_found("Page not found")
   end
 end

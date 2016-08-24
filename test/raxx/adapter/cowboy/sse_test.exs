@@ -1,7 +1,7 @@
 defmodule SSERouter do
   import Raxx.ServerSentEvents
 
-  def call(_request, opts) do
+  def handle_request(_request, opts) do
     upgrade(opts ++ ["3"], __MODULE__)
   end
 
@@ -19,8 +19,8 @@ defmodule SSERouter do
   end
 end
 defmodule Router do
-  def call(r = %{path: [], method: "GET"}, opts) do
-    SSERouter.call(r, opts)
+  def handle_request(r = %{path: [], method: "GET"}, opts) do
+    SSERouter.handle_request(r, opts)
   end
 end
 defmodule Raxx.Adapter.Cowboy.ServerSentEventsTest do

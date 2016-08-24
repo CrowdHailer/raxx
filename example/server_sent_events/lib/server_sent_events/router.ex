@@ -2,15 +2,15 @@ defmodule ServerSentEvents.Router do
   import Raxx.Response
   import Raxx.ServerSentEvents
 
-  def call(%{path: [], method: "GET"}, _opts) do
+  def handle_request(%{path: [], method: "GET"}, _opts) do
     ok(home_page)
   end
 
-  def call(%{path: ["events"], method: "GET"}, opts) do
+  def handle_request(%{path: ["events"], method: "GET"}, opts) do
     upgrade(opts, __MODULE__)
   end
 
-  def call(_request, _opts) do
+  def handle_request(_request, _opts) do
     not_found("Page not found")
   end
 

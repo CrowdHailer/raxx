@@ -1,30 +1,30 @@
 defmodule Forwarder do
   import Raxx.Response
-  def call(request, pid) do
+  def handle_request(request, pid) do
     send(pid, request)
     ok("done")
   end
 end
 defmodule FakeHeader do
   import Raxx.Response
-  def call(_request, _env) do
+  def handle_request(_request, _env) do
     ok("done", %{"custom-header" => "my-value"})
   end
 end
 
 defmodule StringReply do
-  def call(_request, %{body: body}) do
+  def handle_request(_request, %{body: body}) do
     body
   end
 end
 
 defmodule RedirectRequest do
   import Raxx.Response
-  def call(%{path: ["ping"]}, %{}) do
+  def handle_request(%{path: ["ping"]}, %{}) do
     redirect("/pong")
   end
 
-  def call(request, _env) do
+  def handle_request(request, _env) do
     ok("pong")
   end
 end

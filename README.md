@@ -12,7 +12,7 @@ Raxx adapters can be mounted alongside other handlers so that websockets et al c
 ## Usage
 
 ### Raxx handlers
-A Raxx handler is a module that has a call function.
+A Raxx handler is a module that has a `handle_request` function.
 It takes two arguments, a raxx request and an application specific environment.
 The return value is a map with three keys, the status, the headers, and the body.
 
@@ -23,17 +23,17 @@ With the power of Elixirs pattern matching against maps it is possible to handle
 ```elixir
 defmodule BasicRouter do
   # handle the root path
-  def call(%{path: [], method: "GET"}, _env) do
+  def handle_request(%{path: [], method: "GET"}, _env) do
     %{status: 200, headers: %{}, body: "Hello, World!"}
   end
 
   # forward to a sub router
-  def call(request = %{path: ["api" | rest]}, env) do
-    ApiRouter.call(%{request | path: rest}, env)
+  def handle_request(request = %{path: ["api" | rest]}, env) do
+    ApiRouter.handle_request(%{request | path: rest}, env)
   end
 
   # handle a variable segment in path
-  def call(%{path: ["greet", name], method: "GET"}, _env) do
+  def handle_request(%{path: ["greet", name], method: "GET"}, _env) do
     %{status: 200, headers: %{}, body: "Hello, #{name}"}
   end
 end
@@ -44,11 +44,11 @@ Manually creating all these response hashes can be tedious so the Response modul
 ```elixir
 defmodule FooRouter do
   import Raxx.Response
-  def call(%{path: ["users"], method: "GET"}, _env) do
+  def handle_request(%{path: ["users"], method: "GET"}, _env) do
     ok("All user: Andy, Bethany, Clive")
   end
 
-  def call(%{path: ["users"], method: "POST"}, _env) do
+  def handle_request(%{path: ["users"], method: "POST"}, _env) do
     case MyApp.create_user do
       {:ok, user} -> created("New user #{user}")
       {:error, :already_exists} -> conflict("sorry")
@@ -58,11 +58,11 @@ defmodule FooRouter do
     end
   end
 
-  def call(%{path: ["users"], method: _}, _env) do
+  def handle_request(%{path: ["users"], method: _}, _env) do
     method_not_allowed("Don't do that")
   end
 
-  def call(%{path: ["users", id], method: "GET"}, _env) do
+  def handle_request(%{path: ["users", id], method: "GET"}, _env) do
     case MyApp.get_user do
       {:ok, user} -> ok("New user #{user}")
       {:error, nil} -> not_found("User unknown")
@@ -70,7 +70,7 @@ defmodule FooRouter do
     end
   end
 
-  def call(_request, _env) do
+  def handle_request(_request, _env) do
     not_found("Sorry didn't get that")
   end
 end
@@ -86,15 +86,15 @@ defmodule ServerSentEvents.Router do
   # Can't use ServerSentEvents Handler in same module as other Streaming handlers.
   import Raxx.ServerSentEvents
 
-  def call(%{path: [], method: "GET"}, _opts) do
+  def handle_request(%{path: [], method: "GET"}, _opts) do
     ok(home_page)
   end
 
-  def call(%{path: ["events"], method: "GET"}, opts) do
+  def handle_request(%{path: ["events"], method: "GET"}, opts) do
     upgrade(opts, __MODULE__)
   end
 
-  def call(_request, _opts) do
+  def handle_request(_request, _opts) do
     not_found("Page not found")
   end
 

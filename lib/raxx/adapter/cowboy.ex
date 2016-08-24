@@ -42,7 +42,7 @@ end
 
 defmodule Raxx.Adapters.Cowboy.Handler do
   def init({:tcp, :http}, req, opts = {router, raxx_options}) do
-    case router.call(normalise_request(req), raxx_options) do
+    case router.handle_request(normalise_request(req), raxx_options) do
       upgrade = %{upgrade: Raxx.ServerSentEvents} ->
         Raxx.Adapters.Cowboy.ServerSentEvents.upgrade(req, upgrade)
       response ->

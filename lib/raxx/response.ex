@@ -75,11 +75,11 @@ defmodule Raxx.Response do
      end
   end
 
-  def redirect(path) do
+  def redirect(path, headers \\ %{}) do
     # TODO Plug checks that the path does not begin with '//' or no '/'
     %{
       status: 302,
-      headers: %{"location" => path},
+      headers: Map.merge(%{"location" => path}, headers),
       body: redirect_page(path)
     }
   end

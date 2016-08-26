@@ -48,8 +48,8 @@ defmodule FooRouter do
     ok("All user: Andy, Bethany, Clive")
   end
 
-  def handle_request(%{path: ["users"], method: "POST"}, _env) do
-    case MyApp.create_user do
+  def handle_request(%{path: ["users"], method: "POST", body: data}, _env) do
+    case MyApp.create_user(data) do
       {:ok, user} -> created("New user #{user}")
       {:error, :already_exists} -> conflict("sorry")
       {:error, :bad_params} -> bad_request("sorry")

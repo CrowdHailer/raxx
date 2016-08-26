@@ -63,7 +63,7 @@ defmodule FooRouter do
   end
 
   def handle_request(%{path: ["users", id], method: "GET"}, _env) do
-    case MyApp.get_user do
+    case MyApp.get_user(id) do
       {:ok, user} -> ok("New user #{user}")
       {:error, nil} -> not_found("User unknown")
       {:error, :deleted} -> gone("User deleted")

@@ -1,7 +1,8 @@
 defmodule Raxx.Test do
-  def get(path) do
+  def get(path, headers \\ %{}) do
     path = split_path(path)
-    %Raxx.Request{path: path}
+    # TODO normalize headers
+    %Raxx.Request{path: path, headers: headers}
   end
 
   def post(path, params) do

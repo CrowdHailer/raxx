@@ -84,12 +84,18 @@ defmodule Raxx.Response do
     }
   end
 
+  def set_cookie(response, key, value) do
+    IO.inspect(response)
+    %{response | headers: %{"set-cookie" => "key=value"}}
+  end
+
   defp redirect_page(path) do
     """
       <html><body>You are being <a href=\"#{ escape(path) }\">redirected</a>.</body></html>
     """
   end
 
+  # TODO move escapse to util
   @escapes [
     {?<, "&lt;"},
     {?>, "&gt;"},

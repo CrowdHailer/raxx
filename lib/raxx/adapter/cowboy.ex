@@ -65,7 +65,11 @@ defmodule Raxx.Adapters.Cowboy.Handler do
   end
 
   def respond(cowboy_request, %{status: status, headers: headers, body: body}, opts) do
-    headers = Map.merge(%{"content-type" => "text/html"}, headers) |> Enum.map(fn (x) -> x end)
+    headers = Map.merge(%{"content-type" => "text/html"}, headers) |> Enum.flat_map(fn
+      ({k, values}) when is_list(values) ->
+        Enum.map(values, fn (v) -> {k, v} end)
+      (x) -> [x]
+    end)
     {:ok, resp} = :cowboy_req.reply(status, headers, body, cowboy_request)
     {:ok, resp, opts}
   end

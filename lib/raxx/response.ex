@@ -84,9 +84,9 @@ defmodule Raxx.Response do
     }
   end
 
-  def set_cookie(response, key, value) do
-    IO.inspect(response)
-    %{response | headers: %{"set-cookie" => "#{key}=#{value}"}}
+  def set_cookie(r = %{headers: headers}, key, value) do
+    cookies = Map.get(headers, "set-cookie", [])
+    %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=#{value}"]}}
   end
 
   defp redirect_page(path) do

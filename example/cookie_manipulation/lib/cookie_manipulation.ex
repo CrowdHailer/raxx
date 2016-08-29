@@ -19,5 +19,10 @@ defmodule CookieManipulation do
   def handle_request(%{path: ["set", key, value]}, _env) do
     Response.ok("check your cookies #{value}")
     |> Response.set_cookie(key, value)
+    |> Response.set_cookie("always", "on")
+  end
+
+  def handle_request(_request, _opts) do
+    Response.not_found("Page not found")
   end
 end

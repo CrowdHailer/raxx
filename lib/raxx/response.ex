@@ -89,6 +89,11 @@ defmodule Raxx.Response do
     %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=#{value}"]}}
   end
 
+  def expire_cookie(r = %{headers: headers}, key) do
+    cookies = Map.get(headers, "set-cookie", [])
+    %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=;expires=Thu, 01 Jan 1970 00:00:00 GMT"]}}
+  end
+
   defp redirect_page(path) do
     """
       <html><body>You are being <a href=\"#{ escape(path) }\">redirected</a>.</body></html>

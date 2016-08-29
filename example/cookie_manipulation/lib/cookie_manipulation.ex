@@ -20,6 +20,7 @@ defmodule CookieManipulation do
     Response.ok("check your cookies #{value}")
     |> Response.set_cookie(key, value)
     |> Response.set_cookie("always", "on")
+    |> Response.expire_cookie("other")
   end
 
   def handle_request(_request, _opts) do

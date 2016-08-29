@@ -47,6 +47,6 @@ defmodule Raxx.Cookies.CowboyTest do
       ({"set-cookie", _}) -> true
       _ -> false
     end)
-    assert {_, "key=value"} = header
+    assert {_, "foo=foo_value"} = header
   end
 end

@@ -13,7 +13,7 @@ defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
     )
 
 
-    case handler.open(options) do
+    case handler.handle_upgrade(options) do
       # Possibly return list of events so we can send each an noop is empty list
       :nil -> :no_op
       #  FIXME event untested
@@ -24,11 +24,11 @@ defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
     {:loop, chunked_request, {handler, options}}
   end
   # FIXME test what happens when a request that does not accept text/event-stream is sent to a SSE endpoint
-  # Send an open or failure message to the SSE Handler
+  # Send an upgrade or failure message to the SSE Handler
   # Might want the failure message to just be part of a generalised error handler
 
   def info(message, req, state = {router, raxx_options}) do
-    case router.info(message, raxx_options) do
+    case router.handle_info(message, raxx_options) do
       # FIXME nil untested
       :nil ->
         {:loop, req, state}

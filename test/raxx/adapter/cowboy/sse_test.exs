@@ -5,16 +5,16 @@ defmodule SSERouter do
     upgrade(opts ++ ["3"], __MODULE__)
   end
 
-  def open(options) do
+  def handle_upgrade(options) do
     Process.send_after(self, {:count, options}, 100)
     no_event()
   end
 
-  def info({:count, [n | rest]}, _options) do
+  def handle_info({:count, [n | rest]}, _options) do
     Process.send_after(self, {:count, rest}, 100)
     event(n)
   end
-  def info({:count, []}, _options) do
+  def handle_info({:count, []}, _options) do
     close()
   end
 end

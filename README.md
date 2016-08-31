@@ -98,19 +98,19 @@ defmodule ServerSentEvents.Router do
     not_found("Page not found")
   end
 
-  def open(_options) do
+  def handle_upgrade(_options) do
     Process.send_after(self, 0, 1000)
     event("hello")
   end
 
-  def info(10, _opts) do
+  def handle_info(10, _opts) do
     close()
   end
-  def info(i, _opts) when rem(i, 2) == 0 do
+  def handle_info(i, _opts) when rem(i, 2) == 0 do
     Process.send_after(self, i + 1, 1000)
     event(Integer.to_string(i))
   end
-  def info(i, _opts) do
+  def handle_info(i, _opts) do
     Process.send_after(self, i + 1, 1000)
     no_event
   end

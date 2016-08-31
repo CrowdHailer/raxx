@@ -13,21 +13,20 @@ defmodule ServerSentEvents.Router do
     Response.not_found("Page not found")
   end
 
-  # handle_upgrade
-  def open(_options) do
+  def handle_upgrade(_options) do
     Process.send_after(self, 0, 1000)
     ServerSentEvents.event("hello")
   end
 
   # handle_info
-  def info(10, _opts) do
+  def handle_info(10, _opts) do
     ServerSentEvents.close()
   end
-  def info(i, _opts) when rem(i, 2) == 0 do
+  def handle_info(i, _opts) when rem(i, 2) == 0 do
     Process.send_after(self, i + 1, 1000)
     ServerSentEvents.event(Integer.to_string(i))
   end
-  def info(i, _opts) do
+  def handle_info(i, _opts) do
     Process.send_after(self, i + 1, 1000)
     ServerSentEvents.no_event()
   end

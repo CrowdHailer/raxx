@@ -3,7 +3,7 @@ defmodule ServerSentEvents do
 
   def start(_type, _args) do
     routes = [
-      {:_, Raxx.Adapters.Cowboy.Handler, {ServerSentEvents.Router, %{}}}
+      {:_, Raxx.Adapters.Cowboy.Handler, {ServerSentEvents.Router, %{message: "ola"}}}
 
     ]
 

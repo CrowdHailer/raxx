@@ -1,35 +1,38 @@
 defmodule ServerSentEvents.Router do
-  import Raxx.Response
-  import Raxx.ServerSentEvents
+  alias Raxx.{Response, ServerSentEvents}
 
   def handle_request(%{path: [], method: "GET"}, _opts) do
-    ok(home_page)
+    Response.ok(home_page)
   end
 
   def handle_request(%{path: ["events"], method: "GET"}, opts) do
-    upgrade(opts, __MODULE__)
+    ServerSentEvents.upgrade(opts, __MODULE__)
   end
 
   def handle_request(_request, _opts) do
-    not_found("Page not found")
+    Response.not_found("Page not found")
   end
 
+  # handle_upgrade
   def open(_options) do
     Process.send_after(self, 0, 1000)
-    event("hello")
+    ServerSentEvents.event("hello")
   end
 
+  # handle_info
   def info(10, _opts) do
-    close()
+    ServerSentEvents.close()
   end
   def info(i, _opts) when rem(i, 2) == 0 do
     Process.send_after(self, i + 1, 1000)
-    event(Integer.to_string(i))
+    ServerSentEvents.event(Integer.to_string(i))
   end
   def info(i, _opts) do
     Process.send_after(self, i + 1, 1000)
-    no_event
+    ServerSentEvents.no_event()
   end
+
+  # terminate
 
   defp home_page do
     """

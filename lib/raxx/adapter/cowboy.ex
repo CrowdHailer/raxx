@@ -4,7 +4,7 @@ defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
     # http://ninenines.eu/docs/en/cowboy/1.0/guide/rest_flowcharts/
     # If not a get method should return 405
     # ^^^ This logic should be in Raxx.SSE not in the adapter as same for all servers
-    {:ok, req1} = :cowboy_req.chunked_reply(
+    {:ok, chunked_request} = :cowboy_req.chunked_reply(
       200,
       [{"content-type", "text/event-stream"},
       {"cache-control", "no-cache"},
@@ -18,10 +18,10 @@ defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
       :nil -> :no_op
       #  FIXME event untested
       event ->
-        :ok = :cowboy_req.chunk(Raxx.ServerSentEvents.event_to_string(event), cowboy_request)
+        :ok = :cowboy_req.chunk(Raxx.ServerSentEvents.event_to_string(event), chunked_request)
       # FIXME if closes connection at this point should return 204
     end
-    {:loop, req1, {handler, options}}
+    {:loop, chunked_request, {handler, options}}
   end
   # FIXME test what happens when a request that does not accept text/event-stream is sent to a SSE endpoint
   # Send an open or failure message to the SSE Handler

@@ -69,8 +69,9 @@ defmodule Raxx.Response do
     network_authentication_required: 511
   ]
 
+  # FIXME allow only iodata to be body, can't find is_iodata guard
   for {atom, code} <- statuses do
-    def unquote(atom)(body, headers \\ %{}) do
+    def unquote(atom)(body \\ "", headers \\ %{}) do
       %{status: unquote(code), body: body, headers: headers}
      end
   end

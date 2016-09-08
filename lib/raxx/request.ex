@@ -8,4 +8,11 @@ defmodule Raxx.Request do
     headers: %{},
     body: ""
   ]
+
+  def parse_cookies(%{headers: headers}) do
+    case Map.get(headers, "cookie") do
+      nil -> Raxx.Cookie.parse([])
+      cookie_string -> Raxx.Cookie.parse(cookie_string)
+    end
+  end
 end

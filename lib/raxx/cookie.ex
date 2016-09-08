@@ -97,4 +97,19 @@ defmodule Raxx.Cookie do
   def cookie_pair(name, value) do
     "#{name}=#{value}"
   end
+
+  def parse([]) do
+    %{}
+  end
+  def parse([cookie_string]) do
+    :binary.split(cookie_string, "; ")
+    |> Enum.reject(fn(s) -> s == "" end)
+    |> Enum.map(&parse_cookie_pair/1)
+    |> Enum.into(%{})
+  end
+
+  def parse_cookie_pair(cookie_pair) do
+    [name, value] = :binary.split(cookie_pair, "=")
+    {name, value}
+  end
 end

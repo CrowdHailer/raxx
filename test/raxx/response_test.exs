@@ -26,6 +26,13 @@ defmodule Raxx.ResponseTest do
     assert "text/plain" == Response.get_header(response, "Content-Type")
   end
 
+  test "can calculate content-length from content" do
+    assert true
+    # NOTE cowboy automatically sorts out the content length.
+    # Setting the wrong length causes and error so this is not implemented.
+    # Might need to be added in the future for other servers.
+  end
+
   test "can set a session cookie" do
     response = Response.ok() |> Response.set_cookie("foo", "bar")
     assert %{headers: %{"set-cookie" => ["foo=bar"]}} = response

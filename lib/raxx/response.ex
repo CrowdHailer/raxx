@@ -70,9 +70,10 @@ defmodule Raxx.Response do
   ]
 
   # FIXME allow only iodata to be body, can't find is_iodata guard
-  for {atom, code} <- statuses do
-    def unquote(atom)(body \\ "", headers_map \\ %{}) do
-      %{status: unquote(code), body: body, headers: fix_headers(headers_map)}
+  # https://tools.ietf.org/html/rfc2616#section-6.1.1
+  for {reason_phrase, status_code} <- statuses do
+    def unquote(reason_phrase)(body \\ "", headers_map \\ %{}) do
+      %{status: unquote(status_code), body: body, headers: fix_headers(headers_map)}
      end
   end
 

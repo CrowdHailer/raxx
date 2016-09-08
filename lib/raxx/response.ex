@@ -71,9 +71,21 @@ defmodule Raxx.Response do
 
   # FIXME allow only iodata to be body, can't find is_iodata guard
   for {atom, code} <- statuses do
-    def unquote(atom)(body \\ "", headers \\ %{}) do
-      %{status: unquote(code), body: body, headers: headers}
+    def unquote(atom)(body \\ "", headers_map \\ %{}) do
+      %{status: unquote(code), body: body, headers: fix_headers(headers_map)}
      end
+  end
+
+  def fix_headers(headers_map) do
+    headers_map
+    |> Enum.map(fn
+      # FIXME could be an issue with iodata that should be single header getting split
+      ({name, value} when is_binary(value)) ->
+        {name, [value]}
+      ({name, value} when is_list(value)) ->
+        {name, value}
+    end)
+    |> Enum.into(%{})
   end
 
   def redirect(path, headers \\ %{}) do
@@ -83,6 +95,12 @@ defmodule Raxx.Response do
       headers: Map.merge(%{"location" => path}, headers),
       body: redirect_page(path)
     }
+  end
+
+  def get_header(r = %{headers: headers}, header_name) do
+    header_name = String.downcase(header_name)
+    [header_value] = headers[header_name]
+    header_value
   end
 
   def set_cookie(r = %{headers: headers}, key, value) do

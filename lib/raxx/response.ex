@@ -98,6 +98,12 @@ defmodule Raxx.Response do
     }
   end
 
+  def informational?(%{status: code}), do: 100 <= code and code < 200
+  def success?(%{status: code}), do: 200 <= code and code < 300
+  def redirect?(%{status: code}), do: 300 <= code and code < 400
+  def client_error?(%{status: code}), do: 400 <= code and code < 500
+  def server_error?(%{status: code}), do: 500 <= code and code < 600
+
   def get_header(r = %{headers: headers}, header_name) do
     header_name = String.downcase(header_name)
     [header_value] = headers[header_name]

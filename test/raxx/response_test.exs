@@ -3,19 +3,46 @@ defmodule Raxx.ResponseTest do
 
   use ExUnit.Case
 
-  test "can create a no_content response" do
-    response = Response.no_content()
-    assert response.body == ""
-    assert response.status == 204
+  # STATUS
+  test "can create an informational response" do
+    response = Response.ok()
+    assert response.status == 200
+    assert Response.success?(response)
   end
 
-  test "can create an ok response with string content" do
+  test "can create a successful response" do
+    response = Response.continue()
+    assert Response.informational?(response)
+  end
+
+  test "can create a redirect response" do
+    response = Response.found()
+    assert Response.redirect?(response)
+  end
+
+  test "can create a client error response" do
+    response = Response.bad_request()
+    assert Response.client_error?(response)
+  end
+
+  test "can create a server error response" do
+    response = Response.not_implemented()
+    assert Response.server_error?(response)
+  end
+
+  # CONTENT
+  test "can create a no_content response with no content" do
+    response = Response.no_content()
+    assert response.body == ""
+  end
+
+  test "can create a response with string content" do
     content = "my content"
     response = Response.ok(content)
     assert response.body == content
-    assert response.status == 200
   end
 
+  # HEADERS
   test "can create a not_found response with extra headers" do
     response = Response.ok("nothing here", %{"my-header" => "my-value"})
     assert "my-value" == Response.get_header(response, "my-header")

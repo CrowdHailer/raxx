@@ -65,6 +65,11 @@ defmodule Raxx.ResponseTest do
     assert %{headers: %{"set-cookie" => ["foo=bar"]}} = response
   end
 
+  test "can set a secure cookie" do
+    response = Response.ok() |> Response.set_cookie("foo", "bar", %{secure: true})
+    assert %{headers: %{"set-cookie" => ["foo=bar; Secure"]}} = response
+  end
+
   test "can expire a cookie" do
     response = Response.ok() |> Response.expire_cookie("foo")
     %{headers: %{"set-cookie" => [set_cookie_string]}} = response

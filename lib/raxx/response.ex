@@ -110,9 +110,9 @@ defmodule Raxx.Response do
     header_value
   end
 
-  def set_cookie(r = %{headers: headers}, key, value) do
+  def set_cookie(r = %{headers: headers}, key, value, options \\ %{}) do
     cookies = Map.get(headers, "set-cookie", [])
-    %{r | headers: Map.merge(headers, %{"set-cookie" => cookies ++ ["#{key}=#{value}"]})}
+    %{r | headers: Map.merge(headers, %{"set-cookie" => cookies ++ [Raxx.Cookie.set_cookie_string(key, value, options)]})}
   end
 
   def expire_cookie(r = %{headers: headers}, key) do

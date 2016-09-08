@@ -18,21 +18,8 @@
 # Headers.set_cookie(response, cookie)
 
 
+
 defmodule Raxx.HeadersTest do
-  defmodule Cookie do
-    # set-cookie-header = "Set-Cookie:" SP set-cookie-string
-    def set_cookie_header(set_cookie_string) do
-      "Set-Cookie: " <> set_cookie_string
-    end
-
-    def set_cookie_string(name, value, attribute_value_pairs) do
-      cookie_pair(name, value) <> attribute_value_pairs
-    end
-
-    def cookie_pair(name, value) do
-      "#{name}=#{value}"
-    end
-  end
   defmodule Headers do
     def set_cookie(headers, key, value) do
       cookies = Map.get(headers, "set-cookie", [])
@@ -49,5 +36,25 @@ defmodule Raxx.HeadersTest do
   test "can add a single cookie" do
     %{@set_cookie => cookie_headers} = Headers.set_cookie(%{@set_cookie => ["foo=bar"]}, "baz", "fee")
     assert ["foo=bar", "baz=fee"] = cookie_headers
+  end
+end
+
+defmodule Raxx.CookieTest do
+  alias Raxx.Cookie
+  use ExUnit.Case
+  test "can set a cookie value" do
+    assert "foo=bar" == Cookie.set_cookie_string("foo", "bar")
+  end
+
+  test "can set a cookie with a domain" do
+    assert "foo=bar; Domain=example.com" == Cookie.set_cookie_string("foo", "bar", %{domain: "example.com"})
+  end
+
+  test "can set a secure cookie" do
+    assert "foo=bar; Secure" == Cookie.set_cookie_string("foo", "bar", %{secure: true})
+  end
+
+  test "can set a http only cookie" do
+    assert "foo=bar; HttpOnly" == Cookie.set_cookie_string("foo", "bar", %{http_only: true})
   end
 end

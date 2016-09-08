@@ -20,6 +20,11 @@ defmodule Raxx.CookieTest do
     assert "foo=bar; Domain=example.com" == Cookie.set_cookie_string(cookie)
   end
 
+  test "can set a cookie with a path" do
+    cookie = Cookie.new("foo", "bar", %{path: "/path"})
+    assert "foo=bar; Path=/path" == Cookie.set_cookie_string(cookie)
+  end
+
   test "can set a secure cookie" do
     cookie = Cookie.new("foo", "bar", %{secure: true})
     assert "foo=bar; Secure" == Cookie.set_cookie_string(cookie)

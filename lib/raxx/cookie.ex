@@ -1,9 +1,10 @@
 defmodule Raxx.Cookie.Attributes do
-  defstruct domain: nil, secure: false, http_only: false
+  defstruct domain: nil, path: nil, secure: false, http_only: false
 
   def to_header_string(attributes) do
     [
       domain_av(attributes.domain),
+      path_av(attributes.path),
       secure_av(attributes.secure),
       httponly_av(attributes.http_only),
     ]
@@ -16,6 +17,9 @@ defmodule Raxx.Cookie.Attributes do
 
   def domain_av(nil), do: ""
   def domain_av(domain), do: "Domain=#{domain}"
+
+  def path_av(nil), do: ""
+  def path_av(path), do: "Path=#{path}"
 
   def secure_av(false), do: ""
   def secure_av(true), do: "Secure"
@@ -37,7 +41,7 @@ defmodule Raxx.Cookie do
   def set_cookie_string(%{name: name, value: value, attributes: attributes}) do
     cookie_pair(name, value) <> Raxx.Cookie.Attributes.to_header_string(attributes)
   end
-  
+
   def cookie_pair(name, value) do
     "#{name}=#{value}"
   end

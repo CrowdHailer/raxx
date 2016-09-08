@@ -32,7 +32,11 @@ defmodule Raxx.CookieTest do
   In summary max-age is the newer way to set cookie deletion.
 
   Raxx does not convert from expires to max age or visa-versa.
+  Preferably use max-age for a simpler interface.
+  For old IE support use expires, new browsers still support this.
   If you need both set then both will need to be set by the application.
+
+  The expires date format is the subject of conflicting RFC's the best is [RFC 2616](https://tools.ietf.org/html/rfc2616#section-3.3.1)
   """
 
   alias Raxx.Cookie

@@ -2,7 +2,7 @@ defmodule CowboyExample.Router do
   import Raxx.Response
 
   def handle_request(%{path: [], method: "GET"}, _opts) do
-    "Home page"
+    ok("Home page")
   end
 
   # TODO move to stats controller.

@@ -1,13 +1,13 @@
-# Raxx
+# Raxx: an Elixir webserver interface
 
-**A Elixir webserver interface, for stateless HTTP.**
+## What is Raxx?
 
-Raxx exists to simplify handling the HTTP request-response cycle.
-It deliberately does not handle other communication styles that are part of the modern web.
+1. An interface specification for Elixir webservers and Elixir application.
+2. A set of tools to help develop Raxx-compliant web applications
 
-Raxx is inspired by the [Ruby's Rack interface](http://rack.github.io/) and [Clojure's Ring interface](https://github.com/ring-clojure).
+*Raxx is inspired by the [Ruby's Rack interface](http://rack.github.io/) and [Clojure's Ring interface](https://github.com/ring-clojure).*
 
-Raxx adapters can be mounted alongside other handlers so that websockets et al can be handled by an more appropriate tool, e.g perhaps plug.
+[Documentation for Raxx is available online](TODO hex)
 
 ## Usage
 

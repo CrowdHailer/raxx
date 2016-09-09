@@ -115,9 +115,10 @@ defmodule Raxx.Response do
     %{r | headers: Map.merge(headers, %{"set-cookie" => cookies ++ [Raxx.Cookie.new(key, value, options) |> Raxx.Cookie.set_cookie_string]})}
   end
 
+  # Will not expire session cookies.
   def expire_cookie(r = %{headers: headers}, key) do
     cookies = Map.get(headers, "set-cookie", [])
-    %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=;expires=Thu, 01 Jan 1970 00:00:00 GMT"]}}
+    %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT, path=/"]}}
   end
 
   defp redirect_page(path) do

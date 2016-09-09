@@ -9,6 +9,29 @@
 
 [Documentation for Raxx is available online](TODO hex)
 
+## Hello, World!
+
+```elixir
+defmodule Hello do
+  import Raxx.Response
+
+  def handle_request(%{path: []}, _env) do
+    ok("Hello, World!")
+  end
+
+  def handle_request(%{path: [name]}, _env) do
+    ok("Hello, #{name}!")
+  end
+
+  def handle_request(%{path: _unknown}, _env) do
+    not_found()
+  end
+end
+```
+
+Example of a simple, dynamic Raxx application.
+See the [Cowboy example](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example) for how to mount a Raxx application to the cowboy server.
+
 ## Usage
 
 ### Raxx handlers

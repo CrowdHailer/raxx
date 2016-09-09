@@ -32,43 +32,94 @@ end
 Example of a simple, dynamic Raxx application.
 See the [Cowboy example](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example) for how to mount a Raxx application to the cowboy server.
 
-## Usage
+### Principles
 
-### Raxx handlers
-A Raxx handler is a module that has a `handle_request` function.
-It takes two arguments, a raxx request and an application specific environment.
-The return value is a map with three keys, the status, the headers, and the body.
+- Stateless HTTP request fulfill a valuable role in modern applications and will continue to do so, this simple usecase must not be compicated by catering to more advanced communication patterns.
+- Use Ruby rack and Clojure ring as inspiration, but be happy to break away from historic CGI-style header names.
+- Surface utilities so that it can be used in general HTTP based applications, a RFC6265 module could be used by plug and rack
+- Be a good otp citizen, work well in an umbrella app,
+- Raxx is designed to be the foundation of a VC (view controller) framework. Other applications in the umbrella should act as the model.
+- [Your server as a function](https://monkey.org/~marius/funsrv.pdf)
 
-### Minimal
+## Installation
+
+If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+
+1. Add raxx to your list of dependencies in `mix.exs`:
+
+    ```elixir
+    def deps do
+      [{:raxx, "~> 0.0.1"}]
+    end
+    ```
+
+2. Raxx apps/routers needs to be mounted Elixir/erlang server using one of the provided adapters. Instructions for this are found in each adapters README
+
+    - [cowboy](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example). Currently just follow example.
+
+## Raxx applications
+
+A Raxx application module has a `handle_request/2` function that takes a `Raxx.Request` and an application environment, as arguments.
+For every incomming HTTP connnection `handle_request/2` is called.
+
+*TODO implement a handler behaviour*
+
+The application may indicate to the server that it should respond with a simple HTTP response buy returning a `Raxx.Response` struct.
+Alternativly the the application may indicate that the connection should be upgraded, in this case it will return an upgrade object specific to the communication protocol required.
+
+Currently the following upgrades are possible with others (such as websockets), in development.
+
+- Server Sent Events
+
+### Raxx.Request
+
+`Raxx.Request`
 
 With the power of Elixirs pattern matching against maps it is possible to handle request routing without a dsl.
+The hello world example is a great example of this.
+For request inspection that cannot be achieved by pattern matching the `Raxx.Request` module provides additional functionality.
+Such as cookie parsing.
 
 ```elixir
-defmodule BasicRouter do
-  # handle the root path
-  def handle_request(%{path: [], method: "GET"}, _env) do
-    %{status: 200, headers: %{}, body: "Hello, World!"}
-  end
+defmodule Router do
+  import Raxx.Request
 
-  # forward to a sub router
-  def handle_request(request = %{path: ["api" | rest]}, env) do
-    ApiRouter.handle_request(%{request | path: rest}, env)
-  end
-
-  # handle a variable segment in path
-  def handle_request(%{path: ["greet", name], method: "GET"}, _env) do
-    %{status: 200, headers: %{}, body: "Hello, #{name}"}
+  def handle_request(request = %{path: ["users"], method: method}) do
+    case method do
+      "GET" ->
+        query = request.query
+        # Get all the users that match a query
+      "POST" ->
+        data = request.body
+        # Create a user with the following data
+      "PATCH" ->
+        user_id = parse_cookies(request)["user-id"]
+        # Update a the details of the user from a cookie session
+    end
   end
 end
 ```
 
-Manually creating all these response hashes can be tedious so the Response module has helpers.
+To see the details of each request object checkout the cowboy example.
+
+*TODO rename the cowboy example to something like, request visualiser*
+
+### Raxx.Response
+
+`Raxx.Response`
+
+Any map with the required keys (`:status`, `:headers`, `:body`) can be interpreted buy the server as a simple HTTP response.
+However it is more usual to return a `Raxx.Response` struct which has sensible defaults for all fields.
+
+Manually creating response maps can be tedious.
+The `Raxx.Response` module has several helpers for creating response maps.
+This include setting status codes, manipulating cookies
 
 ```elixir
 defmodule FooRouter do
   import Raxx.Response
   def handle_request(%{path: ["users"], method: "GET"}, _env) do
-    ok("All user: Andy, Bethany, Clive")
+    ok("All users: Andy, Bethany, Clive")
   end
 
   def handle_request(%{path: ["users"], method: "POST", body: data}, _env) do
@@ -77,7 +128,7 @@ defmodule FooRouter do
       {:error, :already_exists} -> conflict("sorry")
       {:error, :bad_params} -> bad_request("sorry")
       {:error, :database_fail} -> bad_gateway("sorry")
-      {:error, _unknown} -> internal_server_error("Well thats weird")
+      {:error, _unknown} -> internal_server_error("Well that's weird")
     end
   end
 
@@ -158,31 +209,8 @@ Some outstanding questions about Server Sent Events functionality.
 
 [HTML living standard](https://html.spec.whatwg.org/multipage/comms.html#server-sent-events)
 
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
-
-  1. Add raxx to your list of dependencies in `mix.exs`:
-
-        def deps do
-          [{:raxx, "~> 0.0.1"}]
-        end
-
-  2. Raxx apps/routers needs to be mounted Elixir/erlang server using one of the provided adapters. Instructions for this are found in each adapters README
-
-    - [cowboy](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example). Currently just follow example.
-
 ## Contributing
 
 If you have Elixir installed on your machine then you can treat this project as a normal mix project and run tests via `mix test`.
 
 If required a development environment can be created using [Vagrant](www.vagrantup.com).
-
-### Principles
-
-- Stateless HTTP request fulfill a valuable role in modern applications and will continue to do so.
-- Handling other communication patterns as plug intends to do just adds complexity which is unnecessary on a whole class of applications.
-- Use Ruby rack and Clojure ring as inspiration for naming but be happy to break away from historic CGI-style header names.
-- Surface utilities so that it can be used in general HTTP based applications
-- Only return json if json is asked for.
-- [Your server as a function](https://monkey.org/~marius/funsrv.pdf)

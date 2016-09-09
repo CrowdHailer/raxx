@@ -1,4 +1,18 @@
 defmodule Raxx.Request do
+  @moduledoc """
+  HTTP requests to a Raxx application are encapsulated in a `Raxx.Request` struct.
+
+  The contents are itemised below:
+
+  | **host** | The location of the hosting server, as a binary. e.g. `www.example.com`. |
+  | **port** | The connection port on the server, as an integer. |
+  | **method** | The HTTP request method, such as “GET” or “POST”, as a binary. This cannot ever be an empty string, and is always uppercase. |
+  | **path** | The remainder of the request URL's “path”, split into segments. It designates the virtual “location” of the request's target within the application. This may be an empty array, if the requested URL targets the application root. |
+  | **query** | The query parameters from the URL search string, formatted as a map of strings. |
+  | **headers** | The headers from the HTTP request as a map of strings. Note all headers will be downcased, e.g. `%{"content-type" => "text/plain"}` |
+  | **body** | The body content sent with the request |
+  """
+
   defstruct [
     host: "www.example.com",
     port: 80,

@@ -29,8 +29,7 @@ defmodule Hello do
 end
 ```
 
-Example of a simple, dynamic Raxx application.
-See the [Cowboy example](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example) for how to mount a Raxx application to the cowboy server.
+This Raxx app is mounted on the elli server in the [HelloElli](https://github.com/CrowdHailer/raxx/tree/master/example/hello_elli) example.
 
 ### Principles
 
@@ -55,7 +54,8 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 
 2. Raxx apps/routers needs to be mounted Elixir/erlang server using one of the provided adapters. Instructions for this are found in each adapters README
 
-    - [cowboy](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example). Currently just follow example.
+    - [cowboy](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example).
+    - [elli](https://github.com/CrowdHailer/raxx/tree/master/example/hello_elli).
 
 ## Raxx applications
 

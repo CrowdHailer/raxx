@@ -20,7 +20,7 @@ defmodule Raxx.Elli.ChunkTest do
     headers = %{"accept" => "text/event-stream",
       "cache-control" => "no-cache",
       "connection" => "keep-alive"}
-    IO.inspect(port)
+    # IO.inspect(port)
     {:ok, %{id: ref}} = HTTPoison.get("localhost:#{port}", headers, stream_to: self)
     # receive do
     #   a ->

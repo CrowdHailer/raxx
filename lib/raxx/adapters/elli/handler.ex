@@ -1,11 +1,15 @@
 defmodule Raxx.Adapters.Elli.Handler do
   @behaviour :elli_handler
 
-  def handle(request, {router, env})do
-    response = router.handle_request(normalise_request(request), env)
+  # router rename raxx_handler
+  def handle(elli_request, {router, env})do
+    request = normalise_request(elli_request)
+    response = router.handle_request(request, env)
     case response do
       %{status: status, headers: headers, body: body} ->
         {status, marshal_headers(headers), body}
+      {Raxx.Streaming, mod, env, opts} ->
+        {:chunk, Map.get(opts, :headers, []), Map.get(opts, :initial, "")}
     end
   end
 

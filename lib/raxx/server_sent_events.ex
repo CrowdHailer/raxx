@@ -27,4 +27,18 @@ defmodule Raxx.ServerSentEvents do
       |> Enum.map(fn (line) -> "data: #{line}" end)
     end
   end
+  # TODO test
+  def upgrade(mod, env, opts) do
+    initial = case Map.get(opts, :retry) do
+      :nil ->
+        ""
+      timeout ->
+        "retry: #{timeout}"
+    end
+    Raxx.Streaming.upgrade(mod, env, %{initial: initial, headers: %{
+      "Connection" => "keep-alive",
+      "Content-Type" => "text/event-stream",
+      "Transfer-Encoding" => "chunked"
+    }})
+  end
 end

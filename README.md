@@ -202,7 +202,6 @@ Some outstanding questions about Server Sent Events functionality.
 - [ ] Disallow event of type error.
 - [ ] Handle long poll pollyfill.
 - [ ] Raxx client.
-- [ ] Any shared functionality with file streaming, long pole.
 - [ ] What to do if message handler throws error.
 
 [Link to implementing server in node.js](http://www.html5rocks.com/en/tutorials/eventsource/basics/)

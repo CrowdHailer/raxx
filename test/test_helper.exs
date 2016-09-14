@@ -15,5 +15,11 @@ defmodule Raxx.TestSupport.Responder do
     end
   end
 end
-
+case Application.ensure_all_started(:cowboy) do
+  {:ok, _} ->
+    :ok
+  {:error, {:cowboy, _}} ->
+    raise "could not start the cowboy application. Please ensure it is listed " <>
+          "as a dependency both in deps and application in your mix.exs"
+end
 ExUnit.start()

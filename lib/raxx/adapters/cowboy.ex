@@ -1,57 +1,31 @@
-defmodule Raxx.Adapters.Cowboy.ServerSentEvents do
-  def upgrade(cowboy_request, %{handler: handler, options: options}) do
-    # If invalid content headers should return a 501
-    # http://ninenines.eu/docs/en/cowboy/1.0/guide/rest_flowcharts/
-    # If not a get method should return 405
-    # ^^^ This logic should be in Raxx.SSE not in the adapter as same for all servers
-    {:ok, chunked_request} = :cowboy_req.chunked_reply(
-      200,
-      [{"content-type", "text/event-stream"},
-      {"cache-control", "no-cache"},
-      {"connection", "keep-alive"}],
-      cowboy_request
-    )
-
-
-    case handler.handle_upgrade(options) do
-      # Possibly return list of events so we can send each an noop is empty list
-      :nil -> :no_op
-      #  FIXME event untested
-      event ->
-        :ok = :cowboy_req.chunk(Raxx.ServerSentEvents.event_to_string(event), chunked_request)
-      # FIXME if closes connection at this point should return 204
-    end
-    {:loop, chunked_request, {handler, options}}
-  end
-  # FIXME test what happens when a request that does not accept text/event-stream is sent to a SSE endpoint
-  # Send an upgrade or failure message to the SSE Handler
-  # Might want the failure message to just be part of a generalised error handler
-
-  def info(message, req, state = {router, raxx_options}) do
-    case router.handle_info(message, raxx_options) do
-      # FIXME nil untested
-      :nil ->
-        {:loop, req, state}
-      event ->
-        :ok = :cowboy_req.chunk(Raxx.ServerSentEvents.event_to_string(event), req)
-        # Empty string closes communication from client end so loop is fine return value here
-        {:loop, req, state}
-    end
-  end
-end
-
 defmodule Raxx.Adapters.Cowboy.Handler do
   def init({:tcp, :http}, req, opts = {router, raxx_options}) do
     case router.handle_request(normalise_request(req), raxx_options) do
-      upgrade = %{upgrade: Raxx.ServerSentEvents} ->
-        Raxx.Adapters.Cowboy.ServerSentEvents.upgrade(req, upgrade)
+      upgrade = %Raxx.Streaming{} ->
+        {:ok, chunked_request} = :cowboy_req.chunked_reply(
+          200,
+          [{"content-type", "text/event-stream"},
+          {"cache-control", "no-cache"},
+          {"connection", "keep-alive"}],
+          req
+        )
+        if upgrade.initial != "" do
+          :ok = :cowboy_req.chunk(upgrade.initial, chunked_request)
+        end
+        {:loop, chunked_request, {Raxx.Streaming, opts}}
       response ->
         respond(req, response, opts)
     end
   end
 
-  def info(message, req, state) do
-    Raxx.Adapters.Cowboy.ServerSentEvents.info(message, req, state)
+  def info(message, req, state = {Raxx.Streaming, {raxx_handler, env}}) do
+    case raxx_handler.handle_info(message, env) do
+      {:send, chunk} ->
+        :ok = :cowboy_req.chunk(chunk, req)
+      :nosend ->
+        :ok
+    end
+    {:loop, req, state}
   end
 
   def handle(req, state) do

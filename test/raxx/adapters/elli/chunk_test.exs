@@ -1,9 +1,3 @@
-defmodule Raxx.Streaming do
-  def setup(mod, env, opts \\ %{}) do
-    {__MODULE__, mod, env, opts}
-  end
-end
-
 defmodule Raxx.TestSupport.Chunks do
   def handle_request(request, env) do
     chunks = env.chunks
@@ -26,7 +20,7 @@ defmodule Raxx.Elli.ChunkTest do
     port = 2111
     {:ok, _pid} = :elli.start_link [
       callback: Raxx.Adapters.Elli.Handler,
-      callback_args: {Raxx.TestSupport.Chunks, %{chunks: ["1", "2", "3"]}},
+      callback_args: {Raxx.TestSupport.Chunks, %{chunks: ["1", "2"]}},
       port: port]
     {:ok, %{port: port}}
   end

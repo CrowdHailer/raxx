@@ -5,6 +5,7 @@ defmodule Raxx.TestSupport.Forwarder do
     Raxx.Response.no_content()
   end
 end
+
 defmodule Raxx.TestSupport.Responder do
   def handle_request(request, env) do
     pid = Map.get(env, :target)
@@ -15,6 +16,24 @@ defmodule Raxx.TestSupport.Responder do
     end
   end
 end
+
+defmodule Raxx.TestSupport.Streaming do
+  def handle_request(request, env) do
+    [initial | chunks] = env.chunks
+    Process.send_after(self(), chunks, 500)
+    Raxx.Streaming.upgrade(__MODULE__, env, %{initial: initial})
+  end
+
+  # handle cast?
+  def handle_info([], env) do
+    :nosend
+  end
+  def handle_info([message | chunks], env) do
+    Process.send_after(self(), chunks, 500)
+    {:send, message}
+  end
+end
+
 case Application.ensure_all_started(:cowboy) do
   {:ok, _} ->
     :ok

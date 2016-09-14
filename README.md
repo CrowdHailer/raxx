@@ -156,37 +156,34 @@ See sever sent events in examples directory.
 
 ```elixir
 defmodule ServerSentEvents.Router do
-  import Raxx.Response
-  # Can't use ServerSentEvents Handler in same module as other Streaming handlers.
-  import Raxx.ServerSentEvents
+  alias Raxx.Response
+  alias Raxx.ServerSentEvents, as: SSE
 
   def handle_request(%{path: [], method: "GET"}, _opts) do
-    ok(home_page)
+    Response.ok(home_page)
   end
 
-  def handle_request(%{path: ["events"], method: "GET"}, opts) do
-    upgrade(opts, __MODULE__)
+  def handle_request(%{path: ["events"], method: "GET"}, env) do
+    Process.send_after(self, 0, 1000)
+    SSE.upgrade(__MODULE__, env, %{initial: "hello"})
   end
 
   def handle_request(_request, _opts) do
-    not_found("Page not found")
+    Response.not_found("Page not found")
   end
 
-  def handle_upgrade(_options) do
-    Process.send_after(self, 0, 1000)
-    event("hello")
-  end
-
+  # handle_info
   def handle_info(10, _opts) do
-    close()
+    {:send, ""}
   end
   def handle_info(i, _opts) when rem(i, 2) == 0 do
     Process.send_after(self, i + 1, 1000)
-    event(Integer.to_string(i))
+    chunk = SSE.Event.new("#{i}", event: "count") |> SSE.Event.to_chunk
+    {:send, chunk}
   end
   def handle_info(i, _opts) do
     Process.send_after(self, i + 1, 1000)
-    no_event
+    :nosend
   end
 
   defp home_page do

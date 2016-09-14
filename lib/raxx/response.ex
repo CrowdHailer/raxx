@@ -118,7 +118,7 @@ defmodule Raxx.Response do
   # Will not expire session cookies.
   def expire_cookie(r = %{headers: headers}, key) do
     cookies = Map.get(headers, "set-cookie", [])
-    %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT, path=/"]}}
+    %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/"]}}
   end
 
   defp redirect_page(path) do

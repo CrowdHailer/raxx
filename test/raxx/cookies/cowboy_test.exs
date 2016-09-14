@@ -42,7 +42,7 @@ defmodule Raxx.Cookies.CowboyTest do
   test "add custom headers to request", %{port: port} do
     {:ok, _pid} = raxx_up(port, {Raxx.Cookies.TestHandler, %{}})
     {:ok, %{headers: headers}} = HTTPoison.get("localhost:#{port}")
-    |> IO.inspect
+    # |> IO.inspect
     header = Enum.find(headers, fn
       ({"set-cookie", _}) -> true
       _ -> false

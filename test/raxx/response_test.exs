@@ -53,8 +53,9 @@ defmodule Raxx.ResponseTest do
     assert "text/plain" == Response.get_header(response, "Content-Type")
   end
 
+  @tag :skip
   test "can calculate content-length from content" do
-    assert true
+    # assert true
     # NOTE cowboy automatically sorts out the content length.
     # Setting the wrong length causes and error so this is not implemented.
     # Might need to be added in the future for other servers.
@@ -73,6 +74,6 @@ defmodule Raxx.ResponseTest do
   test "can expire a cookie" do
     response = Response.ok() |> Response.expire_cookie("foo")
     %{headers: %{"set-cookie" => [set_cookie_string]}} = response
-    assert "foo=;expires=Thu, 01 Jan 1970 00:00:00 GMT" == set_cookie_string
+    assert "foo=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/" == set_cookie_string
   end
 end

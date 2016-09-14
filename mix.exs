@@ -20,6 +20,7 @@ defmodule Raxx.Mixfile do
   defp deps do
     [
       {:cowboy, "1.0.4"},
+      {:elli, "~> 1.0", only: :test},
       {:httpoison, "~> 0.8.0"},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]

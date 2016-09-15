@@ -133,6 +133,7 @@ defmodule Raxx.DebugPage do
   @radius 5
 
   defp get_snippet(file, line) do
+    # This does interesting things to highlight the line in question, could be extracted tested.
     if File.regular?(file) and is_integer(line) do
       to_discard = max(line - @radius - 1, 0)
       lines = File.stream!(file) |> Stream.take(line + 5) |> Stream.drop(to_discard)
@@ -149,6 +150,8 @@ defmodule Raxx.DebugPage do
   end
 
   defp with_line_number(lines, initial, highlight) do
+    # Could do different things here with the snippet.
+    # Possibly return struct with %{pre, focus, post}
     Enum.map_reduce(lines, initial, fn(line, acc) ->
       {{acc, line, highlight}, acc + 1}
     end) |> elem(0)

@@ -12,6 +12,13 @@ defmodule Plugger.Router do
    get "/exception" do
      Enum.map([], 1, 6, 9)
    end
+   get "/ouch" do
+     __MODULE__.ouch(1, 2)
+   end
+
+   def ouch do
+     ""
+   end
 
    match _ do
      send_resp(conn, 200, "Hello from plug")

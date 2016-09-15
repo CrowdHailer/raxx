@@ -25,8 +25,13 @@ defmodule Trouble do
     throw :bad
   end
   def handle_request(%{path: ["exception"]}, _env) do
+    __MODULE__.ouch(1,2)
     # Raxx.Response.ok(1, 2, 3)
     1/0
+  end
+
+  def ouch do
+    Raxx.Response.ok
   end
 
   def handle_request(%{path: _unknown}, _env) do

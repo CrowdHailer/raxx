@@ -39,6 +39,7 @@ This Raxx app is mounted on the elli server in the [HelloElli](https://github.co
 - Be a good otp citizen, work well in an umbrella app,
 - Raxx is designed to be the foundation of a VC (view controller) framework. Other applications in the umbrella should act as the model.
 - [Your server as a function](https://monkey.org/~marius/funsrv.pdf)
+- No support for working with errors, throws, exits. We handle them in debugging because elixir is a dynamic language but they should not be used for routing or responses other than 500.
 
 ## Installation
 

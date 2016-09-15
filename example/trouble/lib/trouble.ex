@@ -7,7 +7,7 @@ defmodule Trouble do
     children = [
       worker(:elli, [[
         callback: Raxx.Adapters.Elli.Handler,
-        callback_args: {Raxx.ErrorHandler, %{next: __MODULE__}},
+        callback_args: {Raxx.ErrorHandler, %{next: __MODULE__, app: :trouble}},
         port: 8080]])
     ]
 
@@ -23,6 +23,10 @@ defmodule Trouble do
 
   def handle_request(%{path: ["throw"]}, _env) do
     throw :bad
+  end
+  def handle_request(%{path: ["exception"]}, _env) do
+    # Raxx.Response.ok(1, 2, 3)
+    1/0
   end
 
   def handle_request(%{path: _unknown}, _env) do

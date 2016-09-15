@@ -20,6 +20,7 @@ defmodule Raxx.DebuggerTest do
     assert "Dandy" = response.body
   end
 
+  @tag :skip
   test "handling a throw" do
     response = Raxx.ErrorHandler.handle_request(Raxx.Test.get("/throw"), %{next: TroubleApp})
     assert 500 = response.status
@@ -29,6 +30,7 @@ defmodule Raxx.DebuggerTest do
     assert response.body =~ "<p>path: /throw</p>"
   end
 
+  @tag :skip
   test "handling an unknow path" do
     response = Raxx.ErrorHandler.handle_request(Raxx.Test.get("/unknown"), %{next: TroubleApp})
     assert 500 = response.status

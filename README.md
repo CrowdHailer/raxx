@@ -5,9 +5,7 @@
 1. An interface specification for Elixir webservers and Elixir application.
 2. A set of tools to help develop Raxx-compliant web applications
 
-*Raxx is inspired by the [Ruby's Rack interface](http://rack.github.io/) and [Clojure's Ring interface](https://github.com/ring-clojure).*
-
-[Documentation for Raxx is available online](TODO hex)
+[Documentation for Raxx is available online](https://hexdocs.pm/raxx)
 
 ## Hello, World!
 
@@ -40,6 +38,8 @@ This Raxx app is mounted on the elli server in the [HelloElli](https://github.co
 - Raxx is designed to be the foundation of a VC (view controller) framework. Other applications in the umbrella should act as the model.
 - [Your server as a function](https://monkey.org/~marius/funsrv.pdf)
 - No support for working with errors, throws, exits. We handle them in debugging because elixir is a dynamic language but they should not be used for routing or responses other than 500.
+
+*Raxx is inspired by the [Ruby's Rack interface](http://rack.github.io/) and [Clojure's Ring interface](https://github.com/ring-clojure).*
 
 ## Installation
 

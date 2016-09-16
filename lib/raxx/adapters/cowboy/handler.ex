@@ -1,10 +1,11 @@
 defmodule Raxx.Adapters.Cowboy.Handler do
+  @moduledoc false
   def init({:tcp, :http}, req, opts = {router, raxx_options}) do
     case router.handle_request(normalise_request(req), raxx_options) do
       upgrade = %Raxx.Streaming{} ->
         {:ok, chunked_request} = :cowboy_req.chunked_reply(
           200,
-          [{"content-type", "text/event-stream"},
+          [{"content-type", "text/event-stream"}, # This should not be set for all chunked replies.
           {"cache-control", "no-cache"},
           {"connection", "keep-alive"}],
           req

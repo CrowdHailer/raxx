@@ -4,7 +4,7 @@ defmodule Raxx.TestSupport.Chunks do
     IO.inspect(chunks)
     Process.send_after(self(), chunks, 500)
     Process.send_after(self(), {:chunk, "1232"}, 200)
-    Raxx.Streaming.setup(__MODULE__, env, %{initial: "opening"})
+    Raxx.Streaming.upgrade(__MODULE__, env, %{initial: "opening"})
   end
 
   # handle cast?

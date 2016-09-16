@@ -1,4 +1,5 @@
 defmodule Raxx.Adapters.Elli.Handler do
+  @moduledoc false
   @behaviour :elli_handler
 
   # router rename raxx_handler

@@ -1,4 +1,14 @@
 defmodule Raxx.Response do
+  @moduledoc """
+  HTTP responses from a Raxx application are encapsulated in a `Raxx.Response` struct.
+
+  The contents are itemised below:
+
+  | **status** | The HTTP status code for the response: `1xx, 2xx, 3xx, 4xx, 5xx` |
+  | **headers** | The response headers as a map: `%{"content-type" => ["text/plain"]}` |
+  | **body** | The response body, by default an empty string. |
+  """
+
   defstruct [
     status: 0,
     headers: %{},
@@ -72,12 +82,15 @@ defmodule Raxx.Response do
   # FIXME allow only iodata to be body, can't find is_iodata guard
   # https://tools.ietf.org/html/rfc2616#section-6.1.1
   for {reason_phrase, status_code} <- statuses do
+    if status_code != 200 do
+      @doc false
+    end
     def unquote(reason_phrase)(body \\ "", headers_map \\ %{}) do
       %{status: unquote(status_code), body: body, headers: fix_headers(headers_map)}
      end
   end
 
-  def fix_headers(headers_map) do
+  defp fix_headers(headers_map) do
     headers_map
     |> Enum.map(fn
       # FIXME could be an issue with iodata that should be single header getting split
@@ -89,6 +102,11 @@ defmodule Raxx.Response do
     |> Enum.into(%{})
   end
 
+  @doc """
+  Return a `Raxx.Response` that informs the client that the resouce has been found elsewhere.
+
+  This function sets a `Location` header as well as sending a redirection page.
+  """
   def redirect(path, headers \\ %{}) do
     # TODO Plug checks that the path does not begin with '//' or no '/'
     %{
@@ -104,18 +122,30 @@ defmodule Raxx.Response do
   def client_error?(%{status: code}), do: 400 <= code and code < 500
   def server_error?(%{status: code}), do: 500 <= code and code < 600
 
-  def get_header(r = %{headers: headers}, header_name) do
+  @doc """
+  Returns the header value set on the response object specified by `name`.
+  """
+  def get_header(%{headers: headers}, header_name) do
     header_name = String.downcase(header_name)
-    [header_value] = headers[header_name]
+    [header_value] = headers[header_name] # Assumes single header value
     header_value
   end
 
+  @doc """
+  Adds a set cookie header to the response.
+
+  For options see `Raxx.Cookie.Attributes`
+  """
   def set_cookie(r = %{headers: headers}, key, value, options \\ %{}) do
     cookies = Map.get(headers, "set-cookie", [])
     %{r | headers: Map.merge(headers, %{"set-cookie" => cookies ++ [Raxx.Cookie.new(key, value, options) |> Raxx.Cookie.set_cookie_string]})}
   end
 
-  # Will not expire session cookies.
+  @doc """
+  Adds a cookie header to the response, that will expire the cookie with the given key.
+
+  **NOTE:** Will not expire session cookies.
+  """
   def expire_cookie(r = %{headers: headers}, key) do
     cookies = Map.get(headers, "set-cookie", [])
     %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/"]}}
@@ -142,7 +172,7 @@ defmodule Raxx.Response do
 
   defp escape_char(char), do: << char >>
 
-  def escape(buffer) do
+  defp escape(buffer) do
     IO.iodata_to_binary(for <<char <- buffer>>, do: escape_char(char))
   end
 end

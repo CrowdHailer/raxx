@@ -13,6 +13,18 @@ defmodule Raxx.Request do
   | **body** | The body content sent with the request |
   """
 
+  @type request :: %__MODULE__{
+    host: binary,
+    port: :inet.port_number,
+    method: binary,
+    path: [binary],
+    query: %{binary => binary},
+    headers: %{binary => binary}, # FIXME %{binary => [binary]},
+    body: binary
+  }
+
+  @type cookies :: %{binary => binary}
+
   defstruct [
     host: "www.example.com",
     port: 80,
@@ -23,6 +35,10 @@ defmodule Raxx.Request do
     body: ""
   ]
 
+  @doc """
+  Fetches and parse cookies from the request.
+  """
+  @spec parse_cookies(request) :: cookies
   def parse_cookies(%{headers: headers}) do
     case Map.get(headers, "cookie") do
       nil -> Raxx.Cookie.parse([])

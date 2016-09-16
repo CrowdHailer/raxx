@@ -63,29 +63,59 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 A Raxx application module has a `handle_request/2` function that takes a `Raxx.Request` and an application environment, as arguments.
 For every incomming HTTP connnection `handle_request/2` is called.
 
-*TODO implement a handler behaviour*
-
 The application may indicate to the server that it should respond with a simple HTTP response buy returning a `Raxx.Response` struct.
-Alternativly the the application may indicate that the connection should be upgraded, in this case it will return an upgrade object specific to the communication protocol required.
 
-Currently the following upgrades are possible with others (such as websockets), in development.
+```elixir
+defmodule MySimpleApp do
+  def handle_request(_r, _env), do: Raxx.Response.ok()
+end
+```
 
+Alternativly the the application may indicate that the connection should be upgraded.
+In the case of an upgrade the returned upgrade object specifies the communication protocol required.
+
+```elixir
+defmodule MyStreamingApp do
+  def handle_request(_r, env), do: Raxx.Streaming.upgrade(__MODULE__, env)
+  def handle_info(message, _env), do: {:send, "ping"}
+end
+```
+
+Currently the following upgraded protocols are supported, with others (such as websockets), in development.
+
+- HTTP streaming
 - Server Sent Events
 
 ### Raxx.Request
 
 `Raxx.Request`
 
-With the power of Elixirs pattern matching against maps it is possible to handle request routing without a dsl.
+HTTP requests to a Raxx application are encapsulated in a `Raxx.Request` struct.
+
+```elixir
+%Raxx.Request{
+  host: "www.example.com",
+  path: ["some", "path"],
+  ...
+}
+```
+
+Data can easily be read from the request directly and through pattern matching.
+This allows for expressive routing in raxx apps without a routing DSL.
 The hello world example is a great example of this.
-For request inspection that cannot be achieved by pattern matching the `Raxx.Request` module provides additional functionality.
-Such as cookie parsing.
+
+The `Raxx.Request` module provides additional functionality for inspect the request.
+For example inspecting cookies.
 
 ```elixir
 defmodule Router do
   import Raxx.Request
 
-  def handle_request(request = %{path: ["users"], method: method}) do
+  def handle_request(request = %{path: ["api" | rest]}, env) do
+    ApiRouter.handle_request(%{request | path: rest}, env)
+  end
+
+  def handle_request(request = %{path: ["users"], method: method}, _env) do
     case method do
       "GET" ->
         query = request.query
@@ -101,57 +131,84 @@ defmodule Router do
 end
 ```
 
-To see the details of each request object checkout the cowboy example.
-
-*TODO rename the cowboy example to something like, request visualiser*
+To see the details of each request object checkout the [cowboy example](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example).
 
 ### Raxx.Response
 
 `Raxx.Response`
 
-Any map with the required keys (`:status`, `:headers`, `:body`) can be interpreted buy the server as a simple HTTP response.
+Any map with the required keys (`:status`, `:headers`, `:body`) can be interpreted by the server as a simple HTTP response.
 However it is more usual to return a `Raxx.Response` struct which has sensible defaults for all fields.
 
-Manually creating response maps can be tedious.
+Manually creating response structs can be tedious.
 The `Raxx.Response` module has several helpers for creating response maps.
 This include setting status codes, manipulating cookies
 
 ```elixir
 defmodule FooRouter do
-  import Raxx.Response
+  alias Raxx.Response
   def handle_request(%{path: ["users"], method: "GET"}, _env) do
-    ok("All users: Andy, Bethany, Clive")
+    Response.ok("All users: Andy, Bethany, Clive")
   end
 
   def handle_request(%{path: ["users"], method: "POST", body: data}, _env) do
     case MyApp.create_user(data) do
-      {:ok, user} -> created("New user #{user}")
-      {:error, :already_exists} -> conflict("sorry")
-      {:error, :bad_params} -> bad_request("sorry")
-      {:error, :database_fail} -> bad_gateway("sorry")
-      {:error, _unknown} -> internal_server_error("Well that's weird")
+      {:ok, user} -> Response.created("New user #{user}")
+      {:error, :already_exists} -> Response.conflict("sorry")
+      {:error, :bad_params} -> Response.bad_request("sorry")
+      {:error, :database_fail} -> Response.bad_gateway("sorry")
+      {:error, _unknown} -> Response.internal_server_error("Well that's weird")
     end
   end
 
   def handle_request(%{path: ["users"], method: _}, _env) do
-    method_not_allowed("Don't do that")
+    Response.method_not_allowed("Don't do that")
   end
 
   def handle_request(%{path: ["users", id], method: "GET"}, _env) do
     case MyApp.get_user(id) do
-      {:ok, user} -> ok("New user #{user}")
-      {:error, nil} -> not_found("User unknown")
-      {:error, :deleted} -> gone("User deleted")
+      {:ok, user} -> Response.ok("New user #{user}")
+      {:error, nil} -> Response.not_found("User unknown")
+      {:error, :deleted} -> Response.gone("User deleted")
     end
   end
 
   def handle_request(_request, _env) do
-    not_found("Sorry didn't get that")
+    Response.not_found("Sorry didn't get that")
   end
 end
 ```
 
-### Raxx Server Sent Events
+### Raxx.Streaming
+
+`Raxx.Streaming`
+
+The HTTP streaming mechanism keeps a request open indefinitely.
+A Raxx application that returns a `Raxx.Streaming` struct from a call to `handle_request/2`, is indicating that it wishes to send the response in chunks.
+A `Raxx.Streaming` struct encapsulates all the information required to upgrade the connection.
+
+```elixir
+%Raxx.Streaming{
+  handler: MyHandler,
+  environment: :none,
+  ...
+}
+```
+
+A streaming handler must implement a `handle_info/2` callback.
+This callback is called everytime the request process recieves a message, taking the message and environment as arguments.
+
+```elixir
+defmodule Ping do
+  def handler_request(_, _), do: Raxx.Streaming.upgrade(__MODULE__, nil)
+
+  def handle_info({:data, chunk}), do: {:send, chunk}
+  def handle_info({_), do: :nosend
+end
+```
+
+
+### Raxx.ServerSentEvents
 
 See sever sent events in examples directory.
 
@@ -205,6 +262,21 @@ Some outstanding questions about Server Sent Events functionality.
 [Link to implementing server in node.js](http://www.html5rocks.com/en/tutorials/eventsource/basics/)
 
 [HTML living standard](https://html.spec.whatwg.org/multipage/comms.html#server-sent-events)
+
+### Raxx.Test
+
+`Raxx.Test`
+
+This module provides helpers for testing Raxx applications.
+
+```elixir
+test "hello app says hi" do
+  request = Raxx.Test.get("")
+  response = MyApp.handle_request(request, :no_env)
+  assert 200 = response.status
+  assert "Hello, World!" = response.body
+end
+```
 
 ## Contributing
 

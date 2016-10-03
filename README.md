@@ -7,6 +7,8 @@
 
 [Documentation for Raxx is available online](https://hexdocs.pm/raxx)
 
+[Introductory talk I gave at Elixir.LDN](https://www.youtube.com/watch?v=80AXtvXFIA4&index=2&list=PLWbHc_FXPo2ivlIjzcaHS9N_Swe_0hWj0)
+
 ## Hello, World!
 
 ```elixir

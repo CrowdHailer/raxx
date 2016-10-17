@@ -16,7 +16,7 @@ defmodule Raxx.Cowboy.StreamingTest do
     headers = %{"accept" => "text/event-stream",
       "cache-control" => "no-cache",
       "connection" => "keep-alive"}
-    {:ok, %{id: ref}} = HTTPoison.get("localhost:#{port}", headers, stream_to: self)
+    {:ok, %{id: _ref}} = HTTPoison.get("localhost:#{port}", headers, stream_to: self)
     assert_receive %{chunk: "a"}, 1000
     assert_receive %{chunk: "b"}, 1000
     assert_receive %{chunk: "c"}, 1000

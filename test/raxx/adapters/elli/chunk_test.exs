@@ -1,5 +1,5 @@
 defmodule Raxx.TestSupport.Chunks do
-  def handle_request(request, env) do
+  def handle_request(_request, env) do
     chunks = env.chunks
     IO.inspect(chunks)
     Process.send_after(self(), chunks, 500)
@@ -8,7 +8,7 @@ defmodule Raxx.TestSupport.Chunks do
   end
 
   # handle cast?
-  def handle_info(message, env) do
+  def handle_info(message, _env) do
     IO.inspect(message)
   end
 end
@@ -31,7 +31,7 @@ defmodule Raxx.Elli.ChunkTest do
     headers = %{"accept" => "text/event-stream",
       "cache-control" => "no-cache",
       "connection" => "keep-alive"}
-    {:ok, %{id: ref}} = HTTPoison.get("localhost:#{port}", headers, stream_to: self)
+    {:ok, %{id: _ref}} = HTTPoison.get("localhost:#{port}", headers, stream_to: self)
     receive do
       a ->
         IO.inspect(a)

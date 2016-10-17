@@ -46,6 +46,7 @@ defmodule Raxx.DebuggerTest do
       :foo + 1
     rescue
       x in [ArithmeticError] ->
+        x
         # IO.inspect(x)
         # System.stacktrace
         # |> IO.inspect

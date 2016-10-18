@@ -89,7 +89,8 @@ defmodule Raxx.Adapters.ResponseCase do
       end
 
       def hello_world(request) do
-        Raxx.Response.ok("Hello, World!")
+        body = "Hello, World!"
+        Raxx.Response.ok(body, [{"content-length", :erlang.iolist_size(body)}])
       end
 
       test "Hello response has correct status", %{port: port} do
@@ -99,7 +100,8 @@ defmodule Raxx.Adapters.ResponseCase do
 
       test "Hello response has content length header", %{port: port} do
         {:ok, %{headers: headers}} = HTTPoison.get("localhost:#{port}/hello_world", [])
-        assert {"Content-Length", "13"} = List.keyfind(headers, "Content-Length", 0)
+        IO.inspect(headers)
+        assert {"content-length", "13"} = List.keyfind(headers, "content-length", 0)
       end
 
       test "Hello response greeting body", %{port: port} do

@@ -90,7 +90,11 @@ defmodule Raxx.Response do
      end
   end
 
-  defp fix_headers(headers_map) do
+  defp fix_headers(headers_list) when is_list(headers_list) do
+    # Enum.map(headers_list, )
+    headers_list
+  end
+  defp fix_headers(headers_map) when is_map(headers_map) do
     headers_map
     |> Enum.map(fn
       # FIXME could be an issue with iodata that should be single header getting split

@@ -14,9 +14,11 @@ defmodule Raxx.Adapters.Ace.Handler do
         mod.handle_request(request, state)
         case mod.handle_request(request, state) do
           %{body: body, headers: headers, status: status} ->
+            hl = Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end)
             raw = [
               "HTTP/1.1 " <> "#{status}" <> "\r\n",
-              "Content-Length: #{:erlang.integer_to_binary(:erlang.byte_size(body))}\r\n",
+              Enum.join(hl, "\r\n"),
+              "\r\n",
               "\r\n",
               body
             ]

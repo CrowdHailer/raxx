@@ -1,4 +1,4 @@
-defmodule Raxx.Ace.ResponseTest do
+defmodule Raxx.Cowboy.ResponseTest do
   use Raxx.Adapters.ResponseCase
 
   setup %{case: case, test: test} do

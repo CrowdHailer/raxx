@@ -57,7 +57,7 @@ defmodule Raxx.Adapters.Ace.Handler do
         {:ok, %Raxx.Request{
           # host: TODO
           # port: TODO
-          method: "#{method}",
+          method: method,
           path: path,
           query: query
         }}
@@ -74,8 +74,9 @@ defmodule Raxx.Adapters.Ace.Handler do
     false
   end
 end
+
 defmodule Raxx.Ace.RequestTest do
-  use ExUnit.Case, async: true
+  use Raxx.Adapters.RequestCase
 
   setup %{case: case, test: test} do
     raxx_app = {Raxx.TestSupport.Forwarder, %{target: self()}}
@@ -95,16 +96,6 @@ defmodule Raxx.Ace.RequestTest do
   test "request shows correct port", %{port: port} do
     {:ok, _resp} = HTTPoison.get("localhost:#{port}")
     assert_receive %{port: ^port}
-  end
-
-  test "request shows correct method", %{port: port} do
-    {:ok, _resp} = HTTPoison.get("localhost:#{port}")
-    assert_receive %{method: "GET"}
-  end
-
-  test "request shows correct method when posting", %{port: port} do
-    {:ok, _resp} = HTTPoison.post("localhost:#{port}", "")
-    assert_receive %{method: "POST"}
   end
 
   test "request shows correct path for root", %{port: port} do

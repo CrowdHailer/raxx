@@ -41,4 +41,22 @@ case Application.ensure_all_started(:cowboy) do
     raise "could not start the cowboy application. Please ensure it is listed " <>
           "as a dependency both in deps and application in your mix.exs"
 end
+
+defmodule Raxx.Adapters.RequestCase do
+  use ExUnit.CaseTemplate
+
+  using do
+    quote location: :keep do
+      test "request shows correct method", %{port: port} do
+        {:ok, _resp} = HTTPoison.get("localhost:#{port}")
+        assert_receive %{method: :GET}
+      end
+
+      test "request shows correct method when posting", %{port: port} do
+        {:ok, _resp} = HTTPoison.post("localhost:#{port}", "")
+        assert_receive %{method: :POST}
+      end
+    end
+  end
+end
 ExUnit.start()

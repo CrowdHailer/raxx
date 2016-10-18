@@ -45,4 +45,28 @@ defmodule Raxx.Request do
       cookie_string -> Raxx.Cookie.parse(cookie_string)
     end
   end
+
+  @doc false
+  # TODO test
+  def parse_path(path_string) do
+    case String.split(path_string, "?") do
+      [path_string, query_string] ->
+        {split_path(path_string), URI.decode_query(query_string)}
+      [path_string] ->
+        {split_path(path_string), %{}}
+    end
+  end
+
+  def split_path(path_string) do
+    path_string
+    |> String.split("/")
+    |> Enum.reject(&empty_string?/1)
+  end
+
+  defp empty_string?("") do
+    true
+  end
+  defp empty_string?(str) when is_binary(str) do
+    false
+  end
 end

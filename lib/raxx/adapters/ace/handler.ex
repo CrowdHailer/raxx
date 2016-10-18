@@ -32,15 +32,7 @@ defmodule Raxx.Adapters.Ace.Handler do
   def decode_http_request(buffer, {:no_method, _, _, _}) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
       {:ok, {:http_request, method, {:abs_path, path_string}, version}, rest} ->
-        [path_string, query_string] = case String.split(path_string, "?") do
-          [p, q] ->
-            [p, q]
-          [p] ->
-            [p, ""]
-        end
-        path = path_string |> String.split("/") |> Enum.reject(&empty_string?/1)
-
-        decode_http_request(rest, {method, {path, URI.decode_query(query_string)}, :no_headers, :no_body})
+        decode_http_request(rest, {method, Raxx.Request.parse_path(path_string), :no_headers, :no_body})
     end
   end
   def decode_http_request(buffer, {method, path, :no_headers, :no_body}) do
@@ -65,12 +57,5 @@ defmodule Raxx.Adapters.Ace.Handler do
   end
   def decode_http_request(buffer) do
     decode_http_request(buffer, {:no_method, :no_path, :no_headers, :no_body})
-  end
-
-  defp empty_string?("") do
-    true
-  end
-  defp empty_string?(str) when is_binary(str) do
-    false
   end
 end

@@ -28,7 +28,7 @@ defmodule Raxx.TestSupport.Streaming do
   def handle_info([], _env) do
     :nosend
   end
-  def handle_info([message | chunks], env) do
+  def handle_info([message | chunks], _env) do
     Process.send_after(self(), chunks, 500)
     {:send, message}
   end
@@ -75,6 +75,36 @@ defmodule Raxx.Adapters.RequestCase do
       test "request shows correct query", %{port: port} do
         {:ok, _resp} = HTTPoison.get("localhost:#{port}/?foo=bar")
         assert_receive %{query: %{"foo" => "bar"}}
+      end
+    end
+  end
+end
+defmodule Raxx.Adapters.ResponseCase do
+  use ExUnit.CaseTemplate
+
+  using do
+    quote location: :keep do
+      def handle_request(request = %{path: path = [function | _rest]}, _env) do
+        apply(__MODULE__, String.to_atom(function), [request])
+      end
+
+      def hello_world(request) do
+        Raxx.Response.ok("Hello, World!")
+      end
+
+      test "Hello response has correct status", %{port: port} do
+        {:ok, response} = HTTPoison.get("localhost:#{port}/hello_world", [])
+        assert %{status_code: 200} = response
+      end
+
+      test "Hello response has content length header", %{port: port} do
+        {:ok, %{headers: headers}} = HTTPoison.get("localhost:#{port}/hello_world", [])
+        assert {"Content-Length", "13"} = List.keyfind(headers, "Content-Length", 0)
+      end
+
+      test "Hello response greeting body", %{port: port} do
+        {:ok, %{body: body}} = HTTPoison.get("localhost:#{port}/hello_world", [])
+        assert "Hello, World!" = body
       end
     end
   end

@@ -16,7 +16,8 @@ defmodule Raxx.Adapters.Ace.Handler do
           %{body: body, headers: headers, status: status} ->
             raw = [
               "HTTP/1.1 " <> "#{status}" <> "\r\n",
-              "\r\n\r\n",
+              "Content-Length: #{:erlang.integer_to_binary(:erlang.byte_size(body))}\r\n",
+              "\r\n",
               body
             ]
             {:send, raw, {app, "", conn}}

@@ -10,7 +10,7 @@ defmodule Raxx.Adapters.Ace.Handler do
       {:ok, request} ->
         {mod, state} = app
         {:ok, {ip, port}} = conn
-        request = %{request | port: port}
+        # request = %{request | port: port}
         mod.handle_request(request, state)
         case mod.handle_request(request, state) do
           %{body: body, headers: headers, status: status_code} ->
@@ -28,13 +28,13 @@ defmodule Raxx.Adapters.Ace.Handler do
     end
   end
 
-  def terminate(reason, {app, buffer, conn}) do
+  def terminate(_reason, {_app, buffer, _conn}) do
     IO.inspect(buffer)
   end
 
   def decode_http_request(buffer, {:no_method, _, _, _}) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
-      {:ok, {:http_request, method, {:abs_path, path_string}, version}, rest} ->
+      {:ok, {:http_request, method, {:abs_path, path_string}, _version}, rest} ->
         decode_http_request(rest, {method, Raxx.Request.parse_path(path_string), :no_headers, :no_body})
     end
   end
@@ -49,9 +49,11 @@ defmodule Raxx.Adapters.Ace.Handler do
       {:ok, {:http_header, _, key, _, value}, rest} ->
         decode_http_request(rest, {method, {path, query}, headers ++ [{key, value}], :no_body})
       {:ok, :http_eoh, body} ->
+        {:Host, authority} = headers |> List.keyfind(:Host, 0)
+        [host, port] = String.split(authority, ":")
         {:ok, %Raxx.Request{
-          # host: TODO
-          # port: TODO
+          host: host,
+          port: :erlang.binary_to_integer(port),
           method: method,
           path: path,
           query: query,

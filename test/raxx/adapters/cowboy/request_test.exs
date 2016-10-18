@@ -12,15 +12,4 @@ defmodule Raxx.Cowboy.RequestTest do
     {:ok, %{port: :ranch.get_port(name)}}
   end
 
-  test "request shows correct host", %{port: port} do
-    {:ok, _resp} = HTTPoison.get("localhost:#{port}")
-    assert_receive %{host: "localhost"}
-  end
-
-  test "request shows correct port", %{port: port} do
-    {:ok, _resp} = HTTPoison.get("localhost:#{port}")
-    assert_receive %{port: ^port}
-  end
-
-
 end

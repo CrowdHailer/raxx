@@ -8,16 +8,4 @@ defmodule Raxx.Ace.RequestTest do
     {:ok, %{port: port}}
   end
 
-  @tag :skip
-  test "request shows correct host", %{port: port} do
-    {:ok, _resp} = HTTPoison.get("localhost:#{port}")
-    assert_receive %{host: "localhost"}
-  end
-
-  @tag :skip
-  # currently only the peer port is available.
-  test "request shows correct port", %{port: port} do
-    {:ok, _resp} = HTTPoison.get("localhost:#{port}")
-    assert_receive %{port: ^port}
-  end
 end

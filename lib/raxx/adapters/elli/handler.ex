@@ -32,7 +32,11 @@ defmodule Raxx.Adapters.Elli.Handler do
     headers = :elli_request.headers(elli_request) |> Enum.map(fn ({k, v}) ->
       {String.downcase(k), String.downcase(v)}
     end)
+    {"Host", authority} = :elli_request.headers(elli_request) |> List.keyfind("Host", 0)
+    [host, port] = String.split(authority, ":")
     %{
+      host: host,
+      port: :erlang.binary_to_integer(port),
       method: method,
       path: path,
       query: query,

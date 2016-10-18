@@ -9,10 +9,4 @@ defmodule Raxx.Elli.RequestTest do
     {:ok, %{port: 2020}}
   end
 
-  test "request assumes maps headers", %{port: port} do
-    {:ok, _resp} = HTTPoison.get("localhost:#{port}/", [{"content-type", "unknown/stuff"}])
-    assert_receive %{headers: %{"Content-Type" => content_type}}
-    assert "unknown/stuff" == content_type
-  end
-
 end

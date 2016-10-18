@@ -76,6 +76,12 @@ defmodule Raxx.Adapters.RequestCase do
         {:ok, _resp} = HTTPoison.get("localhost:#{port}/?foo=bar")
         assert_receive %{query: %{"foo" => "bar"}}
       end
+
+      test "request assumes maps headers", %{port: port} do
+        {:ok, _resp} = HTTPoison.get("localhost:#{port}/", [{"content-type", "unknown/stuff"}])
+        assert_receive %{headers: headers}
+        assert {"content-type", "unknown/stuff"} == List.keyfind(headers, "content-type", 0)
+      end
     end
   end
 end

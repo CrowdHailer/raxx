@@ -20,12 +20,4 @@ defmodule Raxx.Ace.RequestTest do
     {:ok, _resp} = HTTPoison.get("localhost:#{port}")
     assert_receive %{port: ^port}
   end
-
-  @tag :skip
-  test "request assumes maps headers", %{port: port} do
-    {:ok, _resp} = HTTPoison.get("localhost:#{port}/", [{"content-type", "unknown/stuff"}])
-    assert_receive %{headers: %{"content-type" => content_type}}
-    assert "unknown/stuff" == content_type
-  end
-
 end

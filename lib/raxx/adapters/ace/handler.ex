@@ -54,7 +54,10 @@ defmodule Raxx.Adapters.Ace.Handler do
           # port: TODO
           method: method,
           path: path,
-          query: query
+          query: query,
+          headers: Enum.map(headers, fn ({k, v}) ->
+            {String.downcase("#{k}"), String.downcase("#{v}")}
+          end)
         }}
     end
   end

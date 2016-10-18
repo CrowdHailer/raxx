@@ -29,7 +29,9 @@ defmodule Raxx.Adapters.Elli.Handler do
     method = :elli_request.method(elli_request)
     path = :elli_request.path(elli_request)
     query = :elli_request.get_args_decoded(elli_request) |> Enum.into(%{})
-    headers = :elli_request.headers(elli_request) |> Enum.into(%{})
+    headers = :elli_request.headers(elli_request) |> Enum.map(fn ({k, v}) ->
+      {String.downcase(k), String.downcase(v)}
+    end)
     %{
       method: method,
       path: path,

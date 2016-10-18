@@ -56,6 +56,26 @@ defmodule Raxx.Adapters.RequestCase do
         {:ok, _resp} = HTTPoison.post("localhost:#{port}", "")
         assert_receive %{method: :POST}
       end
+
+      test "request shows correct path for root", %{port: port} do
+        {:ok, _resp} = HTTPoison.get("localhost:#{port}")
+        assert_receive %{path: []}
+      end
+
+      test "request shows correct path for sub path", %{port: port} do
+        {:ok, _resp} = HTTPoison.get("localhost:#{port}/sub/path")
+        assert_receive %{path: ["sub", "path"]}
+      end
+
+      test "request shows empty query", %{port: port} do
+        {:ok, _resp} = HTTPoison.get("localhost:#{port}/#")
+        assert_receive %{query: %{}}
+      end
+
+      test "request shows correct query", %{port: port} do
+        {:ok, _resp} = HTTPoison.get("localhost:#{port}/?foo=bar")
+        assert_receive %{query: %{"foo" => "bar"}}
+      end
     end
   end
 end

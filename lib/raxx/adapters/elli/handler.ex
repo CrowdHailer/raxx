@@ -9,7 +9,7 @@ defmodule Raxx.Adapters.Elli.Handler do
     case response do
       %{status: status, headers: headers, body: body} ->
         {status, marshal_headers(headers), body}
-      {Raxx.Streaming, mod, env, opts} ->
+      {Raxx.Streaming, _mod, _env, opts} ->
         {:chunk, Map.get(opts, :headers, []), Map.get(opts, :initial, "")}
     end
   end
@@ -18,7 +18,7 @@ defmodule Raxx.Adapters.Elli.Handler do
     IO.inspect(args)
     :ok
   end
-  def handle_event(a,b,c)do
+  def handle_event(_a,_b,_c)do
     # IO.inspect(a)
     # IO.inspect(b)
     # IO.inspect(c)
@@ -26,8 +26,7 @@ defmodule Raxx.Adapters.Elli.Handler do
   end
 
   def normalise_request(elli_request) do
-    # Elli returns the method as an atom. Maybe this is a better thing to do
-    method = "#{:elli_request.method(elli_request)}"
+    method = :elli_request.method(elli_request)
     path = :elli_request.path(elli_request)
     query = :elli_request.get_args_decoded(elli_request) |> Enum.into(%{})
     headers = :elli_request.headers(elli_request) |> Enum.into(%{})
@@ -39,9 +38,11 @@ defmodule Raxx.Adapters.Elli.Handler do
     }
   end
 
+  # TODO remove this in the future.
+  def marshal_headers(%{}) do
+    []
+  end
   def marshal_headers(headers) do
-    Enum.flat_map(headers, fn ({header, values}) ->
-      Enum.map(values, fn (value) -> {header, value} end)
-    end)
+    headers
   end
 end

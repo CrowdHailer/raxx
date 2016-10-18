@@ -13,10 +13,10 @@ defmodule Raxx.Adapters.Ace.Handler do
         request = %{request | port: port}
         mod.handle_request(request, state)
         case mod.handle_request(request, state) do
-          %{body: body, headers: headers, status: status} ->
+          %{body: body, headers: headers, status: status_code} ->
             hl = Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end)
             raw = [
-              "HTTP/1.1 " <> "#{status}" <> "\r\n",
+              Raxx.Response.status_line(status_code),
               Enum.join(hl, "\r\n"),
               "\r\n",
               "\r\n",

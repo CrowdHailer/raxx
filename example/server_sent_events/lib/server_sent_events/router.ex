@@ -2,11 +2,11 @@ defmodule ServerSentEvents.Router do
   alias Raxx.Response
   alias Raxx.ServerSentEvents, as: SSE
 
-  def handle_request(%{path: [], method: "GET"}, _opts) do
+  def handle_request(%{path: [], method: :GET}, _opts) do
     Response.ok(home_page)
   end
 
-  def handle_request(%{path: ["events"], method: "GET"}, env) do
+  def handle_request(%{path: ["events"], method: :GET}, env) do
     Process.send_after(self, 0, 1000)
     SSE.upgrade(__MODULE__, env, %{initial: "hello"})
   end

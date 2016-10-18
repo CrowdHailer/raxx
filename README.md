@@ -119,7 +119,7 @@ defmodule Router do
 
   def handle_request(request = %{path: ["users"], method: method}, _env) do
     case method do
-      "GET" ->
+      :GET ->
         query = request.query
         # Get all the users that match a query
       "POST" ->
@@ -149,7 +149,7 @@ This include setting status codes, manipulating cookies
 ```elixir
 defmodule FooRouter do
   alias Raxx.Response
-  def handle_request(%{path: ["users"], method: "GET"}, _env) do
+  def handle_request(%{path: ["users"], method: :GET}, _env) do
     Response.ok("All users: Andy, Bethany, Clive")
   end
 
@@ -167,7 +167,7 @@ defmodule FooRouter do
     Response.method_not_allowed("Don't do that")
   end
 
-  def handle_request(%{path: ["users", id], method: "GET"}, _env) do
+  def handle_request(%{path: ["users", id], method: :GET}, _env) do
     case MyApp.get_user(id) do
       {:ok, user} -> Response.ok("New user #{user}")
       {:error, nil} -> Response.not_found("User unknown")
@@ -219,11 +219,11 @@ defmodule ServerSentEvents.Router do
   alias Raxx.Response
   alias Raxx.ServerSentEvents, as: SSE
 
-  def handle_request(%{path: [], method: "GET"}, _opts) do
+  def handle_request(%{path: [], method: :GET}, _opts) do
     Response.ok(home_page)
   end
 
-  def handle_request(%{path: ["events"], method: "GET"}, env) do
+  def handle_request(%{path: ["events"], method: :GET}, env) do
     Process.send_after(self, 0, 1000)
     SSE.upgrade(__MODULE__, env, %{initial: "hello"})
   end

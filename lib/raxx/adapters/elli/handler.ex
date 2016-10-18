@@ -36,7 +36,8 @@ defmodule Raxx.Adapters.Elli.Handler do
       method: method,
       path: path,
       query: query,
-      headers: headers
+      headers: headers,
+      body: :elli_request.body(elli_request)
     }
   end
 

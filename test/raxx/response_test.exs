@@ -61,16 +61,19 @@ defmodule Raxx.ResponseTest do
     # Might need to be added in the future for other servers.
   end
 
+  @tag :skip
   test "can set a session cookie" do
     response = Response.ok() |> Response.set_cookie("foo", "bar")
     assert %{headers: %{"set-cookie" => ["foo=bar"]}} = response
   end
 
+  @tag :skip
   test "can set a secure cookie" do
     response = Response.ok() |> Response.set_cookie("foo", "bar", %{secure: true})
     assert %{headers: %{"set-cookie" => ["foo=bar; Secure"]}} = response
   end
 
+  @tag :skip
   test "can expire a cookie" do
     response = Response.ok() |> Response.expire_cookie("foo")
     %{headers: %{"set-cookie" => [set_cookie_string]}} = response

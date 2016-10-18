@@ -19,7 +19,7 @@ defmodule Raxx.Request do
     method: binary,
     path: [binary],
     query: %{binary => binary},
-    headers: %{binary => binary}, # FIXME %{binary => [binary]},
+    headers: [{binary, binary}],
     body: binary
   }
 
@@ -31,7 +31,7 @@ defmodule Raxx.Request do
     method: "GET", # In ring/rack this is request_method
     path: [], # This is path_info but is often used so be good to shorten
     query: %{}, # comes from the search string
-    headers: %{},
+    headers: [],
     body: ""
   ]
 

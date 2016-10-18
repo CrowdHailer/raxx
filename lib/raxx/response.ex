@@ -11,7 +11,7 @@ defmodule Raxx.Response do
 
   defstruct [
     status: 0,
-    headers: %{},
+    headers: [],
     body: []
     # Return page object so you can test on the contents
   ]
@@ -68,8 +68,8 @@ defmodule Raxx.Response do
     if status_code != 200 do
       @doc false
     end
-    def unquote(function_name)(body \\ "", headers_map \\ %{}) do
-      %{status: unquote(status_code), body: body, headers: fix_headers(headers_map)}
+    def unquote(function_name)(body \\ "", headers \\ []) do
+      %{status: unquote(status_code), body: body, headers: fix_headers(headers)}
     end
   end
 

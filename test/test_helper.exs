@@ -77,10 +77,16 @@ defmodule Raxx.Adapters.RequestCase do
         assert_receive %{query: %{"foo" => "bar"}}
       end
 
-      test "request assumes maps headers", %{port: port} do
+      test "request shows correct header", %{port: port} do
         {:ok, _resp} = HTTPoison.get("localhost:#{port}/", [{"content-type", "unknown/stuff"}])
         assert_receive %{headers: headers}
         assert {"content-type", "unknown/stuff"} == List.keyfind(headers, "content-type", 0)
+      end
+
+      test "request has correct body", %{port: port} do
+        {:ok, _resp} = HTTPoison.post("localhost:#{port}", "blah blah")
+        assert_receive %{body: body}
+        assert "blah blah" == body
       end
     end
   end
@@ -96,7 +102,10 @@ defmodule Raxx.Adapters.ResponseCase do
 
       def hello_world(request) do
         body = "Hello, World!"
-        Raxx.Response.ok(body, [{"content-length", :erlang.iolist_size(body)}])
+        Raxx.Response.ok(body, [
+          {"content-length", "#{:erlang.iolist_size(body)}"},
+          {"custom-header", "my-value"}
+        ])
       end
 
       test "Hello response has correct status", %{port: port} do
@@ -106,8 +115,12 @@ defmodule Raxx.Adapters.ResponseCase do
 
       test "Hello response has content length header", %{port: port} do
         {:ok, %{headers: headers}} = HTTPoison.get("localhost:#{port}/hello_world", [])
-        IO.inspect(headers)
         assert {"content-length", "13"} = List.keyfind(headers, "content-length", 0)
+      end
+
+      test "Hello response has custom header", %{port: port} do
+        {:ok, %{headers: headers}} = HTTPoison.get("localhost:#{port}/hello_world", [])
+        assert {"custom-header", "my-value"} = List.keyfind(headers, "custom-header", 0)
       end
 
       test "Hello response greeting body", %{port: port} do

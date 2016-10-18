@@ -40,11 +40,6 @@ defmodule Raxx.Adapters.Cowboy.Handler do
   end
 
   def respond(cowboy_request, %{status: status, headers: headers, body: body}, opts) do
-    headers = Map.merge(%{"content-type" => "text/html"}, headers) |> Enum.flat_map(fn
-      ({k, values}) when is_list(values) ->
-        Enum.map(values, fn (v) -> {k, v} end)
-      (x) -> [x]
-    end)
     {:ok, resp} = :cowboy_req.reply(status, headers, body, cowboy_request)
     {:ok, resp, opts}
   end
@@ -65,7 +60,7 @@ defmodule Raxx.Adapters.Cowboy.Handler do
     query = URI.decode_query(qs)
 
     {headers, req}   = :cowboy_req.headers req
-    headers = Enum.into(headers, %{})
+    # headers = Enum.into(headers, %{})
 
     # Body
     {:ok, content_type, req} = :cowboy_req.parse_header("content-type", req)
@@ -77,7 +72,7 @@ defmodule Raxx.Adapters.Cowboy.Handler do
     %Raxx.Request{
       host: host,
       port: port,
-      method: method,
+      method: String.to_atom(method),
       path: path,
       query: query,
       headers: headers,
@@ -87,9 +82,6 @@ defmodule Raxx.Adapters.Cowboy.Handler do
 
   def parse_req_body(cowboy_req, :undefined) do
     {:ok, nil, cowboy_req}
-  end
-  def parse_req_body(cowboy_req, {"application", "octet-stream", []}) do
-    {:ok, :todo, cowboy_req}
   end
   def parse_req_body(cowboy_req, {"application", "x-www-form-urlencoded", [{"charset", "utf-8"}]}) do
     {:ok, body_qs, cowboy_req}  = :cowboy_req.body_qs(cowboy_req, [])

@@ -39,6 +39,7 @@ defmodule Raxx.Cookies.CowboyTest do
     )
   end
 
+  @tag :skip
   test "add custom headers to request", %{port: port} do
     {:ok, _pid} = raxx_up(port, {Raxx.Cookies.TestHandler, %{}})
     {:ok, %{headers: headers}} = HTTPoison.get("localhost:#{port}")

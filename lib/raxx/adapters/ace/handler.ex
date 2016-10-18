@@ -57,7 +57,8 @@ defmodule Raxx.Adapters.Ace.Handler do
           query: query,
           headers: Enum.map(headers, fn ({k, v}) ->
             {String.downcase("#{k}"), String.downcase("#{v}")}
-          end)
+          end),
+          body: body
         }}
     end
   end

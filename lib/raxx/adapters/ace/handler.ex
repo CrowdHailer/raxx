@@ -35,11 +35,9 @@ defmodule Raxx.Adapters.Ace.Handler do
   def handle_info(message, {%Raxx.Chunked{app: {mod, state}}, buffer, conn}) do
     case mod.handle_info(message, state) do
       {:chunk, data, state} ->
-        size = :erlang.iolist_size(data) |> :erlang.integer_to_list
-        packet = [size, "\r\n", data, "\r\n"]
-        {:send, packet, {%Raxx.Chunked{app: {mod, state}}, buffer, conn}}
+        {:send, Raxx.Chunked.to_packet(data), {%Raxx.Chunked{app: {mod, state}}, buffer, conn}}
       {:close, state} ->
-        {:send, "0\r\n\r\n", {%Raxx.Chunked{app: {mod, state}}, buffer, conn}}
+        {:send, Raxx.Chunked.end_chunk, {%Raxx.Chunked{app: {mod, state}}, buffer, conn}}
     end
   end
   def terminate(_reason, {_app, buffer, _conn}) do

@@ -1,4 +1,4 @@
-defmodule Raxx.Ace.StreamingTest do
+defmodule Raxx.Ace.ChunkedTest do
   use ExUnit.Case, async: true
 
   setup do
@@ -8,18 +8,21 @@ defmodule Raxx.Ace.StreamingTest do
     {:ok, %{port: port}}
   end
 
-  def handle_request(_r, state) do
-    # Raxx.chunk({__MODULE__, state}, headers: [])
+  def handle_request(_r, %{chunks: chunks}) do
     Process.send_after(self(), :tick, 100)
-    %Raxx.Chunked{app: {__MODULE__, state}}
+    Raxx.Chunked.upgrade({__MODULE__, chunks})
+    # TODO
+    # - implicity leave state and model
+    # - pass custom headers
+    # - pass custom status?
   end
 
-  def handle_info(:tick, state = %{chunks: [chunk | rest]}) do
+  def handle_info(:tick, [chunk | rest]) do
     Process.send_after(self(), :tick, 100)
-    {:chunk, chunk, %{state | chunks: rest}}
+    {:chunk, chunk, rest}
   end
-  def handle_info(:tick, state = %{chunks: []}) do
-    {:close, state}
+  def handle_info(:tick, []) do
+    {:close, []}
   end
 
   test "sends a chunked response with status and headers", %{port: port} do

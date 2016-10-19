@@ -6,23 +6,6 @@ defmodule Raxx.TestSupport.Forwarder do
   end
 end
 
-defmodule Raxx.TestSupport.Streaming do
-  def handle_request(_request, env) do
-    [initial | chunks] = env.chunks
-    Process.send_after(self(), chunks, 500)
-    Raxx.Streaming.upgrade(__MODULE__, env, %{initial: initial})
-  end
-
-  # handle cast?
-  def handle_info([], _env) do
-    :nosend
-  end
-  def handle_info([message | chunks], _env) do
-    Process.send_after(self(), chunks, 500)
-    {:send, message}
-  end
-end
-
 defmodule Raxx.Adapters.RequestCase do
   use ExUnit.CaseTemplate
 
@@ -117,6 +100,35 @@ defmodule Raxx.Adapters.ResponseCase do
       test "Hello response greeting body", %{port: port} do
         {:ok, %{body: body}} = HTTPoison.get("localhost:#{port}/hello_world", [])
         assert "Hello, World!" = body
+      end
+    end
+  end
+end
+defmodule Raxx.Adapters.ChunkedCase do
+  use ExUnit.CaseTemplate
+
+  using do
+    quote location: :keep do
+      def handle_request(_r, %{chunks: chunks}) do
+        Process.send_after(self(), :tick, 100)
+        Raxx.Chunked.upgrade({__MODULE__, chunks})
+        # TODO
+        # - implicity leave state and model
+        # - pass custom headers
+        # - pass custom status?
+      end
+
+      def handle_info(:tick, [chunk | rest]) do
+        Process.send_after(self(), :tick, 100)
+        {:chunk, chunk, rest}
+      end
+      def handle_info(:tick, []) do
+        {:close, []}
+      end
+
+      test "sends a chunked response with status and headers", %{port: port} do
+        {:ok, response} = HTTPoison.get("localhost:#{port}")
+        assert "Hello, World!" == response.body
       end
     end
   end

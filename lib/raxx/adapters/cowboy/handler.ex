@@ -13,12 +13,24 @@ defmodule Raxx.Adapters.Cowboy.Handler do
         if upgrade.initial != "" do
           :ok = :cowboy_req.chunk(upgrade.initial, chunked_request)
         end
-        {:loop, chunked_request, {Raxx.Streaming, opts}}
+      upgrade = %Raxx.Chunked{} ->
+        {:ok, chunked_request} = :cowboy_req.chunked_reply(200, [], req)
+        {:loop, chunked_request, upgrade}
       response ->
         respond(req, response, opts)
     end
   end
 
+  def info(message, req, %Raxx.Chunked{app: {mod, state}}) do
+    case mod.handle_info(message, state) do
+      {:chunk, data, state} ->
+        :ok = :cowboy_req.chunk(data, req)
+        {:loop, req, %Raxx.Chunked{app: {mod, state}}}
+      # rename as terminate or finish or all or complete
+      {:close, state} ->
+        {:ok, req, %Raxx.Chunked{app: {mod, state}}}
+    end
+  end
   def info(message, req, state = {Raxx.Streaming, {raxx_handler, env}}) do
     case raxx_handler.handle_info(message, env) do
       {:send, chunk} ->

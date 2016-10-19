@@ -80,6 +80,10 @@ defmodule Raxx.Response do
     end
   end
 
+  def header_lines(headers) do
+    (Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end) |> Enum.join("\r\n")) <> "\r\n"
+  end
+
   defp fix_headers(headers_list) when is_list(headers_list) do
     # Enum.map(headers_list, )
     headers_list

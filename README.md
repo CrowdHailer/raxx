@@ -11,8 +11,18 @@
 
 ## Hello, World!
 
+Add raxx to your list of dependencies in `mix.exs`:
+
 ```elixir
-defmodule Hello do
+def deps do
+  [{:raxx, "~> 0.3.0"}]
+end
+```
+
+Define the behaviour of your servers.
+
+```elixir
+defmodule HelloWeb.Server do
   import Raxx.Response
 
   def handle_request(%{path: []}, _env) do
@@ -29,7 +39,30 @@ defmodule Hello do
 end
 ```
 
-This Raxx app is mounted on the elli server in the [HelloElli](https://github.com/CrowdHailer/raxx/tree/master/example/hello_elli) example.
+Mount your server in you application. *Example using [Ace](https://github.com/CrowdHailer/Ace)*
+
+```elixir
+defmodule HelloWeb do
+  use Application
+
+  @raxx_app {HelloWeb.Server, []}
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [
+      worker(Ace.TCP, [{Raxx.Adapters.Ace.Handler, @raxx_app}, [port: 8080]])
+    ]
+
+    opts = [strategy: :one_for_one]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
+
+Raxx currently has adapters for three erlang servers.
+- [HelloElli example](https://github.com/CrowdHailer/raxx/tree/master/example/hello_elli).
+- [cowboy example](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example).
 
 ### Principles
 
@@ -42,23 +75,6 @@ This Raxx app is mounted on the elli server in the [HelloElli](https://github.co
 - No support for working with errors, throws, exits. We handle them in debugging because elixir is a dynamic language but they should not be used for routing or responses other than 500.
 
 *Raxx is inspired by the [Ruby's Rack interface](http://rack.github.io/) and [Clojure's Ring interface](https://github.com/ring-clojure).*
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
-
-1. Add raxx to your list of dependencies in `mix.exs`:
-
-    ```elixir
-    def deps do
-      [{:raxx, "~> 0.0.1"}]
-    end
-    ```
-
-2. Raxx apps/routers needs to be mounted Elixir/erlang server using one of the provided adapters. Instructions for this are found in each adapters README
-
-    - [cowboy](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example).
-    - [elli](https://github.com/CrowdHailer/raxx/tree/master/example/hello_elli).
 
 ## Raxx applications
 
@@ -78,7 +94,7 @@ In the case of an upgrade the returned upgrade object specifies the communicatio
 
 ```elixir
 defmodule MyStreamingApp do
-  def handle_request(_r, env), do: Raxx.Streaming.upgrade(__MODULE__, env)
+  def handle_request(_r, env), do: Raxx.Chunked.upgrade({__MODULE__, env})
   def handle_info(message, _env), do: {:send, "ping"}
 end
 ```
@@ -181,34 +197,31 @@ defmodule FooRouter do
 end
 ```
 
-### Raxx.Streaming
+### Raxx.Chunked
 
-`Raxx.Streaming`
+`Raxx.Chunked` allows data to be streamed to the client.
+An unbounded amount of response data may be sent this way.
 
-The HTTP streaming mechanism keeps a request open indefinitely.
-A Raxx application that returns a `Raxx.Streaming` struct from a call to `handle_request/2`, is indicating that it wishes to send the response in chunks.
-A `Raxx.Streaming` struct encapsulates all the information required to upgrade the connection.
+A Raxx application that returns a `Raxx.Chunked` struct from a call to `handle_request/2`, is indicating that it wishes to send the response in chunks.
 
 ```elixir
-%Raxx.Streaming{
-  handler: MyHandler,
-  environment: :none,
+%Raxx.Chunked{
+  app: {MyHandler, :none},
   ...
 }
 ```
 
-A streaming handler must implement a `handle_info/2` callback.
+A chunked handler must implement a `handle_info/2` callback.
 This callback is called everytime the request process recieves a message, taking the message and environment as arguments.
 
 ```elixir
 defmodule Ping do
-  def handler_request(_, _), do: Raxx.Streaming.upgrade(__MODULE__, nil)
+  def handler_request(_, _), do: Raxx.Chunked.upgrade({__MODULE__, nil})
 
   def handle_info({:data, chunk}), do: {:send, chunk}
   def handle_info({_), do: :nosend
 end
 ```
-
 
 ### Raxx.ServerSentEvents
 
@@ -254,18 +267,11 @@ defmodule ServerSentEvents.Router do
 end
 ```
 
-Some outstanding questions about Server Sent Events functionality.
-
-- [ ] Disallow event of type error.
-- [ ] Handle long poll pollyfill.
-- [ ] Raxx client.
-- [ ] What to do if message handler throws error.
-
 [Link to implementing server in node.js](http://www.html5rocks.com/en/tutorials/eventsource/basics/)
 
 [HTML living standard](https://html.spec.whatwg.org/multipage/comms.html#server-sent-events)
 
-### Raxx.Test
+<!-- ### Raxx.Test
 
 `Raxx.Test`
 
@@ -278,7 +284,7 @@ test "hello app says hi" do
   assert 200 = response.status
   assert "Hello, World!" = response.body
 end
-```
+``` -->
 
 ## Contributing
 

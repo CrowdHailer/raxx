@@ -9,8 +9,6 @@ defmodule Raxx.Adapters.Elli.Handler do
     case response do
       %{status: status, headers: headers, body: body} ->
         {status, marshal_headers(headers), body}
-      {Raxx.Streaming, _mod, _env, opts} ->
-        {:chunk, Map.get(opts, :headers, []), Map.get(opts, :initial, "")}
     end
   end
 

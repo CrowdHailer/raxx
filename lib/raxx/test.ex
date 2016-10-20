@@ -10,7 +10,6 @@ defmodule Raxx.Test do
   @spec get(binary, %{binary => binary}) :: Request.t
   def get(path, headers \\ %{}) do
     path = split_path(path)
-    # TODO normalize headers
     %Request{path: path, headers: headers}
   end
 
@@ -19,7 +18,6 @@ defmodule Raxx.Test do
   """
   @spec post(binary, %{binary => binary}) :: Request.t
   def post(path, params) do
-    # TODO ensure param keys are strings
     path = split_path(path)
     %Request{
       method: "POST",
@@ -33,7 +31,6 @@ defmodule Raxx.Test do
   """
   @spec patch(binary, binary) :: Request.t
   def patch(path, body) do
-    # TODO ensure param keys are strings
     path = split_path(path)
     %Request{
       method: "PATCH",

@@ -112,10 +112,9 @@ defmodule Raxx.Adapters.ChunkedCase do
       def handle_request(_r, %{chunks: chunks}) do
         Process.send_after(self(), :tick, 100)
         Raxx.Chunked.upgrade({__MODULE__, chunks})
-        # TODO
-        # - implicity leave state and model
-        # - pass custom headers
-        # - pass custom status?
+        # TODO implicity leave state and model
+        # TODO pass custom headers
+        # TODO pass custom status?
       end
 
       def handle_info(:tick, [chunk | rest]) do

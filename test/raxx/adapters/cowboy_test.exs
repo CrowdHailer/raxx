@@ -1,17 +1,3 @@
-defmodule Forwarder do
-  import Raxx.Response
-  def handle_request(request, pid) do
-    send(pid, request)
-    ok("done")
-  end
-end
-
-defmodule StringReply do
-  def handle_request(_request, %{body: body}) do
-    body
-  end
-end
-
 defmodule Raxx.CowboyTest do
   use ExUnit.Case, async: true
 

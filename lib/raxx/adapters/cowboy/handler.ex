@@ -2,17 +2,6 @@ defmodule Raxx.Adapters.Cowboy.Handler do
   @moduledoc false
   def init({:tcp, :http}, req, opts = {router, raxx_options}) do
     case router.handle_request(normalise_request(req), raxx_options) do
-      upgrade = %Raxx.Streaming{} ->
-        {:ok, chunked_request} = :cowboy_req.chunked_reply(
-          200,
-          [{"content-type", "text/event-stream"}, # This should not be set for all chunked replies.
-          {"cache-control", "no-cache"},
-          {"connection", "keep-alive"}],
-          req
-        )
-        if upgrade.initial != "" do
-          :ok = :cowboy_req.chunk(upgrade.initial, chunked_request)
-        end
       upgrade = %Raxx.Chunked{} ->
         {:ok, chunked_request} = :cowboy_req.chunked_reply(200, [], req)
         {:loop, chunked_request, upgrade}
@@ -30,15 +19,6 @@ defmodule Raxx.Adapters.Cowboy.Handler do
       {:close, state} ->
         {:ok, req, %Raxx.Chunked{app: {mod, state}}}
     end
-  end
-  def info(message, req, state = {Raxx.Streaming, {raxx_handler, env}}) do
-    case raxx_handler.handle_info(message, env) do
-      {:send, chunk} ->
-        :ok = :cowboy_req.chunk(chunk, req)
-      :nosend ->
-        :ok
-    end
-    {:loop, req, state}
   end
 
   def handle(req, state) do

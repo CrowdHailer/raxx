@@ -1,4 +1,4 @@
-defmodule Raxx.Cowboy.RequestTest do
+defmodule Raxx.Adapters.Cowboy.RequestTest do
   use Raxx.Adapters.RequestCase
 
   case Application.ensure_all_started(:cowboy) do

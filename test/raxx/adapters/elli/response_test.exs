@@ -1,4 +1,4 @@
-defmodule Raxx.Elli.ResponseTest do
+defmodule Raxx.Adapters.Elli.ResponseTest do
   use Raxx.Adapters.ResponseCase
 
   setup do

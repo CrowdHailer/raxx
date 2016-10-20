@@ -1,4 +1,4 @@
-defmodule Raxx.Ace.ChunkedTest do
+defmodule Raxx.Adapters.Ace.ChunkedTest do
   use Raxx.Adapters.ChunkedCase
 
   setup do

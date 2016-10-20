@@ -1,4 +1,4 @@
-defmodule Raxx.Ace.ResponseTest do
+defmodule Raxx.Adapters.Ace.ResponseTest do
   use Raxx.Adapters.ResponseCase
 
   setup do

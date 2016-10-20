@@ -1,4 +1,4 @@
-defmodule Raxx.Elli.RequestTest do
+defmodule Raxx.Adapters.Elli.RequestTest do
   use Raxx.Adapters.RequestCase
 
   setup do

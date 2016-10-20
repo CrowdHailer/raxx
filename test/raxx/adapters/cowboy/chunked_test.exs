@@ -1,4 +1,4 @@
-defmodule Raxx.Cowboy.ChunkedTest do
+defmodule Raxx.Adapters.Cowboy.ChunkedTest do
   use Raxx.Adapters.ChunkedCase
 
   case Application.ensure_all_started(:cowboy) do
@@ -8,7 +8,7 @@ defmodule Raxx.Cowboy.ChunkedTest do
       raise "could not start the cowboy application. Please ensure it is listed " <>
             "as a dependency both in deps and application in your mix.exs"
   end
-  
+
   setup %{case: case, test: test} do
     raxx_app = {__MODULE__, %{chunks: ["Hello,", " ", "World", "!"]}}
     name = {case, test}

@@ -15,7 +15,7 @@ Add raxx to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:raxx, "~> 0.3.0"}]
+  [{:raxx, "~> 0.4.0"}]
 end
 ```
 

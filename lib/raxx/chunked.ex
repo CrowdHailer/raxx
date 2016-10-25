@@ -17,15 +17,15 @@ defmodule Raxx.Chunked do
   """
   # For SSE
   # Headers to initial HTTP streaming are automatically set `%{"cache-control" => "no-cache", "connection" => "keep-alive"}`
-  defstruct [app: nil]
+  defstruct [app: nil, headers: []]
 
-  def upgrade(app) do
-    struct(__MODULE__, app: app)
+  def upgrade(app, opts) do
+    struct(%__MODULE__{app: app}, opts)
   end
 
   def to_packet(data) do
     size = :erlang.iolist_size(data)
-    packet = [:erlang.integer_to_list(size), "\r\n", data, "\r\n"]
+    packet = [:erlang.integer_to_list(size, 16), "\r\n", data, "\r\n"]
   end
 
   def end_chunk do

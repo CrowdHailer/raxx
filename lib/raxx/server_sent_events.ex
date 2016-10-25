@@ -26,8 +26,8 @@ defmodule Raxx.ServerSentEvents do
     Convert an Event struct to a binary chunk that can be sent over the streaming connection.
     """
     def to_chunk(%{data: data, event: event}) do
-      event_lines(event) ++ data_lines(data) ++ ["\n"]
-      |> Enum.join("\n")
+      event_lines(event) ++ data_lines(data) ++ ["\r\n"]
+      |> Enum.join("\r\n")
     end
 
     defp event_lines(nil) do
@@ -45,19 +45,15 @@ defmodule Raxx.ServerSentEvents do
   @doc """
   Creates the upgrade information needed to start communication with SSEs.
 
-  **NOTE:** This is just a `Raxx.Streaming` upgrade object with extra headers to specify the content is an event stream.
+  **NOTE:** This is just a `Raxx.Chunked` upgrade object with extra headers to specify the content is an event stream.
   """
-  def upgrade(mod, env, opts) do
-    initial = case Map.get(opts, :retry) do
-      :nil ->
-        ""
-      timeout ->
-        "retry: #{timeout}"
-    end
-    Raxx.Streaming.upgrade(mod, env, %{initial: initial, headers: %{
-      "Connection" => "keep-alive",
-      "Content-Type" => "text/event-stream",
-      "Transfer-Encoding" => "chunked"
-    }})
+  def upgrade(app) do
+    # initial = case Map.get(opts, :retry) do
+    #   :nil ->
+    #     ""
+    #   timeout ->
+    #     "retry: #{timeout}"
+    # end
+    Raxx.Chunked.upgrade(app, headers: [{"content-type", "text/event-stream"}])
   end
 end

@@ -22,9 +22,15 @@ defmodule Raxx.Adapters.Ace.Handler do
             ]
             {:send, raw, {app, "", conn}}
           upgrade = %Raxx.Chunked{} ->
+            headers = upgrade.headers
+
+            headers = if !List.keymember?(headers, "content-type", 0) do
+              headers ++ [{"content-type", "text/plain"}]
+            end || headers
+            headers = headers ++ [{"transfer-encoding", "chunked"}]
             response = [
               Raxx.Response.status_line(200),
-              Raxx.Response.header_lines([{"content-type", "text/plain"}, {"transfer-encoding", "chunked"}]),
+              Raxx.Response.header_lines(headers),
               "\r\n"
             ]
             {:send, response, {upgrade, buffer, conn}}

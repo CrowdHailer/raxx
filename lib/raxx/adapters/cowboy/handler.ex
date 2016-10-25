@@ -2,8 +2,8 @@ defmodule Raxx.Adapters.Cowboy.Handler do
   @moduledoc false
   def init({:tcp, :http}, req, opts = {router, raxx_options}) do
     case router.handle_request(normalise_request(req), raxx_options) do
-      upgrade = %Raxx.Chunked{} ->
-        {:ok, chunked_request} = :cowboy_req.chunked_reply(200, [], req)
+      upgrade = %Raxx.Chunked{headers: headers} ->
+        {:ok, chunked_request} = :cowboy_req.chunked_reply(200, headers, req)
         {:loop, chunked_request, upgrade}
       response ->
         respond(req, response, opts)

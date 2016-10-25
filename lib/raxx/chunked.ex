@@ -9,7 +9,7 @@ defmodule Raxx.Chunked do
 
   The contents are itemised below:
 
-  | **handler** | The module that implements the required callbacks to handle a streaming connection |
+  | **handler** | The module that implements the required callbacks to send a response in 1 or more chunks |
   | **state** | Any state that the handle_info callback might need. |
   | **initial** | TODO The first chunk to be streamed to the client, by default an empty string. |
   | **headers** | TODO Any additional headers to add to the response that is sent to the client. |

@@ -93,7 +93,7 @@ Alternativly the the application may indicate that the connection should be upgr
 In the case of an upgrade the returned upgrade object specifies the communication protocol required.
 
 ```elixir
-defmodule MyStreamingApp do
+defmodule MyChunkingApp do
   def handle_request(_r, env), do: Raxx.Chunked.upgrade({__MODULE__, env})
   def handle_info(message, _env), do: {:send, "ping"}
 end
@@ -101,7 +101,7 @@ end
 
 Currently the following upgraded protocols are supported, with others (such as websockets), in development.
 
-- HTTP streaming
+- HTTP Chunked
 - Server Sent Events
 
 ### Raxx.Request

@@ -62,6 +62,12 @@ defmodule Raxx.Adapters.RequestCase do
         assert {"content-type", "unknown/stuff"} == List.keyfind(headers, "content-type", 0)
       end
 
+      test "request downcases headers", %{port: port} do
+        {:ok, _resp} = HTTPoison.get("localhost:#{port}/", [{"Content-Type", "unknown/stuff"}])
+        assert_receive %{headers: headers}
+        assert {"content-type", "unknown/stuff"} == List.keyfind(headers, "content-type", 0)
+      end
+
       test "request has correct body", %{port: port} do
         {:ok, _resp} = HTTPoison.post("localhost:#{port}", "blah blah")
         assert_receive %{body: body}

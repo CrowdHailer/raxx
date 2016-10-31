@@ -72,8 +72,8 @@ defmodule Raxx.Adapters.Ace.Handler do
 
         {:ok, headers, body} = decode_headers(rest)
 
-        {:Host, authority} = headers |> List.keyfind(:Host, 0)
-        [host, port] = String.split(authority, ":")
+        {:Host, location} = headers |> List.keyfind(:Host, 0)
+        [host, port] = String.split(location, ":")
 
         {:ok, %Raxx.Request{
           host: host,

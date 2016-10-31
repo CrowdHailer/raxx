@@ -11,9 +11,14 @@ defmodule Raxx.Adapters.RequestCase do
 
   using do
     quote location: :keep do
-      test "request shows correct host", %{port: port} do
+      test "request shows localhost", %{port: port} do
         {:ok, _resp} = HTTPoison.get("localhost:#{port}")
         assert_receive %{host: "localhost"}
+      end
+
+      test "request shows correct host", %{port: port} do
+        {:ok, _resp} = HTTPoison.get("0.0.0.0:#{port}")
+        assert_receive %{host: "0.0.0.0"}
       end
 
       test "request shows correct port", %{port: port} do

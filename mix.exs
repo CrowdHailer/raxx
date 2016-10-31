@@ -14,13 +14,13 @@ defmodule Raxx.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :httpoison]]
+    [applications: [:logger]]
   end
 
   defp deps do
     [
       {:cowboy, "1.0.4", only: :test},
-      {:ace, ">= 0.0.0", path: "./Ace", only: :test},
+      {:ace, "0.7.0", only: :test},
       {:elli, "~> 1.0", only: :test},
       {:httpoison, "~> 0.8.0", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev}

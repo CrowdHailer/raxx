@@ -146,4 +146,5 @@ defmodule Raxx.Adapters.ChunkedCase do
     end
   end
 end
+{:ok, _} = Application.ensure_all_started(:httpoison)
 ExUnit.start()

@@ -28,4 +28,12 @@ defmodule Raxx.Static do
       end
     end
   end
+
+  def serve_file(filename) do
+    quote do
+      def handle_request(unquote(filename), _) do
+
+      end
+    end
+  end
 end

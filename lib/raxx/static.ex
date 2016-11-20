@@ -11,13 +11,10 @@ defmodule Raxx.Static do
       for file <- files do
         case File.read(file) do
           {:ok, content} ->
-            IO.inspect(content)
             relative = Path.relative_to(file, dir)
             path = Path.split(relative)
             mime = MIME.from_path(file)
 
-            IO.inspect(path)
-            IO.inspect(mime)
             def handle_request(r = %{path: (unquote(path))}, _) do
               Raxx.Response.ok(unquote(content), [
                 {"content-length", "#{:erlang.iolist_size(unquote(content))}"},

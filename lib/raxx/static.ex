@@ -1,38 +1,32 @@
 defmodule Raxx.Static do
-  defmacro __using__(opts) do
-    # No real idea about why `unquote: false` works here.
-    # It seams to and I think it is related to the fact that def is a macro
-    # A clearer version of this code would be great.
-
-    quote unquote: false do
-      dir = Path.expand("./static", Path.dirname(__ENV__.file))
-      files = Path.expand("./**/*", dir) |> Path.wildcard
-
-      for file <- files do
-        case File.read(file) do
-          {:ok, content} ->
-            relative = Path.relative_to(file, dir)
-            path = Path.split(relative)
-            mime = MIME.from_path(file)
-
-            def handle_request(r = %{path: (unquote(path))}, _) do
-              Raxx.Response.ok(unquote(content), [
-                {"content-length", "#{:erlang.iolist_size(unquote(content))}"},
-                {"content-type", unquote(mime)}
-              ])
-            end
-        end
-        def handle_request(_, _) do
-          Raxx.Response.not_found
-        end
-      end
+  # other things this should do are
+  # - send a response for a HEAD request
+  # - return a method not allowed for other HTTP methods
+  # - return content error from accept headers
+  # - gzip encoding
+  # - have an overwritable not_found function
+  # - cache control time
+  # - Etags
+  # - filtered reading of a file
+  # - set a maximum size of file to bundle into the code.
+  defmacro serve_file(filename, path) do
+    quote do
+      ast = unquote(__MODULE__).serve_file_ast(unquote(filename), unquote(path))
+      Module.eval_quoted(__MODULE__, ast)
     end
   end
 
-  def serve_file(filename) do
+  def serve_file_ast(filename, path) do
+    request = quote do: request = %{path: unquote(path), method: method}
+    {:ok, content} = File.read(filename)
+    mime = MIME.from_path(filename)
+    response = Raxx.Response.ok(content, [
+      {"content-length", "#{:erlang.iolist_size(content)}"},
+      {"content-type", mime}
+    ])
     quote do
-      def handle_request(unquote(filename), _) do
-
+      def handle_request(unquote(request), _) do
+        unquote(Macro.escape(response))
       end
     end
   end

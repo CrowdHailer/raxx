@@ -14,11 +14,12 @@ defmodule Raxx.Mixfile do
   end
 
   def application do
-    [applications: [:logger]]
+    [applications: [:logger, :mime]]
   end
 
   defp deps do
     [
+      {:mime, "~> 1.0"},
       {:cowboy, "1.0.4", only: :test},
       {:ace, "0.7.0", only: :test},
       {:elli, "~> 1.0", only: :test},

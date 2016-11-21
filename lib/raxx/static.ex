@@ -14,6 +14,7 @@ defmodule Raxx.Static do
   # - set a maximum size of file to bundle into the code.
   # - static_content(content, mime)
   # - check trying to serve root file
+  # - use plug semantics of {:app, path/in/priv} or "/binary/absoulte" or "./binary/from/file"
   defmacro serve_file(filename, path) do
     quote do
       ast = unquote(__MODULE__).serve_file_ast(unquote(filename), unquote(path))
@@ -57,6 +58,7 @@ defmodule Raxx.Static do
       end
       # use a not found function if need be.
       # add option `Raxx.Static.serve_dir(dir, not_found: :not_found_cb)`
+      # Or just don't include this at all and let people write the last handle_request callback
     end
   end
 end

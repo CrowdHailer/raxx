@@ -33,8 +33,13 @@ defmodule Raxx.Static do
           {"content-type", mime}
         ])
         quote do
-          def handle_request(unquote(request_match), _) do
-            unquote(Macro.escape(response))
+          def handle_request(request = unquote(request_match), _) do
+            case request.method do
+              :GET ->
+                unquote(Macro.escape(response))
+              _ ->
+                Raxx.Response.method_not_allowed
+            end
           end
         end
       {:error, :eisdir} ->

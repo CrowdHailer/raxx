@@ -37,6 +37,12 @@ defmodule Raxx.StaticTest do
     assert 200 == response.status
   end
 
+  test "A file is served with the correct content length" do
+    request = %Raxx.Request{path: ["hello.txt"]}
+    response = SingleFile.handle_request(request, [])
+    assert {"content-length", "14"} == List.keyfind(response.headers, "content-length", 0)
+  end
+
   test "A text file is served with the correct content type" do
     request = %Raxx.Request{path: ["hello.txt"]}
     response = SingleFile.handle_request(request, [])
@@ -65,6 +71,12 @@ defmodule Raxx.StaticTest do
     request = %Raxx.Request{path: ["sub", "file.txt"]}
     response = SingleFile.handle_request(request, [])
     assert 200 == response.status
+  end
+
+  test "invalid method returns a 405 Not Allowed" do
+    request = %Raxx.Request{path: ["hello.txt"], method: :POST}
+    response = SingleFile.handle_request(request, [])
+    assert 405 == response.status
   end
 
 end

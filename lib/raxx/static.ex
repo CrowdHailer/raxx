@@ -1,20 +1,25 @@
 defmodule Raxx.Static do
-  # other things this should do are
-  # - send a response for a HEAD request
-  # - return a method not allowed for other HTTP methods
-  # - return content error from accept headers
-  # - gzip encoding
-  #   plug doesnt actually gzip it just assumes a file named path <>.gz
-  #   gzip is assumed false by default, say true to generate gz from contents or path modification if zipped exists.
-  #   https://groups.google.com/forum/#!topic/elixir-lang-talk/RL-qWWx9ILE
-  # - have an overwritable not_found function
-  # - cache control time
-  # - Etags
-  # - filtered reading of a file
-  # - set a maximum size of file to bundle into the code.
-  # - static_content(content, mime)
-  # - check trying to serve root file
-  # - use plug semantics of {:app, path/in/priv} or "/binary/absoulte" or "./binary/from/file"
+  @moduledoc """
+  To see how to use this module check the tests.
+  The API is still in development as we handle some updates
+
+  other things this should do are:
+  - send a response for a HEAD request
+  - return a method not allowed for other HTTP methods
+  - return content error from accept headers
+  - gzip encoding
+    plug doesnt actually gzip it just assumes a file named path <>.gz
+    gzip is assumed false by default, say true to generate gz from contents or path modification if zipped exists.
+    https://groups.google.com/forum/#!topic/elixir-lang-talk/RL-qWWx9ILE
+  - have an overwritable not_found function
+  - cache control time
+  - Etags
+  - filtered reading of a file
+  - set a maximum size of file to bundle into the code.
+  - static_content(content, mime)
+  - check trying to serve root file
+  - use plug semantics of {:app, path/in/priv} or "/binary/absoulte" or "./binary/from/file"
+  """
   defmacro serve_file(filename, path) do
     quote do
       ast = unquote(__MODULE__).serve_file_ast(unquote(filename), unquote(path))
@@ -22,6 +27,7 @@ defmodule Raxx.Static do
     end
   end
 
+  @doc false
   def serve_file_ast(filename, path) do
     request_match = quote do: %{path: unquote(path)}
     mime = MIME.from_path(filename)

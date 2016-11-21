@@ -1,4 +1,5 @@
 defmodule Raxx.StaticTest do
+  # Use this as an example.
   # defmodule SingleFile do
   #   require Raxx.Static
   #

@@ -53,6 +53,10 @@ defmodule Raxx.Static do
     end
   end
 
+  @doc """
+  Serve a director of assets
+  TODO: pass a glob patter or array of patterns.
+  """
   defmacro serve_dir(dir) do
     quote do
       dir = Path.expand(unquote(dir), Path.dirname(__ENV__.file))

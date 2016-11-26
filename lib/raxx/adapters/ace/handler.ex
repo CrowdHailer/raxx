@@ -51,49 +51,15 @@ defmodule Raxx.Adapters.Ace.Handler do
     :ok
   end
 
-  def decode_headers(buffer) do
-    decode_headers(buffer, [])
-  end
-
-  def decode_headers(buffer, headers) do
-    case :erlang.decode_packet(:httph_bin, buffer, []) do
-      {:more, :undefined} ->
-        {:more, buffer}
-      {:ok, {:http_header, _, key, _, value}, rest} ->
-        headers = headers ++ [{key, value}]
-        decode_headers(rest, headers)
-      {:ok, :http_eoh, rest} ->
-        {:ok, headers, rest}
-    end
-  end
-
-
   def read_request(latest, {:headers, buffer, request = %{headers: headers}}) do
     buffer = buffer <> latest
     case :erlang.decode_packet(:httph_bin, buffer, []) do
       {:more, :undefined} ->
         {:more, {:headers, buffer, request}}
       {:ok, {:http_header, _, key, _, value}, rest} ->
-        headers = headers ++ [{key, value}]
-        read_request("", {:headers, rest, %{request | headers: headers}})
+        read_request("", {:headers, rest, add_header(request, key, value)})
       {:ok, :http_eoh, body} ->
-        {:Host, location} = headers |> List.keyfind(:Host, 0)
-        [host, port] = case String.split(location, ":") do
-          [host, port] -> [host, port]
-          [host] -> [host, "80"]
-        end
-
-        {:ok, %Raxx.Request{
-          host: host,
-          port: :erlang.binary_to_integer(port),
-          method: request.method,
-          path: request.path,
-          query: request.query,
-          headers: Enum.map(headers, fn ({k, v}) ->
-            {String.downcase("#{k}"), String.downcase("#{v}")}
-          end),
-          body: body
-          }}
+        {:ok, %Raxx.Request{request | body: body}}
     end
   end
   def read_request(latest, {:start_line, buffer, conn}) do
@@ -103,43 +69,23 @@ defmodule Raxx.Adapters.Ace.Handler do
         {:more, {:start_line, buffer, conn}}
       {:ok, {:http_request, method, {:abs_path, path_string}, _version}, rest} ->
         {path, query} = Raxx.Request.parse_path(path_string)
-        request = %{method: method, path: path, query: query, headers: []}
+        request = %Raxx.Request{method: method, path: path, query: query, headers: []}
         read_request("", {:headers, rest, request})
     end
   end
-  def read_request(buffer) do
-    IO.inspect(buffer)
-    case :erlang.decode_packet(:http_bin, buffer, []) do
-      # second element length, only defined for body
-      {:more, :undefined} ->
-        {:more, buffer}
-      {:ok, {:http_request, method, {:abs_path, path_string}, _version}, rest} ->
-        {path, query} = Raxx.Request.parse_path(path_string)
 
-        case decode_headers(rest) do
-          {:ok, headers, body} ->
-            {:Host, location} = headers |> List.keyfind(:Host, 0)
-            [host, port] = case String.split(location, ":") do
-              [host, port] -> [host, port]
-              [host] -> [host, "80"]
-            end
-
-            {:ok, %Raxx.Request{
-              host: host,
-              port: :erlang.binary_to_integer(port),
-              method: method,
-              path: path,
-              query: query,
-              headers: Enum.map(headers, fn ({k, v}) ->
-                {String.downcase("#{k}"), String.downcase("#{v}")}
-              end),
-              body: body
-              }}
-          {:more, buffer} ->
-            {:more, buffer}
-        end
-
-
+  # TODO case when adding key "Host" or "host"
+  def add_header(request = %{headers: headers}, :Host, location) do
+    [host, port] = case String.split(location, ":") do
+      [host, port] -> [host, :erlang.binary_to_integer(port)]
+      [host] -> [host, 80]
     end
+    headers = headers ++ [{"host", location}]
+    %{request | headers: headers, host: host, port: port}
+  end
+  def add_header(request = %{headers: headers}, key, value) do
+    key = String.downcase("#{key}")
+    headers = headers ++ [{key, value}]
+    %{request | headers: headers}
   end
 end

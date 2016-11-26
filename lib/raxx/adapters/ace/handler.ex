@@ -51,17 +51,6 @@ defmodule Raxx.Adapters.Ace.Handler do
     :ok
   end
 
-  def read_request(latest, {:headers, buffer, request = %{headers: headers}}) do
-    buffer = buffer <> latest
-    case :erlang.decode_packet(:httph_bin, buffer, []) do
-      {:more, :undefined} ->
-        {:more, {:headers, buffer, request}}
-      {:ok, {:http_header, _, key, _, value}, rest} ->
-        read_request("", {:headers, rest, add_header(request, key, value)})
-      {:ok, :http_eoh, body} ->
-        {:ok, %Raxx.Request{request | body: body}}
-    end
-  end
   def read_request(latest, {:start_line, buffer, conn}) do
     buffer = buffer <> latest
     case :erlang.decode_packet(:http_bin, buffer, []) do
@@ -71,6 +60,32 @@ defmodule Raxx.Adapters.Ace.Handler do
         {path, query} = Raxx.Request.parse_path(path_string)
         request = %Raxx.Request{method: method, path: path, query: query, headers: []}
         read_request("", {:headers, rest, request})
+    end
+  end
+  def read_request(latest, {:headers, buffer, request = %{headers: headers}}) do
+    buffer = buffer <> latest
+    case :erlang.decode_packet(:httph_bin, buffer, []) do
+      {:more, :undefined} ->
+        {:more, {:headers, buffer, request}}
+      {:ok, {:http_header, _, key, _, value}, rest} ->
+        read_request("", {:headers, rest, add_header(request, key, value)})
+      {:ok, :http_eoh, rest} ->
+        read_request("", {:body, rest, request})
+    end
+  end
+  def read_request(latest, {:body, buffer, request = %{headers: headers}}) do
+    buffer = buffer <> latest
+    case :proplists.get_value("content-length", headers) do
+      :undefined ->
+        {:ok, request}
+      raw ->
+        length = :erlang.binary_to_integer(raw)
+        case buffer do
+          <<body :: binary-size(length)>> <> buffer ->
+            {:ok, %{request | body: body}}
+          _ ->
+            {:more, {:body, buffer, request}}
+        end
     end
   end
 

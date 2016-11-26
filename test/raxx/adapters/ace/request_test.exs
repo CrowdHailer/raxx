@@ -8,4 +8,31 @@ defmodule Raxx.Adapters.Ace.RequestTest do
     {:ok, %{port: port}}
   end
 
+  test "test handles request with split start-line ", %{port: port} do
+    request = """
+    GET / HTTP/1.1
+    Host: www.raxx.com
+
+    """
+    {:ok, socket} = :gen_tcp.connect({127,0,0,1}, port, [:binary])
+    {first, second} = Enum.split(request |> String.split(""), 8)
+    :gen_tcp.send(socket, Enum.join(first))
+    :timer.sleep(10)
+    :gen_tcp.send(socket, Enum.join(second))
+    assert_receive %{host: "www.raxx.com", path: []}
+  end
+
+  test "test handles request with split headers ", %{port: port} do
+    request = """
+    GET / HTTP/1.1
+    Host: www.raxx.com
+
+    """
+    {:ok, socket} = :gen_tcp.connect({127,0,0,1}, port, [:binary])
+    {first, second} = Enum.split(request |> String.split(""), 25)
+    :gen_tcp.send(socket, Enum.join(first))
+    :timer.sleep(10)
+    :gen_tcp.send(socket, Enum.join(second))
+    assert_receive %{host: "www.raxx.com", path: []}
+  end
 end

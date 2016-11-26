@@ -1,15 +1,29 @@
 defmodule Raxx.Adapters.Ace.Handler do
   def init(conn, app) do
-    status = {:start_line, "", conn}
-    {:nosend, {app, status}}
+    partial = {:start_line, conn}
+    buffer = ""
+    # Need to keep track of conn for keep-alive, 4th spot might also be where to keep upgrade
+    {:nosend, {app, partial, buffer}}
   end
 
-  def handle_packet(packet, {app, status}) do
-    case read_request(packet, status) do
-      {:more, status} ->
-        {:nosend, {app, status}}
-      {:ok, request} ->
+  # If streaming response all new packets should be added to the buffer
+  # States are
+  # - basic (all new packets slowly build a request, dispatched as soon as ready)
+  # - chunked (all new packets are buffered)
+  # - streaming/websockets (new packets are streamed to some process)
+  # - create an app protocol so that it can be called for many updates
+  # %Basic{app: {mod, state}}
+  # %Chunked{mod: mod}
+  # Server.handle_request(app, request)
+  # erlang deliveres messages in order so assume that info messages arrive in order.
+
+  def handle_packet(packet, {app, partial, buffer}) do
+    case process_buffer(buffer <> packet, partial) do
+      {:more, partial, buffer} ->
+        {:nosend, {app, partial, buffer}}
+      {:ok, request, buffer} ->
         {mod, state} = app
+        # call process_request function
         case mod.handle_request(request, state) do
           %{body: body, headers: headers, status: status_code} ->
             header_lines = Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end)
@@ -20,7 +34,8 @@ defmodule Raxx.Adapters.Ace.Handler do
               "\r\n",
               body
             ]
-            {:send, raw, {app, "", %{}}}
+            # Check keep alive status
+            {:send, raw, {app, %{}, ""}}
           upgrade = %Raxx.Chunked{} ->
             headers = upgrade.headers
 
@@ -33,17 +48,19 @@ defmodule Raxx.Adapters.Ace.Handler do
               Raxx.Response.header_lines(headers),
               "\r\n"
             ]
-            {:send, response, {upgrade, status}}
+            # make sure next requests can keep coming in.
+            # QUERY will a client keep sending request content if the response is chunked
+            {:send, response, {upgrade, request, buffer}}
         end
     end
   end
 
-  def handle_info(message, {%Raxx.Chunked{app: {mod, state}}, buffer, conn}) do
+  def handle_info(message, {%Raxx.Chunked{app: {mod, state}}, partial, buffer}) do
     case mod.handle_info(message, state) do
       {:chunk, data, state} ->
-        {:send, Raxx.Chunked.to_packet(data), {%Raxx.Chunked{app: {mod, state}}, buffer, conn}}
+        {:send, Raxx.Chunked.to_packet(data), {%Raxx.Chunked{app: {mod, state}}, partial, buffer}}
       {:close, state} ->
-        {:send, Raxx.Chunked.end_chunk, {%Raxx.Chunked{app: {mod, state}}, buffer, conn}}
+        {:send, Raxx.Chunked.end_chunk, {%Raxx.Chunked{app: {mod, state}}, partial, buffer}}
     end
   end
   def terminate(_reason, {_app, buffer, _conn}) do
@@ -51,40 +68,39 @@ defmodule Raxx.Adapters.Ace.Handler do
     :ok
   end
 
-  def read_request(latest, {:start_line, buffer, conn}) do
-    buffer = buffer <> latest
+  # Process part sould look like a function that you can pass to reduce
+
+  def process_buffer(buffer, {:start_line, conn}) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
       {:more, :undefined} ->
-        {:more, {:start_line, buffer, conn}}
+        {:more, {:start_line, conn}, buffer}
       {:ok, {:http_request, method, {:abs_path, path_string}, _version}, rest} ->
         {path, query} = Raxx.Request.parse_path(path_string)
         request = %Raxx.Request{method: method, path: path, query: query, headers: []}
-        read_request("", {:headers, rest, request})
+        process_buffer(rest, {:headers, request})
     end
   end
-  def read_request(latest, {:headers, buffer, request = %{headers: headers}}) do
-    buffer = buffer <> latest
+  def process_buffer(buffer, {:headers, request = %{headers: headers}}) do
     case :erlang.decode_packet(:httph_bin, buffer, []) do
       {:more, :undefined} ->
-        {:more, {:headers, buffer, request}}
+        {:more, {:headers, request}, buffer}
       {:ok, {:http_header, _, key, _, value}, rest} ->
-        read_request("", {:headers, rest, add_header(request, key, value)})
+        process_buffer(rest, {:headers, add_header(request, key, value)})
       {:ok, :http_eoh, rest} ->
-        read_request("", {:body, rest, request})
+        process_buffer(rest, {:body, request})
     end
   end
-  def read_request(latest, {:body, buffer, request = %{headers: headers}}) do
-    buffer = buffer <> latest
+  def process_buffer(buffer, {:body, request = %{headers: headers}}) do
     case :proplists.get_value("content-length", headers) do
       :undefined ->
-        {:ok, request}
+        {:ok, request, buffer}
       raw ->
         length = :erlang.binary_to_integer(raw)
         case buffer do
-          <<body :: binary-size(length)>> <> buffer ->
-            {:ok, %{request | body: body}}
+          <<body :: binary-size(length)>> <> rest ->
+            {:ok, %{request | body: body}, rest}
           _ ->
-            {:more, {:body, buffer, request}}
+            {:more, {:body, request}, buffer}
         end
     end
   end

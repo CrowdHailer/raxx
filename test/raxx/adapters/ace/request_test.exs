@@ -65,4 +65,6 @@ defmodule Raxx.Adapters.Ace.RequestTest do
     :timer.sleep(10)
     assert_receive %{host: "www.raxx.com", path: [], body: ^content}
   end
+
+  # need to test keep alive with crap forming start of next request
 end

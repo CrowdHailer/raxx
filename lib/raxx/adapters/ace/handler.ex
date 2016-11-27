@@ -35,7 +35,7 @@ defmodule Raxx.Adapters.Ace.Handler do
               body
             ]
             # Check keep alive status
-            {:send, raw, {app, %{}, ""}}
+            {:send, raw, {app, {:start_line, %{}}, ""}}
           upgrade = %Raxx.Chunked{} ->
             headers = upgrade.headers
 

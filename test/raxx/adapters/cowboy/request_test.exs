@@ -20,4 +20,16 @@ defmodule Raxx.Adapters.Cowboy.RequestTest do
     {:ok, %{port: :ranch.get_port(name)}}
   end
 
+  test "post multipart form with file", %{port: port} do
+    body = {:multipart, [{"foo", "bar"}, {:file, "/etc/hosts"}]}
+    {:ok, _resp} = HTTPoison.post("localhost:#{port}", body)
+    assert_receive r = %{headers: headers, body: body}
+    IO.inspect r
+    # IO.inspect(headers)
+    # IO.inspect(rest)
+    # IO.inspect(body)
+    # assert %{"foo" => "bar", "file" => file} = body
+    # assert file.contents
+  end
+
 end

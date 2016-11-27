@@ -8,6 +8,23 @@ defmodule Raxx.Adapters.Ace.RequestTest do
     {:ok, %{port: port}}
   end
 
+  test "post multipart form with file", %{port: port} do
+    body = {:multipart, [{"foo", "bar"}, {:file, "/etc/hosts"}]}
+    {:ok, _resp} = HTTPoison.post("localhost:#{port}", body)
+    assert_receive r = %{headers: headers, body: body}
+    assert {"content-type", "multipart/form-data" <> rest} = List.keyfind(headers, "content-type", 0)
+    Raxx.Request.content(r)
+    |> IO.inspect
+    # just need three parameters for upload
+    # http://www.wooptoot.com/file-upload-with-sinatra
+    # %Raxx.Upload{
+    #   filename: "cat.png",
+    #   type: "image/png",
+    #   contents: "some text"
+    # }
+    # https://tools.ietf.org/html/rfc7578#section-4.1
+  end
+
   test "test handles request with split start-line ", %{port: port} do
     request = """
     GET / HTTP/1.1

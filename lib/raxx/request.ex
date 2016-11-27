@@ -49,6 +49,66 @@ defmodule Raxx.Request do
     end
   end
 
+  @doc """
+  get content, having parsed content type
+
+  could alternativly have Request.form
+  this should be extensible, have multipart form as a separate project
+  """
+  def content(request) do
+    case content_type(request) do
+      {"multipart/form-data", "boundary=" <> boundary} ->
+        parse_multipart_form_data(request.body, boundary)
+    end
+  end
+
+  @doc """
+  content type is a field of type media type (same as Accept)
+  https://tools.ietf.org/html/rfc7231#section-3.1.1.5
+
+  Content type should be send with any content.
+  If not can assume "application/octet-stream" or try content sniffing.
+  because of security risks it is recommended to be able to disable sniffing
+  """
+  def content_type(%{headers: headers}) do
+    case :proplists.get_value("content-type", headers) do
+      :undefined ->
+        :undefined
+      media_type ->
+        parse_media_type(media_type)
+    end
+  end
+
+  @doc """
+  https://tools.ietf.org/html/rfc7231#section-3.1.1.1
+  """
+  def parse_media_type(media_type) do
+    [type, modifier] = String.split(media_type, ";")
+    {type, String.strip(modifier)}
+  end
+
+  def parse_multipart_form_data(data, boundary) do
+    ["" | parts] = String.split(data, "--" <> boundary)
+    Enum.reduce(parts, [], fn
+      ("--\r\n", data) ->
+        data
+      ("\r\n" <> part, data) ->
+        {:ok, headers, body} = read_multipart_headers(part)
+        [body, ""] = String.split(body, ~r"\r\n$")
+        data ++ [{headers, body}]
+    end)
+  end
+
+  def read_multipart_headers(part, headers \\ []) do
+    case :erlang.decode_packet(:httph_bin, part, []) do
+      {:ok, {:http_header, _, key, _, value}, rest} ->
+        headers = [{String.downcase("#{key}"), value} | headers]
+        {:ok, headers, body} = read_multipart_headers(rest, headers)
+      {:ok, :http_eoh, rest} ->
+        {:ok, Enum.reverse(headers), rest}
+    end
+  end
+
   @doc false
   # TODO test
   def parse_path(path_string) do

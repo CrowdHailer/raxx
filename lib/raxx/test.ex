@@ -9,7 +9,7 @@ defmodule Raxx.Test do
   """
   @spec get(binary, %{binary => binary}) :: Request.t
   def get(path, headers \\ %{}) do
-    path = split_path(path)
+    path = Raxx.Request.split_path(path)
     %Request{path: path, headers: headers}
   end
 
@@ -18,7 +18,7 @@ defmodule Raxx.Test do
   """
   @spec post(binary, %{binary => binary}) :: Request.t
   def post(path, params) do
-    path = split_path(path)
+    path = Raxx.Request.split_path(path)
     %Request{
       method: "POST",
       path: path,
@@ -31,24 +31,11 @@ defmodule Raxx.Test do
   """
   @spec patch(binary, binary) :: Request.t
   def patch(path, body) do
-    path = split_path(path)
+    path = Raxx.Request.split_path(path)
     %Request{
       method: "PATCH",
       path: path,
       body: body
     }
-  end
-
-  defp split_path(str) do
-    str
-    |> String.split("/")
-    |> Enum.reject(&empty_string?/1)
-  end
-
-  defp empty_string?("") do
-    true
-  end
-  defp empty_string?(str) when is_binary(str) do
-    false
   end
 end

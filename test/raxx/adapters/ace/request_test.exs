@@ -8,21 +8,25 @@ defmodule Raxx.Adapters.Ace.RequestTest do
     {:ok, %{port: port}}
   end
 
+  # TODO move to general request case
+  test "post simple form encoding", %{port: port} do
+    {:ok, _resp} = HTTPoison.post("localhost:#{port}", {:form, [{"string", "foo"}, {"number", 3}]})
+    assert_receive request = %Raxx.Request{}
+    assert {"application/x-www-form-urlencoded", _} = Raxx.Request.content_type(request)
+
+    {:ok, form} = Raxx.Request.content(request)
+    assert %{"number" => "3", "string" => "foo"} == form
+  end
+
+  # TODO move to general request case
   test "post multipart form with file", %{port: port} do
-    body = {:multipart, [{"foo", "bar"}, {:file, "/etc/hosts"}]}
+    body = {:multipart, [{"plain", "string"}, {:file, "/etc/hosts"}]}
     {:ok, _resp} = HTTPoison.post("localhost:#{port}", body)
-    assert_receive r = %{headers: headers, body: body}
-    assert {"content-type", "multipart/form-data" <> rest} = List.keyfind(headers, "content-type", 0)
-    Raxx.Request.content(r)
-    |> IO.inspect
-    # just need three parameters for upload
-    # http://www.wooptoot.com/file-upload-with-sinatra
-    # %Raxx.Upload{
-    #   filename: "cat.png",
-    #   type: "image/png",
-    #   contents: "some text"
-    # }
-    # https://tools.ietf.org/html/rfc7578#section-4.1
+    assert_receive request = %Raxx.Request{}
+    assert {"multipart/form-data", _} = Raxx.Request.content_type(request)
+    {:ok, %{"plain" => "string", "file" => upload}} = Raxx.Request.content(request)
+    assert upload.filename == "hosts"
+    assert upload.type == "application/octet-stream"
   end
 
   test "test handles request with split start-line ", %{port: port} do

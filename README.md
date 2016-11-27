@@ -276,3 +276,67 @@ end
 If you have Elixir installed on your machine then you can treat this project as a normal mix project and run tests via `mix test`.
 
 If required a development environment can be created using [Vagrant](www.vagrantup.com).
+
+## Discussions
+
+These are not issues because there is not a decision on how best to proceed.
+
+#### Host header
+
+All information in the host header is duplicated in other parts the request struct.
+The Host header is always required.
+
+Therefore should the host header be deleted from this list of headers?
+It should never be relied on and users building request might add a host field but not a host header
+
+#### Lost information from paths
+
+Raxx will turn a variety of different path strings to the same path
+
+"//" == "/" -> []
+"/a//b" = "/a/b" -> ["a", "b"]
+"/a/?" == "/a/" == "/a" -> ["a"]
+
+I want Raxx to loose as little information about the request as possible.
+Therefore should the Server implemetations redirect clients to the canonical url
+
+#### HTTP connection model
+
+Call `handle_request` before the body is recieved.
+allows body to be streamed.
+test with websockets.
+All so check uses for transfer encoding in requests.
+
+#### Request creation
+
+```elixir
+get("/")
+get("/users?page=2")
+get({"/users", %{page: 2}}, [{"content-type", "application/json"}])
+post("/users", form(%{name: "barry"}), session(%{user: current}))
+post("/users", json(%{name: "barry"}), session(%{user: current}))
+post("/users", multipart(%{name: "barry", avatar: {file: "./avatar.jpg"}}), session(%{user: current}))
+```
+
+These functions could be part of `Raxx`, `Raxx.Test`, `Raxx.Request`, `Raxx.Client`
+
+My thinking is they belong on `Raxx.Request`:
+- they are constructors
+- test should have custom assertions `assert_redirect_to`, `assert_ok`
+- test should have helpers for calling a configured app
+- client should use connection to send over the wire
+
+```elixir
+use Raxx.Test, {MyApp, %{}}
+# Problem cannot set env per test.
+
+test "homepage" do
+  response = get("/")
+  assert_ok response
+end
+```
+
+#### Adapter verification
+
+Create a separate project `Raxx.Spec`, `Raxx.Verify`.
+It can be included in adapter specifications and defines a bunch of tests.

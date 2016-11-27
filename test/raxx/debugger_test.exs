@@ -10,12 +10,12 @@ end
 
 
 defmodule Raxx.DebuggerTest do
-  alias Raxx.{ErrorHandler, Test}
+  alias Raxx.ErrorHandler
   use ExUnit.Case
 
 
   test "will return request if no problems" do
-    response = ErrorHandler.handle_request(Test.get("/"), %{next: TroubleApp})
+    response = ErrorHandler.handle_request(%Raxx.Request{path: []}, %{next: TroubleApp})
     assert 200 = response.status
     assert "Dandy" = response.body
   end

@@ -271,21 +271,6 @@ end
 
 [HTML living standard](https://html.spec.whatwg.org/multipage/comms.html#server-sent-events)
 
-<!-- ### Raxx.Test
-
-`Raxx.Test`
-
-This module provides helpers for testing Raxx applications.
-
-```elixir
-test "hello app says hi" do
-  request = Raxx.Test.get("")
-  response = MyApp.handle_request(request, :no_env)
-  assert 200 = response.status
-  assert "Hello, World!" = response.body
-end
-``` -->
-
 ## Contributing
 
 If you have Elixir installed on your machine then you can treat this project as a normal mix project and run tests via `mix test`.

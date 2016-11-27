@@ -340,3 +340,10 @@ end
 
 Create a separate project `Raxx.Spec`, `Raxx.Verify`.
 It can be included in adapter specifications and defines a bunch of tests.
+
+#### Mount as header
+
+mount is a slightly special field it might want to be preserved to forwarded services.
+Although probably not. if preserved it should be custom header.
+
+resons not to preserve is backend services do not get to generate links.

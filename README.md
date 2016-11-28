@@ -293,9 +293,11 @@ It should never be relied on and users building request might add a host field b
 
 Raxx will turn a variety of different path strings to the same path
 
+```
 "//" == "/" -> []
 "/a//b" = "/a/b" -> ["a", "b"]
 "/a/?" == "/a/" == "/a" -> ["a"]
+```
 
 I want Raxx to loose as little information about the request as possible.
 Therefore should the Server implemetations redirect clients to the canonical url
@@ -349,3 +351,30 @@ mount is a slightly special field it might want to be preserved to forwarded ser
 Although probably not. if preserved it should be custom header.
 
 resons not to preserve is backend services do not get to generate links.
+
+#### Streamed Requests
+
+Large requests raise a number of issues and the current case of reading the whole request before calling the application.
+- If the request can be determined to be invalid from the headers then don't need to read the request.
+- files might be too large.
+
+There are a variety of solutions.
+- call application once headers read.
+  handle_request -> response | {:stream, state} | {:read, state}
+- write upload to file as read.
+  This will be at the adapter level.
+  Could be configured to go straight to IPFS/S3, I assume that S3 has a rename API call.
+  Use a worker to clean up the remote files, both sanitise and delete old
+  
+#### Extensible map of state machines
+
+Raxx.Waiting / Raxx.ReadingStartLine -> Raxx.ReadingHeaders -> Raxx.ReadingBody -> Raxx.Waiting
+Raxx.Waiting -> Raxx.ReadingMultipart -> Raxx.SendingChunks
+
+upgrade is just a way to replace whole state machine in Ace server. probably alot like socket hijack.
+
+Every state should have a `to_send` property.
+
+*Pachyderm*
+Entire Causality protocol over HTTP. Custom state machine, handle_conflict etc
+Send a backlog of requests as a multipart/pacyderm; version=1

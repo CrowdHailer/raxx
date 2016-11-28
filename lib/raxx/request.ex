@@ -86,8 +86,12 @@ defmodule Raxx.Request do
   https://tools.ietf.org/html/rfc7231#section-3.1.1.1
   """
   def parse_media_type(media_type) do
-    [type, modifier] = String.split(media_type, ";")
-    {type, String.strip(modifier)}
+    case String.split(media_type, ";") do
+      [type, modifier] ->
+        {type, String.strip(modifier)}
+      [type] ->
+        {type, ""}
+    end
   end
 
   defmodule Upload do

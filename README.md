@@ -15,7 +15,7 @@ Add raxx to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:raxx, "~> 0.5.1"}]
+  [{:raxx, "~> 0.5.2"}]
 end
 ```
 
@@ -335,6 +335,8 @@ test "homepage" do
   assert_ok response
 end
 ```
+
+use could set up default host port etc.
 
 #### Adapter verification
 

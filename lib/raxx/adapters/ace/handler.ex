@@ -63,8 +63,7 @@ defmodule Raxx.Adapters.Ace.Handler do
         {:send, Raxx.Chunked.end_chunk, {%Raxx.Chunked{app: {mod, state}}, partial, buffer}}
     end
   end
-  def terminate(_reason, {_app, buffer, _conn}) do
-    IO.inspect(buffer)
+  def terminate(_reason, {_app, _partial, _buffer}) do
     :ok
   end
 

@@ -20,13 +20,13 @@ defmodule Raxx.Adapters.Ace.RequestTest do
 
   # TODO move to general request case
   test "post multipart form with file", %{port: port} do
-    body = {:multipart, [{"plain", "string"}, {:file, "/etc/hosts"}]}
+    body = {:multipart, [{"plain", "string"}, {:file, "test/hello.txt"}]}
     {:ok, _resp} = HTTPoison.post("localhost:#{port}", body)
     assert_receive request = %Raxx.Request{}
     assert {"multipart/form-data", _} = Raxx.Request.content_type(request)
     {:ok, %{"plain" => "string", "file" => upload}} = Raxx.Request.content(request)
-    assert upload.filename == "hosts"
-    assert upload.type == "application/octet-stream"
+    assert upload.filename == "hello.txt"
+    assert upload.type == "text/plain"
   end
 
   test "test handles request with split start-line ", %{port: port} do

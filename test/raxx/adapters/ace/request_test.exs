@@ -14,7 +14,7 @@ defmodule Raxx.Adapters.Ace.RequestTest do
     assert_receive request = %Raxx.Request{}
     assert {"application/x-www-form-urlencoded", _} = Raxx.Request.content_type(request)
 
-    {:ok, form} = Raxx.Request.content(request)
+    {:ok, form} = URI2.Query.decode(request.body)
     assert %{"number" => "3", "string" => "foo"} == form
   end
 
@@ -24,7 +24,8 @@ defmodule Raxx.Adapters.Ace.RequestTest do
     {:ok, _resp} = HTTPoison.post("localhost:#{port}", body)
     assert_receive request = %Raxx.Request{}
     assert {"multipart/form-data", _} = Raxx.Request.content_type(request)
-    {:ok, %{"plain" => "string", "file" => upload}} = Raxx.Request.content(request)
+    {:ok, parsed} = Raxx.Parsers.Multipart.parse(request)
+    %{"plain" => "string", "file" => upload} = Enum.into(parsed, %{})
     assert upload.filename == "hello.txt"
     assert upload.type == "text/plain"
   end

@@ -50,22 +50,6 @@ defmodule Raxx.Request do
   end
 
   @doc """
-  get content, having parsed content type
-
-  could alternativly have Request.form
-  this should be extensible, have multipart form as a separate project
-  # type spec, this should return an error for un parsable content
-  """
-  def content(request) do
-    case content_type(request) do
-      {"multipart/form-data", "boundary=" <> boundary} ->
-        {:ok, Raxx.Parsers.Multipart.decode(request.body, boundary)}
-      {"application/x-www-form-urlencoded", _} ->
-        {:ok, URI.decode_query(request.body)}
-    end
-  end
-
-  @doc """
   content type is a field of type media type (same as Accept)
   https://tools.ietf.org/html/rfc7231#section-3.1.1.5
 

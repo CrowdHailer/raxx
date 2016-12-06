@@ -18,13 +18,16 @@ defmodule Raxx.Parsers.Multipart do
   def parse(request) do
     case Raxx.Request.content_type(request) do
       {"multipart/form-data", "boundary=" <> boundary} ->
-        decode(request.body, boundary)
+        parse_body(request.body, boundary)
+      other ->
+        {:error, :not_multipart_content}
     end
   end
 
-  def decode(data, boundary) do
+  @doc false
+  def parse_body(data, boundary) do
     ["" | parts] = String.split(data, "--" <> boundary)
-    Enum.reduce(parts, [], fn
+    parsed = Enum.reduce(parts, [], fn
       ("--\r\n", data) ->
         data
       ("\r\n" <> part, data) ->
@@ -47,7 +50,7 @@ defmodule Raxx.Parsers.Multipart do
 
         end
     end)
-    |> Enum.into(%{})
+    {:ok, parsed}
   end
 
   def read_multipart_headers(part, headers \\ []) do

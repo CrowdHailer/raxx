@@ -36,36 +36,63 @@ defmodule URI2.Query do
   end
 
   @doc """
+  Decode a query string into a nested map of values
+
+      iex> URI2.Query.decode("percentages[]=15&percentages[]=99+%21")
+      {:ok, %{"percentages" => ["15", "99 !"]}}
+  """
+  def decode(query_string) when is_binary(query_string) do
+    case parse(query_string) do
+      {:ok, key_value_pairs} ->
+        build_nested(key_value_pairs)
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Use bracket notation for nested queries.
+
+  Note this is not a formal part of the query specification.
 
   ## Examples
 
-  iex> URI2.Query.build_nested([{"foo", "1"}, {"bar", "2"}])
-  {:ok, %{"foo" => "1", "bar" => "2"}}
+      iex> URI2.Query.build_nested([{"foo", "1"}, {"bar", "2"}])
+      {:ok, %{"foo" => "1", "bar" => "2"}}
 
-  iex> URI2.Query.build_nested([{"foo[]", "1"}, {"foo[]", "2"}])
-  {:ok, %{"foo" => ["1", "2"]}}
+      iex> URI2.Query.build_nested([{"foo[]", "1"}, {"foo[]", "2"}])
+      {:ok, %{"foo" => ["1", "2"]}}
 
-  iex> URI2.Query.build_nested([{"foo[bar]", "1"}, {"foo[baz]", "2"}])
-  {:ok, %{"foo" => %{"bar" => "1"}}}
+      iex> URI2.Query.build_nested([{"foo[bar]", "1"}, {"foo[baz]", "2"}])
+      {:ok, %{"foo" => %{"bar" => "1", "baz" => "2"}}}
+
+      iex> URI2.Query.build_nested([{"foo[bar][baz]", "1"}])
+      {:ok, %{"foo" => %{"bar" => %{"baz" => "1"}}}}
+
+      iex> URI2.Query.build_nested([{"foo[bar][]", "1"}, {"foo[bar][]", "2"}])
+      {:ok, %{"foo" => %{"bar" => ["1", "2"]}}}
+
+      # I think this case does not work because it is ambiguous whether the second kv item should be added to the first list item.
+      # iex> URI2.Query.build_nested([{"foo[][bar]", "1"}, {"foo[][baz]", "2"}])
+      # {:ok, %{"foo" => [%{"bar" => "1"}, %{"baz" => "2"}]}}
   """
   def build_nested(key_value_pairs, nested \\ %{})
   def build_nested([], nested) do
     {:ok, nested}
   end
-  def build_nested([{key, value} | rest], nested) do
-    case :binary.split(key, "[") do
+  def build_nested([{key, value} | key_value_pairs], nested) do
+    {:ok, nested} = case :binary.split(key, "[") do
       [key] ->
-        {:ok, nested} = put_single_value(nested, key, value)
-        build_nested(rest, nested)
+        put_single_value(nested, key, value)
       [key, "]"] ->
-        {:ok, nested} = put_array_entry(nested, key, value)
-        build_nested(rest, nested)
+        put_array_entry(nested, key, value)
       [key, rest] ->
         case :binary.split(rest, "]") do
-          [subkey, ""] ->
-            {:ok, nested} = put_sub_query(nested, key, [{subkey, value}])
+          [subkey, rest] ->
+            put_sub_query(nested, key, [{subkey <> rest, value}])
         end
     end
+    build_nested(key_value_pairs, nested)
   end
 
   defp put_sub_query(map, key, key_value_pairs) do

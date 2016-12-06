@@ -15,7 +15,7 @@ Add raxx to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:raxx, "~> 0.5.2"}]
+  [{:raxx, "~> 0.6.0"}]
 end
 ```
 
@@ -365,7 +365,7 @@ There are a variety of solutions.
   This will be at the adapter level.
   Could be configured to go straight to IPFS/S3, I assume that S3 has a rename API call.
   Use a worker to clean up the remote files, both sanitise and delete old
-  
+
 #### Extensible map of state machines
 
 Raxx.Waiting / Raxx.ReadingStartLine -> Raxx.ReadingHeaders -> Raxx.ReadingBody -> Raxx.Waiting

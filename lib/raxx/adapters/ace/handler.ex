@@ -74,7 +74,9 @@ defmodule Raxx.Adapters.Ace.Handler do
       {:more, :undefined} ->
         {:more, {:start_line, conn}, buffer}
       {:ok, {:http_request, method, {:abs_path, path_string}, _version}, rest} ->
-        {path, query} = Raxx.Request.parse_path(path_string)
+        %{path: path, query: query_string} = URI.parse(path_string)
+        {:ok, query} = URI2.Query.decode(query_string || "")
+        path = Raxx.Request.split_path(path)
         request = %Raxx.Request{method: method, path: path, query: query, headers: []}
         process_buffer(rest, {:headers, request})
     end

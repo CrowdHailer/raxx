@@ -9,6 +9,12 @@ defmodule Raxx.Adapters.Ace.RequestTest do
   end
 
   # TODO move to general request case
+  test "request shows correct nested query", %{port: port} do
+    {:ok, _resp} = HTTPoison.get("localhost:#{port}/?foo[]=a+b&foo[]=a%21")
+    assert_receive %{query: %{"foo" => ["a b", "a!"]}}
+  end
+
+  # TODO move to general request case
   test "post simple form encoding", %{port: port} do
     {:ok, _resp} = HTTPoison.post("localhost:#{port}", {:form, [{"string", "foo"}, {"number", 3}]})
     assert_receive request = %Raxx.Request{}

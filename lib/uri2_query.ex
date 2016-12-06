@@ -30,7 +30,7 @@ defmodule URI2.Query do
     try do
       {:ok, URI.query_decoder(query_string) |> Enum.to_list()}
     rescue
-      error in ArgumentError ->
+      _error in ArgumentError ->
         {:error, :invalid_query}
     end
   end
@@ -81,7 +81,7 @@ defmodule URI2.Query do
     {:ok, nested}
   end
   def build_nested([{key, value} | key_value_pairs], nested) do
-    {:ok, nested} = case :binary.split(key, "[") do
+    updated = case :binary.split(key, "[") do
       [key] ->
         put_single_value(nested, key, value)
       [key, "]"] ->
@@ -92,7 +92,12 @@ defmodule URI2.Query do
             put_sub_query(nested, key, [{subkey <> rest, value}])
         end
     end
-    build_nested(key_value_pairs, nested)
+    case updated do
+      {:ok, nested} ->
+        build_nested(key_value_pairs, nested)
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   defp put_sub_query(map, key, key_value_pairs) do
@@ -100,6 +105,8 @@ defmodule URI2.Query do
       subquery = %{} ->
         {:ok, subquery} = build_nested(key_value_pairs, subquery)
         {:ok, Map.put(map, key, subquery)}
+      other ->
+        {:error, {:key_already_defined_as, other}}
     end
   end
 
@@ -107,6 +114,8 @@ defmodule URI2.Query do
     case Map.has_key?(map, key) do
       false ->
         {:ok, Map.put_new(map, key, value)}
+      true ->
+        {:error, {:key_already_defined_as, Map.get(map, key)}}
     end
   end
 
@@ -114,6 +123,8 @@ defmodule URI2.Query do
     case Map.get(map, key, []) do
       values when is_list(values) ->
         {:ok, Map.put(map, key, values ++ [value])}
+      other ->
+        {:error, {:key_already_defined_as, other}}
     end
   end
 end

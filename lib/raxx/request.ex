@@ -78,29 +78,6 @@ defmodule Raxx.Request do
     end
   end
 
-  defmodule Upload do
-    # just need three parameters for upload
-    # http://www.wooptoot.com/file-upload-with-sinatra
-    # %Raxx.Upload{
-    #   filename: "cat.png",
-    #   type: "image/png",
-    #   contents: "some text"
-    # }
-    # https://tools.ietf.org/html/rfc7578#section-4.1
-    defstruct [:filename, :type, :content]
-  end
-
-  @doc false
-  # TODO test
-  def parse_path(path_string) do
-    case String.split(path_string, "?") do
-      [path_string, query_string] ->
-        {split_path(path_string), URI.decode_query(query_string)}
-      [path_string] ->
-        {split_path(path_string), %{}}
-    end
-  end
-
   def split_path(path_string) do
     path_string
     |> String.split("/")

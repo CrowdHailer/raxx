@@ -42,7 +42,7 @@ defmodule Raxx.Parsers.Multipart do
             data ++ [{name, body}]
           filename ->
             filename = String.slice(filename, 1..-2)
-            data ++ [{name, %Raxx.Request.Upload{
+            data ++ [{name, %Raxx.Upload{
               filename: filename,
               type: :proplists.get_value("content-type", headers),
               content: body

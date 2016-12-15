@@ -20,4 +20,16 @@ defmodule Raxx.MethodOverrideTest do
     assert :DELETE == request.method
   end
 
+  test "override works with lowercase form contents" do
+    request = %Raxx.Request{method: :POST, body: %{"_method" => "delete"}}
+    |> Raxx.MethodOverride.override_method
+    assert :DELETE == request.method
+  end
+
+  test "does not allow unknown methods" do
+    request = %Raxx.Request{method: :POST, body: %{"_method" => "PARTY"}}
+    |> Raxx.MethodOverride.override_method
+    assert :POST == request.method
+  end
+
 end

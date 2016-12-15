@@ -19,7 +19,14 @@ defmodule Raxx.MethodOverride do
   def override_method(request = %{method: :POST, body: form}) do
     case Map.pop(form, "_method") do
       {method, form} ->
-        %{request | method: String.to_atom(method)}
+        method = String.upcase(method)
+        cond do
+          method in ["PUT", "PATCH", "DELETE"] ->
+            method = String.to_existing_atom(method)
+            %{request | method: method}
+          true ->
+            request
+        end
     end
   end
 end

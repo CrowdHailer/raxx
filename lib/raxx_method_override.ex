@@ -23,7 +23,7 @@ defmodule Raxx.MethodOverride do
         cond do
           method in ["PUT", "PATCH", "DELETE"] ->
             method = String.to_existing_atom(method)
-            %{request | method: method}
+            %{request | method: method, body: form}
           true ->
             request
         end

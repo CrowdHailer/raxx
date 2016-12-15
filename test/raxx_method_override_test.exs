@@ -20,6 +20,12 @@ defmodule Raxx.MethodOverrideTest do
     assert :DELETE == request.method
   end
 
+  test "overridding method removes the _method field from form" do
+    request = %Raxx.Request{method: :POST, body: %{"_method" => "PUT"}}
+    |> Raxx.MethodOverride.override_method
+    assert :error == Map.fetch(request.body, "_method")
+  end
+
   test "override works with lowercase form contents" do
     request = %Raxx.Request{method: :POST, body: %{"_method" => "delete"}}
     |> Raxx.MethodOverride.override_method

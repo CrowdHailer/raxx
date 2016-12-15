@@ -16,9 +16,9 @@ defmodule Raxx.MethodOverride do
   @doc """
   Edits the request method based on the request body
   """
-  def override_method(request = %{method: :POST, body: form}) do
+  def override_method(request = %{method: :POST, body: form = %{}})  do
     case Map.pop(form, "_method") do
-      {method, form} ->
+      {method, form} when is_binary(method)->
         method = String.upcase(method)
         cond do
           method in ["PUT", "PATCH", "DELETE"] ->
@@ -27,6 +27,11 @@ defmodule Raxx.MethodOverride do
           true ->
             request
         end
+      {nil, _form} ->
+        request
     end
+  end
+  def override_method(request) do
+    request
   end
 end

@@ -32,4 +32,29 @@ defmodule Raxx.MethodOverrideTest do
     assert :POST == request.method
   end
 
+  test "leaves non-POST requests unmodified, e.g. GET" do
+    request = %Raxx.Request{method: :GET, body: %{"_method" => "DELETE"}}
+    |> Raxx.MethodOverride.override_method
+    assert :GET == request.method
+  end
+
+  # Not entirely sure of the logic here.
+  test "leaves non-POST requests unmodified, e.g. PUT" do
+    request = %Raxx.Request{method: :PUT, body: %{"_method" => "DELETE"}}
+    |> Raxx.MethodOverride.override_method
+    assert :PUT == request.method
+  end
+
+  test "unparsed bodies are not considered" do
+    request = %Raxx.Request{method: :POST, body: "_method=PATCH"}
+    |> Raxx.MethodOverride.override_method
+    assert :POST == request.method
+  end
+
+  test "forms with out a _method field are a no-op" do
+    request = %Raxx.Request{method: :POST, body: %{"other" => "PUT"}}
+    |> Raxx.MethodOverride.override_method
+    assert :POST == request.method
+  end
+
 end

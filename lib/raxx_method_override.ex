@@ -9,8 +9,10 @@ defmodule Raxx.MethodOverride do
   - `PATCH`
   - `DELETE`
 
-  Should the field be customisable? `_method` as default.
-  Should it ever error for bad requests.
+  The body is expected to be parsed aready and in the form of a map.
+
+  *Should the field be customisable? `_method` as default.*
+  *Should it ever error for bad requests.*
   """
 
   @doc """

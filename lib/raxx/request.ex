@@ -41,10 +41,10 @@ defmodule Raxx.Request do
     scheme: nil,
     host: nil,
     port: nil,
-    method: nil, # In ring/rack this is request_method
+    method: nil,
     mount: [],
-    path: [], # This is path_info but is often used so be good to shorten
-    query: %{}, # comes from the search string
+    path: [],
+    query: %{},
     headers: [],
     body: nil
   ]

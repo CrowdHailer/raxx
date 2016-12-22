@@ -61,11 +61,24 @@ defmodule Raxx.RequestTest do
     assert %{"foo" => "bar"} == get("/?foo=bar").query
   end
 
+  test "query can be passed as tuple" do
+    assert %{"foo" => "bar"} == get({"/", %{"foo" => "bar"}}).query
+    assert %{"foo" => "bar"} == get({"/?", %{"foo" => "bar"}}).query
+  end
+
+  test "query with non_binary content is converted" do
+    assert %{"foo" => "bar"} == get({"/", %{foo: "bar"}}).query
+    assert %{"foo" => "5"} == get({"/", %{"foo" => 5}}).query
+  end
+
+  test "query can be built from nested query string" do
+    assert %{"foo" => %{"bar" => "baz"}} == get("/?foo[bar]=baz").query
+    assert %{"foo" => %{"bar" => "5"}} == get({"/", %{foo: %{bar: 5}}}).query
+  end
+
   # TODO test query passed in as tuple
   # TODO test content and headers
   # TODO test content as io_list, binary, map of body and headers or headers only
-  # TODO stringify query keys
-  # TODO test nested query
   # TODO pass in uri as map
   # TODO document constructor methods
   # TODO consider invalid cases. i.e. get request with a body (probably rely on user to not ask for invalid queries)

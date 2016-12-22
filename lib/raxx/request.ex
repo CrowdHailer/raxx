@@ -103,7 +103,7 @@ defmodule Raxx.Request do
     path = url.path
     path = Raxx.Request.split_path(path)
     # Done to stringify keys
-    # query = query |> Plug.Conn.Query.encode |> Plug.Conn.Query.decode
+    query = query |> Plug.Conn.Query.encode |> Plug.Conn.Query.decode
     struct(Raxx.Request,
       scheme: url.scheme,
       host: url.host,

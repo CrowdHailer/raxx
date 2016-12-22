@@ -28,14 +28,14 @@ defmodule Raxx.Request do
   @type cookies :: %{binary => binary}
 
   defstruct [
-    host: "www.example.com",
-    port: 80,
-    method: :GET, # In ring/rack this is request_method
+    host: nil,
+    port: nil,
+    method: nil, # In ring/rack this is request_method
     mount: [],
     path: [], # This is path_info but is often used so be good to shorten
     query: %{}, # comes from the search string
     headers: [],
-    body: ""
+    body: nil
   ]
 
   @doc """

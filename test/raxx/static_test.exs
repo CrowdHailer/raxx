@@ -26,49 +26,49 @@ defmodule Raxx.StaticTest do
   use ExUnit.Case
 
   test "Correct file contents is served" do
-    request = %Raxx.Request{path: ["hello.txt"]}
+    request = %Raxx.Request{method: :GET, path: ["hello.txt"]}
     response = SingleFile.handle_request(request, [])
     assert "Hello, World!\n" == response.body
   end
 
   test "A file is served with a 200 response" do
-    request = %Raxx.Request{path: ["hello.txt"]}
+    request = %Raxx.Request{method: :GET, path: ["hello.txt"]}
     response = SingleFile.handle_request(request, [])
     assert 200 == response.status
   end
 
   test "A file is served with the correct content length" do
-    request = %Raxx.Request{path: ["hello.txt"]}
+    request = %Raxx.Request{method: :GET, path: ["hello.txt"]}
     response = SingleFile.handle_request(request, [])
     assert {"content-length", "14"} == List.keyfind(response.headers, "content-length", 0)
   end
 
   test "A text file is served with the correct content type" do
-    request = %Raxx.Request{path: ["hello.txt"]}
+    request = %Raxx.Request{method: :GET, path: ["hello.txt"]}
     response = SingleFile.handle_request(request, [])
     assert {"content-type", "text/plain"} == List.keyfind(response.headers, "content-type", 0)
   end
 
   test "A css file is served with the correct content type" do
-    request = %Raxx.Request{path: ["site.css"]}
+    request = %Raxx.Request{method: :GET, path: ["site.css"]}
     response = SingleFile.handle_request(request, [])
     assert {"content-type", "text/css"} == List.keyfind(response.headers, "content-type", 0)
   end
 
   test "No file results in 404 response" do
-    request = %Raxx.Request{path: ["nope.txt"]}
+    request = %Raxx.Request{method: :GET, path: ["nope.txt"]}
     response = SingleFile.handle_request(request, [])
     assert 404 == response.status
   end
 
   test "directorys are not found" do
-    request = %Raxx.Request{path: ["sub"]}
+    request = %Raxx.Request{method: :GET, path: ["sub"]}
     response = SingleFile.handle_request(request, [])
     assert 404 == response.status
   end
 
   test "files in subdirectories are  found" do
-    request = %Raxx.Request{path: ["sub", "file.txt"]}
+    request = %Raxx.Request{method: :GET, path: ["sub", "file.txt"]}
     response = SingleFile.handle_request(request, [])
     assert 200 == response.status
   end

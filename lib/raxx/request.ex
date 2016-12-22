@@ -49,6 +49,73 @@ defmodule Raxx.Request do
     body: nil
   ]
 
+  def get(url, body \\ "", headers \\ []) do
+    build(:GET, url, body, headers)
+  end
+
+  def post(url, body \\ "", headers \\ []) do
+    build(:POST, url, body, headers)
+  end
+
+  def put(url, body \\ "", headers \\ []) do
+    build(:PUT, url, body, headers)
+  end
+
+  def patch(url, body \\ "", headers \\ []) do
+    build(:PATCH, url, body, headers)
+  end
+
+  def delete(url, body \\ "", headers \\ []) do
+    build(:DELETE, url, body, headers)
+  end
+
+  def options(url, body \\ "", headers \\ []) do
+    build(:OPTIONS, url, body, headers)
+  end
+
+  def head(url, body \\ "", headers \\ []) do
+    build(:HEAD, url, body, headers)
+  end
+
+  # This should be the `Raxx.request` function
+  defp build(method, url, body, headers) when is_binary(url) do
+    {url, query} = case String.split(url, "?") do
+      [url, qs] ->
+        query = URI.decode_query(qs)
+        {url, query}
+      [url] ->
+        {url, %{}}
+    end
+    build(method, url, query, body, headers)
+  end
+  defp build(method, {url, query}, body, headers) do
+    # DEBT check url string for query
+    build(method, url, query, body, headers)
+  end
+  defp build(method, url, query, body, headers) when is_list(body) do
+    build(method, url, query, "", body ++ headers)
+  end
+  defp build(method, url, query, %{headers: headers, body: body}, extra_headers) do
+    build(method, url, query, body, headers ++ extra_headers)
+  end
+  defp build(method, url, query, body, headers) do
+    url = URI.parse(url)
+    path = url.path
+    path = Raxx.Request.split_path(path)
+    # Done to stringify keys
+    # query = query |> Plug.Conn.Query.encode |> Plug.Conn.Query.decode
+    struct(Raxx.Request,
+      scheme: url.scheme,
+      host: url.host,
+      port: url.port,
+      method: method,
+      path: path,
+      query: query,
+      headers: headers,
+      body: body
+    )
+  end
+
   def split_path(path_string) do
     path_string
     |> String.split("/")

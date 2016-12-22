@@ -100,34 +100,11 @@ defmodule Raxx.Response do
     |> Enum.into(%{})
   end
 
-  @doc """
-  Return a `Raxx.Response` that informs the client that the resouce has been found elsewhere.
-
-  This function sets a `Location` header as well as sending a redirection page.
-  """
-  def redirect(path, headers \\ %{}) do
-    # TODO Plug checks that the path does not begin with '//' or no '/'
-    %{
-      status: 302,
-      headers: Map.merge(%{"location" => path}, headers),
-      body: redirect_page(path)
-    }
-  end
-
   def informational?(%{status: code}), do: 100 <= code and code < 200
   def success?(%{status: code}), do: 200 <= code and code < 300
   def redirect?(%{status: code}), do: 300 <= code and code < 400
   def client_error?(%{status: code}), do: 400 <= code and code < 500
   def server_error?(%{status: code}), do: 500 <= code and code < 600
-
-  @doc """
-  Returns the header value set on the response object specified by `name`.
-  """
-  def get_header(%{headers: headers}, header_name) do
-    header_name = String.downcase(header_name)
-    [header_value] = headers[header_name] # Assumes single header value
-    header_value
-  end
 
   @doc """
   Adds a set cookie header to the response.
@@ -147,12 +124,6 @@ defmodule Raxx.Response do
   def expire_cookie(r = %{headers: headers}, key) do
     cookies = Map.get(headers, "set-cookie", [])
     %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/"]}}
-  end
-
-  defp redirect_page(path) do
-    """
-      <html><body>You are being <a href=\"#{ escape(path) }\">redirected</a>.</body></html>
-    """
   end
 
   # TODO move escapse to util

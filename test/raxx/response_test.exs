@@ -42,17 +42,6 @@ defmodule Raxx.ResponseTest do
     assert response.body == content
   end
 
-  # HEADERS
-  test "can create a not_found response with extra headers" do
-    response = Response.ok("nothing here", %{"my-header" => "my-value"})
-    assert "my-value" == Response.get_header(response, "my-header")
-  end
-
-  test "can fetch content type header" do
-    response = Response.ok("nothing here", %{"content-type" => ["text/plain"]})
-    assert "text/plain" == Response.get_header(response, "Content-Type")
-  end
-
   @tag :skip
   test "can set a session cookie" do
     response = Response.ok() |> Response.set_cookie("foo", "bar")

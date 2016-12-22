@@ -37,8 +37,6 @@ defmodule Raxx.Request do
     body: binary
   }
 
-  @type cookies :: %{binary => binary}
-
   defstruct [
     scheme: nil,
     host: nil,
@@ -50,46 +48,6 @@ defmodule Raxx.Request do
     headers: [],
     body: nil
   ]
-
-  @doc """
-  Fetches and parse cookies from the request.
-  """
-  @spec parse_cookies(request) :: cookies
-  def parse_cookies(%{headers: headers}) do
-    case Map.get(headers, "cookie") do
-      nil -> Raxx.Cookie.parse([])
-      cookie_string -> Raxx.Cookie.parse(cookie_string)
-    end
-  end
-
-  @doc """
-  content type is a field of type media type (same as Accept)
-  https://tools.ietf.org/html/rfc7231#section-3.1.1.5
-
-  Content type should be send with any content.
-  If not can assume "application/octet-stream" or try content sniffing.
-  because of security risks it is recommended to be able to disable sniffing
-  """
-  def content_type(%{headers: headers}) do
-    case :proplists.get_value("content-type", headers) do
-      :undefined ->
-        :undefined
-      media_type ->
-        parse_media_type(media_type)
-    end
-  end
-
-  @doc """
-  https://tools.ietf.org/html/rfc7231#section-3.1.1.1
-  """
-  def parse_media_type(media_type) do
-    case String.split(media_type, ";") do
-      [type, modifier] ->
-        {type, String.strip(modifier)}
-      [type] ->
-        {type, ""}
-    end
-  end
 
   def split_path(path_string) do
     path_string

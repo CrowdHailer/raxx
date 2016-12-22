@@ -16,7 +16,7 @@ defmodule Raxx.Parsers.Multipart do
   """
   # TODO add error case
   def parse(request) do
-    case Raxx.Request.content_type(request) do
+    case Raxx.Headers.content_type(request) do
       {"multipart/form-data", "boundary=" <> boundary} ->
         parse_body(request.body, boundary)
       other ->

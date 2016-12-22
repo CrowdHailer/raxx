@@ -2,8 +2,19 @@ defmodule Raxx.Request do
   @moduledoc """
   HTTP requests to a Raxx application are encapsulated in a `Raxx.Request` struct.
 
+  A request has all the properties of the url it was sent to.
+  In addition it has optional content, in the body.
+  As well as a variable number of headers that contain meta data.
+
+  where appropriate URI properties are named from this definition.
+
+  > scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]
+
+  from [wikipedia](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Syntax)
+
   The contents are itemised below:
 
+  | **scheme** | `http` or `https`, depending on the transport used. |
   | **host** | The location of the hosting server, as a binary. e.g. `www.example.com`. |
   | **port** | The connection port on the server, as an integer. |
   | **method** | The HTTP request method, such as “GET” or “POST”, as a binary. This cannot ever be an empty string, and is always uppercase. |
@@ -15,6 +26,7 @@ defmodule Raxx.Request do
   """
 
   @type request :: %__MODULE__{
+    scheme: binary,
     host: binary,
     port: :inet.port_number,
     method: binary,
@@ -28,6 +40,7 @@ defmodule Raxx.Request do
   @type cookies :: %{binary => binary}
 
   defstruct [
+    scheme: nil,
     host: nil,
     port: nil,
     method: nil, # In ring/rack this is request_method

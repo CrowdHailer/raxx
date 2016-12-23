@@ -66,6 +66,11 @@ defmodule Raxx.RequestTest do
     assert %{"foo" => "bar"} == get({"/?", %{"foo" => "bar"}}).query
   end
 
+  test "tuple query is merged with query in string" do
+    assert %{"foo" => "bar", "baz" => "foo"} == get({"/?baz=foo", %{"foo" => "bar"}}).query
+    assert %{"foo" => "baz"} == get({"/?foo=bar", %{foo: "baz"}}).query
+  end
+
   test "query with non_binary content is converted" do
     assert %{"foo" => "bar"} == get({"/", %{foo: "bar"}}).query
     assert %{"foo" => "5"} == get({"/", %{"foo" => 5}}).query
@@ -76,10 +81,27 @@ defmodule Raxx.RequestTest do
     assert %{"foo" => %{"bar" => "5"}} == get({"/", %{foo: %{bar: 5}}}).query
   end
 
-  # TODO test query passed in as tuple
-  # TODO test content and headers
-  # TODO test content as io_list, binary, map of body and headers or headers only
+  test "body can be set as binary" do
+    assert "Hello, World!" == get("/", "Hello, World!").body
+  end
+
+  test "body can be an iolist" do
+    assert ["Hello, World!"] == get("/", ["Hello, World!"]).body
+  end
+
+  test "body can be set as part of content map" do
+    content = %{body: "Hello, World!", headers: [{"content-type", "application/x-www-form-urlencoded"}]}
+    assert "Hello, World!" == get("/", content).body
+  end
+
+  test "extra headers can be added as last argument" do
+    assert [{"referer", "/home"}] == get("/", [{"referer", "/home"}]).headers
+    assert [{"referer", "/home"}] == get("/", "Hello, World!", [{"referer", "/home"}]).headers
+  end
+
   # TODO pass in uri as map
+  # TODO deep merge query
+  # TODO pass in path as list
   # TODO document constructor methods
   # TODO consider invalid cases. i.e. get request with a body (probably rely on user to not ask for invalid queries)
 end

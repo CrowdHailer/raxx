@@ -79,38 +79,35 @@ defmodule Raxx.Request do
 
   # This should be the `Raxx.request` function
   defp build(method, url, body, headers) when is_binary(url) do
-    {url, query} = case String.split(url, "?") do
-      [url, qs] ->
-        query = URI.decode_query(qs)
-        {url, query}
-      [url] ->
-        {url, %{}}
-    end
-    build(method, url, query, body, headers)
+    url = URI.parse(url)
+    url = %{url | query: Plug.Conn.Query.decode(url.query || "")}
+    build(method, url, body, headers)
   end
   defp build(method, {url, query}, body, headers) do
     # DEBT check url string for query
-    build(method, url, query, body, headers)
-  end
-  defp build(method, url, query, body, headers) when is_list(body) do
-    build(method, url, query, "", body ++ headers)
-  end
-  defp build(method, url, query, %{headers: headers, body: body}, extra_headers) do
-    build(method, url, query, body, headers ++ extra_headers)
-  end
-  defp build(method, url, query, body, headers) do
     url = URI.parse(url)
-    path = url.path
-    path = Raxx.Request.split_path(path)
-    # Done to stringify keys
+    url_query = Plug.Conn.Query.decode(url.query || "")
     query = query |> Plug.Conn.Query.encode |> Plug.Conn.Query.decode
+    query = Map.merge(url_query, query)
+    url = %{url | query: query}
+    build(method, url, body, headers)
+  end
+  # This pattern match cannot be an iolist, it contains a tuple.
+  # It is therefore assumed to be body content
+  defp build(method, url, body = [{_, _} | _], headers) do
+    build(method, url, "", body ++ headers)
+  end
+  defp build(method, url, %{headers: headers, body: body}, extra_headers) do
+    build(method, url, body, headers ++ extra_headers)
+  end
+  defp build(method, url, body, headers) do
     struct(Raxx.Request,
       scheme: url.scheme,
       host: url.host,
       port: url.port,
       method: method,
-      path: path,
-      query: query,
+      path: Raxx.Request.split_path(url.path),
+      query: url.query,
       headers: headers,
       body: body
     )

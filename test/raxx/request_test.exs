@@ -1,6 +1,7 @@
 defmodule Raxx.RequestTest do
   use ExUnit.Case
   import Raxx.Request
+  doctest Raxx.Request
 
   test "get sets the correct http method" do
     assert :GET == get("/").method

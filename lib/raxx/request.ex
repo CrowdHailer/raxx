@@ -6,7 +6,7 @@ defmodule Raxx.Request do
   In addition it has optional content, in the body.
   As well as a variable number of headers that contain meta data.
 
-  where appropriate URI properties are named from this definition.
+  Where appropriate URI properties are named from this definition.
 
   > scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]
 
@@ -23,6 +23,15 @@ defmodule Raxx.Request do
   | **query** | The query parameters from the URL search string, formatted as a map of strings. |
   | **headers** | The headers from the HTTP request as a map of strings. Note all headers will be downcased, e.g. `%{"content-type" => "text/plain"}` |
   | **body** | The body content sent with the request |
+
+  ## Examples
+
+      iex> get("http://example.com:80/some/path?query=foo", "Hello, World!", [{"content-type", "tex/plain"}])
+      %Raxx.Request{body: "Hello, World!",
+          headers: [{"content-type", "tex/plain"}], host: "example.com",
+          method: :GET, mount: [], path: ["some", "path"], port: 80,
+          query: %{"query" => "foo"}, scheme: "http"}
+
   """
 
   @type request :: %__MODULE__{
@@ -49,32 +58,81 @@ defmodule Raxx.Request do
     body: nil
   ]
 
-  def get(url, body \\ "", headers \\ []) do
-    build(:GET, url, body, headers)
+  @doc """
+  Create a `GET` request for the given url.
+
+  Optional content and headers can be added to the request.
+
+  ## Examples
+
+      iex> get("/?foo=bar").query
+      %{"foo" => "bar"}
+
+      iex> get({"/", %{foo: "bar"}}).query
+      %{"foo" => "bar"}
+
+      iex> get("/", "Hello, World!").body
+      "Hello, World!"
+
+      iex> get("/", [{"referer", "/home"}]).headers
+      [{"referer", "/home"}]
+  """
+  def get(url, content \\ "", headers \\ []) do
+    build(:GET, url, content, headers)
   end
 
-  def post(url, body \\ "", headers \\ []) do
-    build(:POST, url, body, headers)
+  @doc """
+  Create a `POST` request for the given url.
+
+  See `get/3` for examples on adding content and headers
+  """
+  def post(url, content \\ "", headers \\ []) do
+    build(:POST, url, content, headers)
   end
 
-  def put(url, body \\ "", headers \\ []) do
-    build(:PUT, url, body, headers)
+  @doc """
+  Create a `PUT` request for the given url.
+
+  See `get/3` for examples on adding content and headers
+  """
+  def put(url, content \\ "", headers \\ []) do
+    build(:PUT, url, content, headers)
   end
 
-  def patch(url, body \\ "", headers \\ []) do
-    build(:PATCH, url, body, headers)
+  @doc """
+  Create a `PATCH` request for the given url.
+
+  See `get/3` for examples on adding content and headers
+  """
+  def patch(url, content \\ "", headers \\ []) do
+    build(:PATCH, url, content, headers)
   end
 
-  def delete(url, body \\ "", headers \\ []) do
-    build(:DELETE, url, body, headers)
+  @doc """
+  Create a `DELETE` request for the given url.
+
+  See `get/3` for examples on adding content and headers
+  """
+  def delete(url, content \\ "", headers \\ []) do
+    build(:DELETE, url, content, headers)
   end
 
-  def options(url, body \\ "", headers \\ []) do
-    build(:OPTIONS, url, body, headers)
+  @doc """
+  Create a `OPTIONS` request for the given url.
+
+  See `get/3` for examples on adding content and headers
+  """
+  def options(url, content \\ "", headers \\ []) do
+    build(:OPTIONS, url, content, headers)
   end
 
-  def head(url, body \\ "", headers \\ []) do
-    build(:HEAD, url, body, headers)
+  @doc """
+  Create a `HEAD` request for the given url.
+
+  See `get/3` for examples on adding content and headers
+  """
+  def head(url, content \\ "", headers \\ []) do
+    build(:HEAD, url, content, headers)
   end
 
   # This should be the `Raxx.request` function
@@ -113,6 +171,7 @@ defmodule Raxx.Request do
     )
   end
 
+  @doc false
   def split_path(path_string) do
     path_string
     |> String.split("/")

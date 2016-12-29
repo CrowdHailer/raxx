@@ -7,6 +7,20 @@ defmodule Raxx.Response do
   | **status** | The HTTP status code for the response: `1xx, 2xx, 3xx, 4xx, 5xx` |
   | **headers** | The response headers as a map: `%{"content-type" => ["text/plain"]}` |
   | **body** | The response body, by default an empty string. |
+
+  ## Examples
+
+      iex> Response.ok().status
+      200
+
+      iex> Response.ok("Hello, World!").body
+      "Hello, World!"
+
+      iex> Response.ok([{"content-language", "en"}]).headers
+      [{"content-language", "en"}]
+
+      iex> Response.ok("Hello, World!", [{"content-type", "text/plain"}]).headers
+      [{"content-type", "text/plain"}]
   """
 
   defstruct [
@@ -18,9 +32,11 @@ defmodule Raxx.Response do
 
   for {status_code, reason_phrase} <- HTTP.StatusLine.statuses do
     function_name = reason_phrase |> String.downcase |> String.replace(" ", "_") |> String.to_atom
-    if status_code != 200 do
-      @doc false
-    end
+    @doc """
+    Create a "#{status_code} #{reason_phrase}" response.
+
+    See module documentation for adding response content
+    """
     def unquote(function_name)(body \\ "", headers \\ []) do
       build(unquote(status_code), body, headers)
     end

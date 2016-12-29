@@ -1,7 +1,7 @@
 defmodule Raxx.ResponseTest do
-  alias Raxx.Response
-
   use ExUnit.Case
+  alias Raxx.Response
+  doctest Raxx.Response
 
   # STATUS
   test "can create a informational response" do

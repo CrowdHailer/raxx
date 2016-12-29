@@ -1,4 +1,5 @@
 defmodule Raxx.Adapters.Ace.Handler do
+  @moduledoc false
   def init(conn, app) do
     partial = {:start_line, conn}
     buffer = ""

@@ -2,7 +2,9 @@
 # because the rest of a response is generic headers and fields
 defmodule HTTP.StatusLine do
   @moduledoc """
-  Copied from https://tools.ietf.org/html/rfc7231#section-6.1
+  Working with HTTP response codes
+
+  Defined status-lines are from https://tools.ietf.org/html/rfc7231#section-6.1
   """
   @external_resource "./rfc7231.status_codes"
 

@@ -22,28 +22,12 @@ defmodule Raxx.Response do
       @doc false
     end
     def unquote(function_name)(body \\ "", headers \\ []) do
-      %{status: unquote(status_code), body: body, headers: fix_headers(headers)}
+      %{status: unquote(status_code), body: body, headers: headers}
     end
   end
 
   def header_lines(headers) do
     (Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end) |> Enum.join("\r\n")) <> "\r\n"
-  end
-
-  defp fix_headers(headers_list) when is_list(headers_list) do
-    # Enum.map(headers_list, )
-    headers_list
-  end
-  defp fix_headers(headers_map) when is_map(headers_map) do
-    headers_map
-    |> Enum.map(fn
-      # FIXME could be an issue with iodata that should be single header getting split
-      ({name, value} when is_binary(value)) ->
-        {name, [value]}
-      ({name, value} when is_list(value)) ->
-        {name, value}
-    end)
-    |> Enum.into(%{})
   end
 
   def informational?(%{status: code}), do: 100 <= code and code < 200

@@ -26,11 +26,9 @@ defmodule Raxx.Adapters.Ace.Handler do
         # call process_request function
         case mod.handle_request(request, state) do
           %{body: body, headers: headers, status: status_code} ->
-            header_lines = Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end)
             raw = [
               HTTP.StatusLine.status_line(status_code),
-              Enum.join(header_lines, "\r\n"),
-              "\r\n",
+              header_lines(headers),
               "\r\n",
               body
             ]
@@ -38,14 +36,13 @@ defmodule Raxx.Adapters.Ace.Handler do
             {:send, raw, {app, {:start_line, %{}}, ""}}
           upgrade = %Raxx.Chunked{} ->
             headers = upgrade.headers
-
             headers = if !List.keymember?(headers, "content-type", 0) do
               headers ++ [{"content-type", "text/plain"}]
             end || headers
             headers = headers ++ [{"transfer-encoding", "chunked"}]
             response = [
               HTTP.StatusLine.status_line(200),
-              Raxx.Response.header_lines(headers),
+              header_lines(headers),
               "\r\n"
             ]
             # make sure next requests can keep coming in.
@@ -53,6 +50,11 @@ defmodule Raxx.Adapters.Ace.Handler do
             {:send, response, {upgrade, request, buffer}}
         end
     end
+  end
+
+  # Move to `Raxx.Headers` or `HTTP.Headers`
+  defp header_lines(headers) do
+    (Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end) |> Enum.join("\r\n")) <> "\r\n"
   end
 
   def handle_info(message, {%Raxx.Chunked{app: {mod, state}}, partial, buffer}) do

@@ -26,10 +26,6 @@ defmodule Raxx.Response do
     end
   end
 
-  def header_lines(headers) do
-    (Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end) |> Enum.join("\r\n")) <> "\r\n"
-  end
-
   def informational?(%{status: code}), do: 100 <= code and code < 200
   def success?(%{status: code}), do: 200 <= code and code < 300
   def redirect?(%{status: code}), do: 300 <= code and code < 400

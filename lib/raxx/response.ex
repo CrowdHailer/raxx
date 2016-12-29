@@ -88,24 +88,4 @@ defmodule Raxx.Response do
   https://tools.ietf.org/html/rfc7231#section-6.6
   """
   def server_error?(%{status: code}), do: 500 <= code and code < 600
-
-  # needed for redirect
-  @escapes [
-    {?<, "&lt;"},
-    {?>, "&gt;"},
-    {?&, "&amp;"},
-    {?", "&quot;"},
-    {?', "&#39;"}
-  ]
-
-  Enum.each @escapes, fn { match, insert } ->
-    defp escape_char(unquote(match)), do: unquote(insert)
-  end
-
-  defp escape_char(char), do: << char >>
-
-  @doc false
-  defp escape(buffer) do
-    IO.iodata_to_binary(for <<char <- buffer>>, do: escape_char(char))
-  end
 end

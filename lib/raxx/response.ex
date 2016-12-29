@@ -32,27 +32,8 @@ defmodule Raxx.Response do
   def client_error?(%{status: code}), do: 400 <= code and code < 500
   def server_error?(%{status: code}), do: 500 <= code and code < 600
 
-  @doc """
-  Adds a set cookie header to the response.
-
-  For options see `Raxx.Cookie.Attributes`
-  """
-  def set_cookie(r = %{headers: headers}, key, value, options \\ %{}) do
-    cookies = Map.get(headers, "set-cookie", [])
-    %{r | headers: Map.merge(headers, %{"set-cookie" => cookies ++ [Raxx.Cookie.new(key, value, options) |> Raxx.Cookie.set_cookie_string]})}
-  end
-
-  @doc """
-  Adds a cookie header to the response, that will expire the cookie with the given key.
-
-  **NOTE:** Will not expire session cookies.
-  """
-  def expire_cookie(r = %{headers: headers}, key) do
-    cookies = Map.get(headers, "set-cookie", [])
-    %{r | headers: %{"set-cookie" => cookies ++ ["#{key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/"]}}
-  end
-
-  # TODO move escapse to util
+  
+  # needed for redirect
   @escapes [
     {?<, "&lt;"},
     {?>, "&gt;"},

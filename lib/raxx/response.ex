@@ -22,8 +22,20 @@ defmodule Raxx.Response do
       @doc false
     end
     def unquote(function_name)(body \\ "", headers \\ []) do
-      %{status: unquote(status_code), body: body, headers: headers}
+      build(unquote(status_code), body, headers)
     end
+  end
+
+  # This pattern match cannot be an iolist, it contains a tuple.
+  # It is therefore assumed to be body content
+  defp build(code, body = [{_, _} | _], headers) do
+    build(code, "", body ++ headers)
+  end
+  defp build(code, %{headers: headers, body: body}, extra_headers) do
+    build(code, body, headers ++ extra_headers)
+  end
+  defp build(code, body, headers) do
+    struct(Raxx.Response, status: code, body: body, headers: headers)
   end
 
   def informational?(%{status: code}), do: 100 <= code and code < 200
@@ -32,7 +44,6 @@ defmodule Raxx.Response do
   def client_error?(%{status: code}), do: 400 <= code and code < 500
   def server_error?(%{status: code}), do: 500 <= code and code < 600
 
-  
   # needed for redirect
   @escapes [
     {?<, "&lt;"},
@@ -48,6 +59,7 @@ defmodule Raxx.Response do
 
   defp escape_char(char), do: << char >>
 
+  @doc false
   defp escape(buffer) do
     IO.iodata_to_binary(for <<char <- buffer>>, do: escape_char(char))
   end

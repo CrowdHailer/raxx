@@ -41,4 +41,14 @@ defmodule Raxx.ResponseTest do
     response = Response.ok(content)
     assert response.body == content
   end
+
+  test "body can be set as part of a content map" do
+    content = %{body: "Hello, World!", headers: [{"content-type", "application/x-www-form-urlencoded"}]}
+    assert "Hello, World!" == Response.ok(content).body
+  end
+
+  test "extra headers can be added as last argument" do
+    assert [{"location", "/home"}] == Response.ok([{"location", "/home"}]).headers
+    assert [{"location", "/home"}] == Response.ok("Hello, World!", [{"location", "/home"}]).headers
+  end
 end

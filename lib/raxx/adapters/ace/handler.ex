@@ -28,7 +28,7 @@ defmodule Raxx.Adapters.Ace.Handler do
           %{body: body, headers: headers, status: status_code} ->
             header_lines = Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end)
             raw = [
-              Raxx.Response.status_line(status_code),
+              HTTP.StatusLine.status_line(status_code),
               Enum.join(header_lines, "\r\n"),
               "\r\n",
               "\r\n",
@@ -44,7 +44,7 @@ defmodule Raxx.Adapters.Ace.Handler do
             end || headers
             headers = headers ++ [{"transfer-encoding", "chunked"}]
             response = [
-              Raxx.Response.status_line(200),
+              HTTP.StatusLine.status_line(200),
               Raxx.Response.header_lines(headers),
               "\r\n"
             ]

@@ -62,6 +62,7 @@ defmodule Raxx.Adapters.Cowboy.Handler do
 
     # Request
     %Raxx.Request{
+      scheme: "http",
       host: host,
       port: port,
       method: String.to_atom(method),

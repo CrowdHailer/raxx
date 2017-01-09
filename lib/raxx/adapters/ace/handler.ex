@@ -116,7 +116,7 @@ defmodule Raxx.Adapters.Ace.Handler do
       [host] -> [host, 80]
     end
     headers = headers ++ [{"host", location}]
-    %{request | headers: headers, host: host, port: port}
+    %{request | headers: headers, host: host, port: port, scheme: "http"}
   end
   def add_header(request = %{headers: headers}, key, value) do
     key = String.downcase("#{key}")

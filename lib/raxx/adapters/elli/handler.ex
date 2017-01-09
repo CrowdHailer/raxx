@@ -33,6 +33,7 @@ defmodule Raxx.Adapters.Elli.Handler do
     {"Host", authority} = :elli_request.headers(elli_request) |> List.keyfind("Host", 0)
     [host, port] = String.split(authority, ":")
     %{
+      scheme: "http",
       host: host,
       port: :erlang.binary_to_integer(port),
       method: method,

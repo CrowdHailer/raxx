@@ -11,6 +11,11 @@ defmodule Raxx.Adapters.RequestCase do
 
   using do
     quote location: :keep do
+      test "request shows correct scheme", %{port: port} do
+        {:ok, _resp} = HTTPoison.get("localhost:#{port}")
+        assert_receive %{scheme: "http"}
+      end
+
       test "request shows localhost", %{port: port} do
         {:ok, _resp} = HTTPoison.get("localhost:#{port}")
         assert_receive %{host: "localhost"}

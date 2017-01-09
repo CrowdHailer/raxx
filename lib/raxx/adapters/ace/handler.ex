@@ -55,7 +55,11 @@ defmodule Raxx.Adapters.Ace.Handler do
 
   # Move to `Raxx.Headers` or `HTTP.Headers`
   defp header_lines(headers) do
-    (Enum.map(headers, fn({x, y}) -> "#{x}: #{y}" end) |> Enum.join("\r\n")) <> "\r\n"
+    Enum.map(headers, &header_line/1)
+  end
+
+  defp header_line({field_name, field_value}) do
+    "#{field_name}: #{field_value}\r\n"
   end
 
   def handle_info(message, {%Raxx.Chunked{app: {mod, state}}, partial, buffer}) do

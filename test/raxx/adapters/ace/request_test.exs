@@ -94,5 +94,19 @@ defmodule Raxx.Adapters.Ace.RequestTest do
     assert_receive %{host: "www.raxx.com", path: [], body: ^content}
   end
 
-  # need to test keep alive with crap forming start of next request
+  test "will handle two requests over the same connection", %{port: port} do
+    request = """
+    GET / HTTP/1.1
+    Host: www.raxx.com
+
+    """
+    {:ok, socket} = :gen_tcp.connect({127,0,0,1}, port, [:binary])
+    {first, second} = Enum.split(request |> String.split(""), 25)
+    :gen_tcp.send(socket, request <> Enum.join(first))
+    :timer.sleep(10)
+    :gen_tcp.send(socket, Enum.join(second))
+    :timer.sleep(10)
+    assert_receive %{host: "www.raxx.com", path: [], body: nil}
+    assert_receive %{host: "www.raxx.com", path: [], body: nil}
+  end
 end

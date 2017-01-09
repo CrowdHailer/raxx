@@ -88,6 +88,7 @@ defmodule Raxx.Adapters.Ace.Handler do
     case :erlang.decode_packet(:httph_bin, buffer, []) do
       {:more, :undefined} ->
         {:more, {:headers, request}, buffer}
+      # Key values is binary for unknown headers, atom and capitalised for known.
       {:ok, {:http_header, _, key, _, value}, rest} ->
         process_buffer(rest, {:headers, add_header(request, key, value)})
       {:ok, :http_eoh, rest} ->
@@ -109,7 +110,6 @@ defmodule Raxx.Adapters.Ace.Handler do
     end
   end
 
-  # TODO case when adding key "Host" or "host"
   def add_header(request = %{headers: headers}, :Host, location) do
     [host, port] = case String.split(location, ":") do
       [host, port] -> [host, :erlang.binary_to_integer(port)]

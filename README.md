@@ -309,48 +309,10 @@ allows body to be streamed.
 test with websockets.
 All so check uses for transfer encoding in requests.
 
-#### Request creation
-
-```elixir
-get("/")
-get("/users?page=2")
-get({"/users", %{page: 2}}, [{"content-type", "application/json"}])
-post("/users", form(%{name: "barry"}), session(%{user: current}))
-post("/users", json(%{name: "barry"}), session(%{user: current}))
-post("/users", multipart(%{name: "barry", avatar: {file: "./avatar.jpg"}}), session(%{user: current}))
-```
-
-These functions could be part of `Raxx`, `Raxx.Test`, `Raxx.Request`, `Raxx.Client`
-
-My thinking is they belong on `Raxx.Request`:
-- they are constructors
-- test should have custom assertions `assert_redirect_to`, `assert_ok`
-- test should have helpers for calling a configured app
-- client should use connection to send over the wire
-
-```elixir
-use Raxx.Test, {MyApp, %{}}
-# Problem cannot set env per test.
-
-test "homepage" do
-  response = get("/")
-  assert_ok response
-end
-```
-
-use could set up default host port etc.
-
 #### Adapter verification
 
 Create a separate project `Raxx.Spec`, `Raxx.Verify`.
 It can be included in adapter specifications and defines a bunch of tests.
-
-#### Mount as header
-
-mount is a slightly special field it might want to be preserved to forwarded services.
-Although probably not. if preserved it should be custom header.
-
-resons not to preserve is backend services do not get to generate links.
 
 #### Streamed Requests
 

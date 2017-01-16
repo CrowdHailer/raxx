@@ -51,7 +51,7 @@ defmodule HelloWeb do
     import Supervisor.Spec, warn: false
 
     children = [
-      worker(Ace.TCP, [{Raxx.Adapters.Ace.Handler, @raxx_app}, [port: 8080]])
+      worker(Ace.HTTP, [@raxx_app, [port: 8080]])
     ]
 
     opts = [strategy: :one_for_one]

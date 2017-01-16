@@ -3,8 +3,8 @@ defmodule Raxx.Adapters.Ace.ChunkedTest do
 
   setup do
     raxx_app = {__MODULE__, %{chunks: ["Hello,", " ", "World", "!"]}}
-    {:ok, endpoint} = Ace.TCP.start_link({Raxx.Adapters.Ace.Handler, raxx_app}, port: 0)
-    {:ok, port} = Ace.TCP.Endpoint.port(endpoint)
+    {:ok, endpoint} = Ace.HTTP.start_link(raxx_app, port: 0)
+    {:ok, port} = Ace.HTTP.port(endpoint)
     {:ok, %{port: port}}
   end
 

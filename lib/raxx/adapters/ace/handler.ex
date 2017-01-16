@@ -91,7 +91,7 @@ defmodule Raxx.Adapters.Ace.Handler do
         process_buffer(rest, {:headers, request})
     end
   end
-  def process_buffer(buffer, {:headers, request = %{headers: headers}}) do
+  def process_buffer(buffer, {:headers, request}) do
     case :erlang.decode_packet(:httph_bin, buffer, []) do
       {:more, :undefined} ->
         {:more, {:headers, request}, buffer}

@@ -14,12 +14,11 @@ defmodule Raxx.Parsers.Multipart do
   - Comparison listing the concerns of an image uploader
   https://infinum.co/the-capsized-eight/best-rails-image-uploader-paperclip-carrierwave-refile
   """
-  # TODO add error case
   def parse(request) do
     case Raxx.Headers.content_type(request) do
       {"multipart/form-data", "boundary=" <> boundary} ->
         parse_body(request.body, boundary)
-      other ->
+      _other ->
         {:error, :not_multipart_content}
     end
   end

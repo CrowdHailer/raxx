@@ -11,7 +11,7 @@ defmodule HTTP.StatusLine do
   path = Path.expand(@external_resource, Path.dirname(__ENV__.file))
   {:ok, file} = File.read(path)
   file = String.strip(file)
-  [header | lines] = String.split(file, "\n")
+  [_header | lines] = String.split(file, "\n")
   statuses = Enum.map(lines, fn
     (status_string) ->
       {code, " " <> reason_phrase} = Integer.parse(status_string)
@@ -24,7 +24,7 @@ defmodule HTTP.StatusLine do
   Variable naming from https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html
   """
   for status_string <- lines do
-    {code, " " <> reason_phrase} = Integer.parse(status_string)
+    {code, " " <> _reason_phrase} = Integer.parse(status_string)
     def status_line(unquote(code)) do
       "HTTP/1.1 " <> unquote(status_string) <> "\r\n"
     end

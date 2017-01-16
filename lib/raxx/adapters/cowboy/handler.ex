@@ -91,7 +91,7 @@ defmodule Raxx.Adapters.Cowboy.Handler do
     {:ok, body, cowboy_req} = multipart(cowboy_req)
     {:ok, body, cowboy_req}
   end
-  def parse_req_body(cowboy_req, content_type) do
+  def parse_req_body(cowboy_req, _content_type) do
     {:ok, body, cowboy_req}  = :cowboy_req.body(cowboy_req, [])
     {:ok, body, cowboy_req}
   end

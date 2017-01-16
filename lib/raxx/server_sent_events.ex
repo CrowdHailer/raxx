@@ -2,12 +2,10 @@ defmodule Raxx.ServerSentEvents do
   @moduledoc """
   Upgrade a HTTP connection to send an event stream.
   """
-  @moduledoc false
   defmodule Event do
     @moduledoc """
     Create and manipulate individual chunks that comply with the server sent events protocol.
     """
-    @moduledoc false
     defstruct [
       id: nil,
       data: "",

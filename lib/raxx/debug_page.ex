@@ -21,7 +21,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 defmodule Raxx.DebugPage do
-  def html(request, error = {kind, reason, stacktrace}, root) do
+  def html(request, _error = {kind, reason, stacktrace}, root) do
     reason = Exception.normalize(kind, reason, stacktrace)
     {title, message} = case {kind, reason} do
       {:error, exception} ->
@@ -31,9 +31,6 @@ defmodule Raxx.DebugPage do
       {:exit, reason} ->
         {"unhandled exit", Exception.format_exit(reason)}
     end
-
-    method = request.method
-    path = "/" <> Enum.join(request.path, "/")
 
     {frames, _i} = stacktrace |> Enum.map_reduce(0, &norm_stack(&1, &2, root))
 

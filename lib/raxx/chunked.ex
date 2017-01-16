@@ -25,7 +25,7 @@ defmodule Raxx.Chunked do
 
   def to_packet(data) do
     size = :erlang.iolist_size(data)
-    packet = [:erlang.integer_to_list(size, 16), "\r\n", data, "\r\n"]
+    [:erlang.integer_to_list(size, 16), "\r\n", data, "\r\n"]
   end
 
   def end_chunk do

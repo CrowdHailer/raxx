@@ -1,6 +1,6 @@
 # Raxx.Static
 
-**TODO: Add description**
+**Static file serving in Raxx applications**
 
 ## Installation
 
@@ -22,3 +22,16 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
     end
     ```
 
+## Usage
+
+```elixir
+defmodule StaticFileServer do
+  require Raxx.Static
+
+  # relative path to assets directory
+  dir = "./static"
+  Raxx.Static.serve_dir(dir)
+end
+```
+
+TODO serve single file example

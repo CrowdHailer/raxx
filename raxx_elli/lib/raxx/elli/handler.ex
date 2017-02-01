@@ -1,4 +1,4 @@
-defmodule Raxx.Adapters.Elli.Handler do
+defmodule Raxx.Elli.Handler do
   @moduledoc false
   @behaviour :elli_handler
 

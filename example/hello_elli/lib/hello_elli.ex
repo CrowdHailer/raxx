@@ -6,7 +6,7 @@ defmodule HelloElli do
 
     children = [
       worker(:elli, [[
-        callback: Raxx.Adapters.Elli.Handler,
+        callback: Raxx.Elli.Handler,
         callback_args: {__MODULE__, %{}},
         port: 8080]])
     ]

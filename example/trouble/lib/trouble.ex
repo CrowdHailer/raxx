@@ -6,7 +6,7 @@ defmodule Trouble do
 
     children = [
       worker(:elli, [[
-        callback: Raxx.Adapters.Elli.Handler,
+        callback: Raxx.Elli.Handler,
         callback_args: {Raxx.ErrorHandler, %{next: __MODULE__, app: :trouble}},
         port: 8080]])
     ]

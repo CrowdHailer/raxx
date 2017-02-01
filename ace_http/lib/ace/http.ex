@@ -10,7 +10,7 @@ defmodule Ace.HTTP do
   Start a HTTP server.
   """
   def start_link(raxx_app, options \\ []) do
-    Ace.TCP.start_link({Raxx.Adapters.Ace.Handler, raxx_app}, options)
+    Ace.TCP.start_link({Ace.HTTP.Handler, raxx_app}, options)
   end
 
   @doc """

@@ -1,5 +1,4 @@
-# TODO Rename on next breaking release
-defmodule Raxx.Adapters.Ace.Handler do
+defmodule Ace.HTTP.Handler do
   @moduledoc false
   def init(conn, app) do
     partial = {:start_line, conn}

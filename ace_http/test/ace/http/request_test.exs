@@ -1,4 +1,4 @@
-defmodule Raxx.Adapters.Ace.RequestTest do
+defmodule Ace.HTTP.RequestTest do
   use Raxx.Verify.RequestCase
 
   setup do

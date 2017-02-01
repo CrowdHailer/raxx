@@ -1,21 +1,4 @@
 defmodule Raxx.StaticTest do
-  # Use this as an example.
-  # defmodule SingleFile do
-  #   require Raxx.Static
-  #
-  #   dir = Path.expand("./static", Path.dirname(__ENV__.file))
-  #   filenames = Path.expand("./**/*", dir) |> Path.wildcard
-  #
-  #   for filename <- filenames do
-  #     relative = Path.relative_to(filename, dir)
-  #     path = Path.split(relative)
-  #     Raxx.Static.serve_file(filename, path)
-  #   end
-  #
-  #   def handle_request(_, _) do
-  #     Raxx.Response.not_found()
-  #   end
-  # end
   defmodule SingleFile do
     require Raxx.Static
 

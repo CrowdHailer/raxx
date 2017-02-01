@@ -1,6 +1,6 @@
 # Raxx.Cowboy
 
-**TODO: Add description**
+**Cowboy adapter for the raxx webserver interface**
 
 ## Installation
 
@@ -21,4 +21,3 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
       [applications: [:raxx_cowboy]]
     end
     ```
-

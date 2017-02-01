@@ -2,7 +2,7 @@ defmodule Raxx.Adapters.Ace.RequestTest do
   use Raxx.Verify.RequestCase
 
   setup do
-    raxx_app = {Raxx.TestSupport.Forwarder, %{target: self()}}
+    raxx_app = {Raxx.Verify.Forwarder, %{target: self()}}
     {:ok, endpoint} = Ace.HTTP.start_link(raxx_app, port: 0)
     {:ok, port} = Ace.HTTP.port(endpoint)
     {:ok, %{port: port}}

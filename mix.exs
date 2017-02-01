@@ -21,10 +21,8 @@ defmodule Raxx.Mixfile do
     [
       {:mime, "~> 1.0"},
       {:plug, "~> 1.2.2"}, # DEBT remove; currently used for query strings etc
-      {:cowboy, "1.0.4", only: :test},
       {:ace, "0.7.0", optional: true},
       {:elli, "~> 1.0", only: :test},
-      {:httpoison, "~> 0.8.0", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:http_status, path: "./http_status"},
       {:raxx_verify, path: "./raxx_verify"}

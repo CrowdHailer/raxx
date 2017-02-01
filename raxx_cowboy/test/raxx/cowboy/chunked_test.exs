@@ -1,5 +1,5 @@
-defmodule Raxx.Adapters.Cowboy.ResponseTest do
-  use Raxx.Verify.ResponseCase
+defmodule Raxx.Cowboy.ChunkedTest do
+  use Raxx.Verify.ChunkedCase
 
   case Application.ensure_all_started(:cowboy) do
     {:ok, _} ->
@@ -10,9 +10,10 @@ defmodule Raxx.Adapters.Cowboy.ResponseTest do
   end
 
   setup %{case: case, test: test} do
+    raxx_app = {__MODULE__, %{chunks: ["Hello,", " ", "World", "!"]}}
     name = {case, test}
     routes = [
-      {:_, Raxx.Adapters.Cowboy.Handler, {__MODULE__, %{target: self()}}}
+      {:_, Raxx.Cowboy.Handler, raxx_app}
     ]
     dispatch = :cowboy_router.compile([{:_, routes}])
     env = [dispatch: dispatch]

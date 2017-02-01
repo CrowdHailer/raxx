@@ -1,4 +1,4 @@
-defmodule Raxx.Adapters.Cowboy.Handler do
+defmodule Raxx.Cowboy.Handler do
   @moduledoc false
   def init({:tcp, :http}, req, opts = {router, raxx_options}) do
     case router.handle_request(normalise_request(req), raxx_options) do

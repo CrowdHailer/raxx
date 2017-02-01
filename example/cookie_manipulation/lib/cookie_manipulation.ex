@@ -4,7 +4,7 @@ defmodule CookieManipulation do
 
   def start(_type, _args) do
     routes = [
-      {:_, Raxx.Adapters.Cowboy.Handler, {__MODULE__, %{}}}
+      {:_, Raxx.Cowboy.Handler, {__MODULE__, %{}}}
     ]
 
     dispatch = :cowboy_router.compile([{:_, routes}])

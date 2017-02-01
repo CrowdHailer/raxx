@@ -1,5 +1,5 @@
-defmodule Raxx.Adapters.Cowboy.RequestTest do
-  use Raxx.Verify.RequestCase
+defmodule Raxx.Cowboy.ResponseTest do
+  use Raxx.Verify.ResponseCase
 
   case Application.ensure_all_started(:cowboy) do
     {:ok, _} ->
@@ -12,7 +12,7 @@ defmodule Raxx.Adapters.Cowboy.RequestTest do
   setup %{case: case, test: test} do
     name = {case, test}
     routes = [
-      {:_, Raxx.Adapters.Cowboy.Handler, {Raxx.TestSupport.Forwarder, %{target: self()}}}
+      {:_, Raxx.Cowboy.Handler, {__MODULE__, %{target: self()}}}
     ]
     dispatch = :cowboy_router.compile([{:_, routes}])
     env = [dispatch: dispatch]

@@ -1,4 +1,4 @@
-# RaxxMethodOverride
+# Raxx.MethodOverride
 
 **Override HTTP methods using the request body**
 

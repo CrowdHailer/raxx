@@ -5,6 +5,7 @@ defmodule HTTPStatus do
   Defined status-lines are from https://tools.ietf.org/html/rfc7231#section-6.1
   """
   @external_resource "./rfc7231.status_codes"
+  @default_http_version "1.1"
 
   path = Path.expand(@external_resource, Path.dirname(__ENV__.file))
   {:ok, file} = File.read(path)
@@ -25,11 +26,15 @@ defmodule HTTPStatus do
 
       iex> HTTPStatus.status_line(200)
       "HTTP/1.1 200 OK\\r\\n"
+
+      iex> HTTPStatus.status_line(200, "1.0")
+      "HTTP/1.0 200 OK\\r\\n"
   """
+  def status_line(code, version \\ unquote(@default_http_version))
   for status_string <- lines do
     {code, " " <> _reason_phrase} = Integer.parse(status_string)
-    def status_line(unquote(code)) do
-      "HTTP/1.1 " <> unquote(status_string) <> "\r\n"
+    def status_line(unquote(code), version) do
+      "HTTP/" <> version <> " " <> unquote(status_string) <> "\r\n"
     end
   end
 

@@ -1,5 +1,5 @@
 defmodule Raxx.Adapters.Cowboy.ChunkedTest do
-  use Raxx.Adapters.ChunkedCase
+  use Raxx.Verify.ChunkedCase
 
   case Application.ensure_all_started(:cowboy) do
     {:ok, _} ->

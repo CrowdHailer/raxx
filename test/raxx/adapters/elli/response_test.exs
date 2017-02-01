@@ -1,5 +1,5 @@
 defmodule Raxx.Adapters.Elli.ResponseTest do
-  use Raxx.Adapters.ResponseCase
+  use Raxx.Verify.ResponseCase
 
   setup do
     port = 2022

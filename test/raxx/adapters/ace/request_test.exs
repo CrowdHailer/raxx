@@ -1,5 +1,5 @@
 defmodule Raxx.Adapters.Ace.RequestTest do
-  use Raxx.Adapters.RequestCase
+  use Raxx.Verify.RequestCase
 
   setup do
     raxx_app = {Raxx.TestSupport.Forwarder, %{target: self()}}

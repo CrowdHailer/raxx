@@ -1,5 +1,5 @@
 defmodule Raxx.Adapters.Cowboy.ResponseTest do
-  use Raxx.Adapters.ResponseCase
+  use Raxx.Verify.ResponseCase
 
   case Application.ensure_all_started(:cowboy) do
     {:ok, _} ->

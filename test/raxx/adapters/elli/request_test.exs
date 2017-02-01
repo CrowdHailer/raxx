@@ -1,5 +1,5 @@
 defmodule Raxx.Adapters.Elli.RequestTest do
-  use Raxx.Adapters.RequestCase
+  use Raxx.Verify.RequestCase
 
   setup do
     {:ok, _pid} = :elli.start_link [

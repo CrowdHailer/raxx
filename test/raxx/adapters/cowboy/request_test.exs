@@ -1,5 +1,5 @@
 defmodule Raxx.Adapters.Cowboy.RequestTest do
-  use Raxx.Adapters.RequestCase
+  use Raxx.Verify.RequestCase
 
   case Application.ensure_all_started(:cowboy) do
     {:ok, _} ->

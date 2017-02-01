@@ -1,5 +1,5 @@
 defmodule Raxx.Adapters.Ace.ChunkedTest do
-  use Raxx.Adapters.ChunkedCase
+  use Raxx.Verify.ChunkedCase
 
   setup do
     raxx_app = {__MODULE__, %{chunks: ["Hello,", " ", "World", "!"]}}

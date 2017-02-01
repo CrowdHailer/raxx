@@ -1,5 +1,5 @@
 defmodule Raxx.Adapters.Ace.ResponseTest do
-  use Raxx.Adapters.ResponseCase
+  use Raxx.Verify.ResponseCase
 
   setup do
     raxx_app = {__MODULE__, %{target: self()}}

@@ -1,8 +1,6 @@
-# Basically the same as HTTP.Response,
-# because the rest of a response is generic headers and fields
-defmodule HTTP.StatusLine do
+defmodule HTTPStatus do
   @moduledoc """
-  Working with HTTP response codes
+  Working with status codes for HTTP responses.
 
   Defined status-lines are from https://tools.ietf.org/html/rfc7231#section-6.1
   """
@@ -22,6 +20,11 @@ defmodule HTTP.StatusLine do
   Expand a status code into the correct status line
 
   Variable naming from https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html
+
+  ## Examples
+
+      iex> HTTPStatus.status_line(200)
+      "HTTP/1.1 200 OK\\r\\n"
   """
   for status_string <- lines do
     {code, " " <> _reason_phrase} = Integer.parse(status_string)
@@ -32,8 +35,13 @@ defmodule HTTP.StatusLine do
 
   @doc """
   List of all statuses as tuples of `{code, reason}`
+
+  ## Examples
+
+      iex> HTTPStatus.every_status |> List.first
+      {100, "Continue"}
   """
-  def statuses do
+  def every_status do
     unquote(statuses)
   end
 

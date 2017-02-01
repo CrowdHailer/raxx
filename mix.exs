@@ -26,6 +26,7 @@ defmodule Raxx.Mixfile do
       {:elli, "~> 1.0", only: :test},
       {:httpoison, "~> 0.8.0", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev},
+      {:http_status, path: "./http_status"}
     ]
   end
 

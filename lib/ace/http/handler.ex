@@ -29,7 +29,7 @@ defmodule Raxx.Adapters.Ace.Handler do
         case mod.handle_request(request, state) do
           %{body: body, headers: headers, status: status_code} ->
             raw = [
-              HTTP.StatusLine.status_line(status_code),
+              HTTPStatus.status_line(status_code),
               header_lines(headers),
               "\r\n",
               body
@@ -46,7 +46,7 @@ defmodule Raxx.Adapters.Ace.Handler do
             end || headers
             headers = headers ++ [{"transfer-encoding", "chunked"}]
             response = [
-              HTTP.StatusLine.status_line(200),
+              HTTPStatus.status_line(200),
               header_lines(headers),
               "\r\n"
             ]

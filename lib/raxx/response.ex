@@ -30,7 +30,7 @@ defmodule Raxx.Response do
     # Return page object so you can test on the contents
   ]
 
-  for {status_code, reason_phrase} <- HTTP.StatusLine.statuses do
+  for {status_code, reason_phrase} <- HTTPStatus.every_status do
     function_name = reason_phrase |> String.downcase |> String.replace(" ", "_") |> String.to_atom
     @doc """
     Create a "#{status_code} #{reason_phrase}" response.

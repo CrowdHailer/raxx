@@ -289,6 +289,23 @@ The Host header is always required.
 Therefore should the host header be deleted from this list of headers?
 It should never be relied on and users building request might add a host field but not a host header
 
+### Debug page
+
+Eventually I think that all Raxx Applications should be pure.
+This means that the only error that occurs is when the server process also fails.
+Therefor the only reason for a debugger is to handle the imperfect compiler,
+i.e. unrecognised runtime errors.
+This is a useful case at the moment.
+Defining the raxx application as pure means error handling belongs in the server that is hosting the Raxx application.
+It may want to send error information through supervision and not catching errors because of this.
+
+> Note that calls inside try/1 are not tail recursive since the VM
+> needs to keep the stacktrace in case an exception happens.
+
+https://github.com/elixir-lang/elixir/blob/22bd10a8170af0b187029d115abe4cc8edcf2ae6/lib/elixir/lib/kernel/special_forms.ex#L1622
+
+To see a raxx implementation of errors and debug pages check out version [0.9.0]()
+
 #### Lost information from paths
 
 Raxx will turn a variety of different path strings to the same path
@@ -308,11 +325,6 @@ Call `handle_request` before the body is recieved.
 allows body to be streamed.
 test with websockets.
 All so check uses for transfer encoding in requests.
-
-#### Adapter verification
-
-Create a separate project `Raxx.Spec`, `Raxx.Verify`.
-It can be included in adapter specifications and defines a bunch of tests.
 
 #### Streamed Requests
 

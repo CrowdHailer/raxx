@@ -63,13 +63,6 @@ defmodule Raxx.Static do
         path = Path.split(relative)
         Raxx.Static.serve_file(filename, path)
       end
-
-      def handle_request(_,_) do
-        Raxx.Response.not_found
-      end
-      # use a not found function if need be.
-      # add option `Raxx.Static.serve_dir(dir, not_found: :not_found_cb)`
-      # Or just don't include this at all and let people write the last handle_request callback
     end
   end
 end

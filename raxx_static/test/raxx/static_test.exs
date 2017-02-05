@@ -38,18 +38,6 @@ defmodule Raxx.StaticTest do
     assert {"content-type", "text/css"} == List.keyfind(response.headers, "content-type", 0)
   end
 
-  test "No file results in 404 response" do
-    request = %Raxx.Request{method: :GET, path: ["nope.txt"]}
-    response = SingleFile.handle_request(request, [])
-    assert 404 == response.status
-  end
-
-  test "directorys are not found" do
-    request = %Raxx.Request{method: :GET, path: ["sub"]}
-    response = SingleFile.handle_request(request, [])
-    assert 404 == response.status
-  end
-
   test "files in subdirectories are  found" do
     request = %Raxx.Request{method: :GET, path: ["sub", "file.txt"]}
     response = SingleFile.handle_request(request, [])

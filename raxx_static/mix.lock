@@ -1,5 +1,6 @@
 %{"earmark": {:hex, :earmark, "1.1.0", "8c2bf85d725050a92042bc1edf362621004d43ca6241c756f39612084e95487f", [:mix], []},
   "ex_doc": {:hex, :ex_doc, "0.14.5", "c0433c8117e948404d93ca69411dd575ec6be39b47802e81ca8d91017a0cf83c", [:mix], [{:earmark, "~> 1.0", [hex: :earmark, optional: false]}]},
+  "http_status": {:hex, :http_status, "0.2.0", "ec2844f9bbf3ab0912c24d0b15882b60013243a1e787932f56032d7d1bb53a49", [:mix], []},
   "mime": {:hex, :mime, "1.0.1", "05c393850524767d13a53627df71beeebb016205eb43bfbd92d14d24ec7a1b51", [:mix], []},
   "plug": {:hex, :plug, "1.2.2", "cfbda521b54c92ab8ddffb173fbaabed8d8fc94bec07cd9bb58a84c1c501b0bd", [:mix], [{:cowboy, "~> 1.0", [hex: :cowboy, optional: true]}, {:mime, "~> 1.0", [hex: :mime, optional: false]}]},
-  "raxx": {:hex, :raxx, "0.8.2", "947b95f0e25c1027c9acb9e68240b7e102e35f06fe0689d92618b5b9bdda8d57", [:mix], [{:ace, "0.7.0", [hex: :ace, optional: true]}, {:mime, "~> 1.0", [hex: :mime, optional: false]}, {:plug, "~> 1.2.2", [hex: :plug, optional: false]}]}}
+  "raxx": {:hex, :raxx, "0.10.0", "6537cd16a2e60cba53694e4028d2c65e2eba1575641dad4249f37fc72ab0f163", [:mix], [{:http_status, "~> 0.2", [hex: :http_status, optional: false]}, {:mime, "~> 1.0", [hex: :mime, optional: false]}, {:plug, "~> 1.2.2", [hex: :plug, optional: false]}]}}

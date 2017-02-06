@@ -241,7 +241,15 @@ The Host header is always required.
 Therefore should the host header be deleted from this list of headers?
 It should never be relied on and users building request might add a host field but not a host header
 
-### Debug page
+#### Virtual host
+
+Can the `Host` header have a path in the URL?
+
+Raxx.Request.host + Raxx.Request.mount = virtual host
+
+Router.host instead of Router.mount 
+
+#### Debug page
 
 Eventually I think that all Raxx Applications should be pure.
 This means that the only error that occurs is when the server process also fails.

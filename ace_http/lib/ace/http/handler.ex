@@ -85,6 +85,9 @@ defmodule Ace.HTTP.Handler do
         {:more, {:start_line, conn}, buffer}
       {:ok, {:http_request, method, {:abs_path, path_string}, _version}, rest} ->
         %{path: path, query: query_string} = URI.parse(path_string)
+        # DEBT in case of path '//' then parsing returns path of nil.
+        # e.g. localhost:8080//
+        path = path || "/"
         {:ok, query} = URI2.Query.decode(query_string || "")
         path = Raxx.Request.split_path(path)
         request = %Raxx.Request{method: method, path: path, query: query, headers: []}

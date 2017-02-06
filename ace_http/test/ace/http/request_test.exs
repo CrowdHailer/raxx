@@ -8,6 +8,11 @@ defmodule Ace.HTTP.RequestTest do
     {:ok, %{port: port}}
   end
 
+  test "will handle special case '//'", %{port: port} do
+    {:ok, _resp} = HTTPoison.get("localhost:#{port}//")
+    assert_receive %{path: []}
+  end
+
   # TODO move to general request case
   test "request shows correct nested query", %{port: port} do
     {:ok, _resp} = HTTPoison.get("localhost:#{port}/?foo[]=a+b&foo[]=a%21")

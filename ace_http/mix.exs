@@ -18,7 +18,7 @@ defmodule Ace.HTTP.Mixfile do
 
   defp deps do
     [
-      {:raxx, "~> 0.10.0", path: "../"},
+      {:raxx, "~> 0.10.1"},
       {:http_status, "~> 0.2.0"},
       {:ace, "0.7.0"},
       {:raxx_verify, path: "../raxx_verify", only: :test},

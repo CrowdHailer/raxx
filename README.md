@@ -15,7 +15,7 @@ Add raxx to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:raxx, "~> 0.10.0"}]
+  [{:raxx, "~> 0.10.1"}]
 end
 ```
 
@@ -247,7 +247,7 @@ Can the `Host` header have a path in the URL?
 
 Raxx.Request.host + Raxx.Request.mount = virtual host
 
-Router.host instead of Router.mount 
+Router.host instead of Router.mount
 
 #### Debug page
 

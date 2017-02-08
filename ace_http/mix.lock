@@ -10,5 +10,5 @@
   "mime": {:hex, :mime, "1.0.1", "05c393850524767d13a53627df71beeebb016205eb43bfbd92d14d24ec7a1b51", [:mix], []},
   "mimerl": {:hex, :mimerl, "1.0.2", "993f9b0e084083405ed8252b99460c4f0563e41729ab42d9074fd5e52439be88", [:rebar3], []},
   "plug": {:hex, :plug, "1.2.2", "cfbda521b54c92ab8ddffb173fbaabed8d8fc94bec07cd9bb58a84c1c501b0bd", [:mix], [{:cowboy, "~> 1.0", [hex: :cowboy, optional: true]}, {:mime, "~> 1.0", [hex: :mime, optional: false]}]},
-  "raxx": {:hex, :raxx, "0.10.0", "6537cd16a2e60cba53694e4028d2c65e2eba1575641dad4249f37fc72ab0f163", [:mix], [{:http_status, "~> 0.2", [hex: :http_status, optional: false]}, {:mime, "~> 1.0", [hex: :mime, optional: false]}, {:plug, "~> 1.2.2", [hex: :plug, optional: false]}]},
+  "raxx": {:hex, :raxx, "0.10.1", "9aa93678939f93092de2bcccba47ecc8647d15989eadb520cd285aa0426a4e2b", [:mix], [{:http_status, "~> 0.2", [hex: :http_status, optional: false]}, {:mime, "~> 1.0", [hex: :mime, optional: false]}, {:plug, "~> 1.2.2", [hex: :plug, optional: false]}]},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [:make, :rebar], []}}

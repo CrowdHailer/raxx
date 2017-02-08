@@ -3,7 +3,7 @@ defmodule Raxx.Mixfile do
 
   def project do
     [app: :raxx,
-     version: "0.10.1",
+     version: "0.10.2",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -28,10 +28,9 @@ defmodule Raxx.Mixfile do
 
   defp description do
     """
-    A Elixir webserver interface.
+    Pure interface for webservers and frameworks.
 
-    1. An interface specification for Elixir webservers and Elixir application.
-    2. A set of tools to help develop Raxx-compliant web applications
+    Including a powerful tools library for building refined web applications
     """
   end
 

@@ -21,3 +21,7 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
       [applications: [:raxx_cowboy]]
     end
     ```
+
+## Usage
+
+[cowboy example](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example)

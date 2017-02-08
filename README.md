@@ -1,25 +1,41 @@
 # Raxx: an Elixir webserver interface
 
-## What is Raxx?
+Raxx is:
 
-1. An interface specification for Elixir webservers and Elixir application.
-2. A set of tools to help develop Raxx-compliant web applications
+- The specification of a **pure** interface for webservers and frameworks.
+- A simple and powerful tools library for building refined web applications
+
+
+To use Raxx provide an app: A module that implements `handle_request/2`, taking a request and config as arguments and return a respone map
+
+- `status`:  The HTTP response code
+- `headers`: A collection of headers
+- `body`: An binary or io_list
+
+
+```elixir
+defmodule MyApp do
+  def handle_request(_request, _config) do
+    %{status: 200, headers: [{"content-type", "text/html"}], body: "A barebones raxx app."}
+  end
+end
+
+Ace.HTTP.start_link({MyApp, :no_config}, port: 8080)
+```
 
 [Documentation for Raxx is available online](https://hexdocs.pm/raxx)
 
-[Introductory talk I gave at Elixir.LDN](https://www.youtube.com/watch?v=80AXtvXFIA4&index=2&list=PLWbHc_FXPo2ivlIjzcaHS9N_Swe_0hWj0)
+[Introductory presentation of Raxx](https://www.youtube.com/watch?v=80AXtvXFIA4&index=2&list=PLWbHc_FXPo2ivlIjzcaHS9N_Swe_0hWj0)
+
+## Supported Web servers
+
+- [x] [ace](https://github.com/CrowdHailer/raxx/tree/master/ace_http)
+- [x] [cowboy](https://github.com/CrowdHailer/raxx/tree/master/raxx_cowboy)
+- [x] [elli](https://github.com/CrowdHailer/raxx/tree/master/raxx_elli)
 
 ## Hello, World!
 
-Add raxx to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [{:raxx, "~> 0.10.1"}]
-end
-```
-
-Define the behaviour of your servers.
+A (slightly) less simplistic example utilitising `Raxx.Response` for convenience.
 
 ```elixir
 defmodule HelloWeb.Server do
@@ -45,13 +61,11 @@ Mount your server in you application. *Example using [Ace](https://github.com/Cr
 defmodule HelloWeb do
   use Application
 
-  @raxx_app {HelloWeb.Server, []}
-
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
     children = [
-      worker(Ace.HTTP, [@raxx_app, [port: 8080]])
+      worker(Ace.HTTP, [{HelloWeb.Server, []}, [port: 8080]])
     ]
 
     opts = [strategy: :one_for_one]
@@ -59,10 +73,6 @@ defmodule HelloWeb do
   end
 end
 ```
-
-Raxx currently has adapters for three erlang servers.
-- [HelloElli example](https://github.com/CrowdHailer/raxx/tree/master/example/hello_elli).
-- [cowboy example](https://github.com/CrowdHailer/raxx/tree/master/example/cowboy_example).
 
 ### Principles
 

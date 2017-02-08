@@ -29,9 +29,9 @@ Ace.HTTP.start_link({MyApp, :no_config}, port: 8080)
 
 ## Supported Web servers
 
-- [x] [ace](https://github.com/CrowdHailer/raxx/tree/master/ace_http)
-- [x] [cowboy](https://github.com/CrowdHailer/raxx/tree/master/raxx_cowboy)
-- [x] [elli](https://github.com/CrowdHailer/raxx/tree/master/raxx_elli)
+- [ace](https://github.com/CrowdHailer/raxx/tree/master/ace_http)
+- [cowboy](https://github.com/CrowdHailer/raxx/tree/master/raxx_cowboy)
+- [elli](https://github.com/CrowdHailer/raxx/tree/master/raxx_elli)
 
 ## Hello, World!
 

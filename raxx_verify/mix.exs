@@ -17,6 +17,7 @@ defmodule Raxx.Verify.Mixfile do
   defp deps do
     [
       {:httpoison, "~> 0.8.0"},
+      {:raxx_server_sent_events, ">= 0.0.0", path: "../raxx_server_sent_events"}
     ]
   end
 end

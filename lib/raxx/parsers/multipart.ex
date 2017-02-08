@@ -34,7 +34,7 @@ defmodule Raxx.Parsers.Multipart do
         "form-data;" <> params = :proplists.get_value("content-disposition", headers)
         [body, ""] = String.split(body, ~r"\r\n$")
         params = String.strip(params)
-        params = Raxx.Cookie.parse([params])
+        params = Plug.Conn.Cookies.decode(params)
         name = String.slice(Map.get(params, "name"), 1..-2)
         case Map.get(params, "filename") do
           nil ->

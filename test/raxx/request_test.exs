@@ -105,4 +105,5 @@ defmodule Raxx.RequestTest do
   # TODO pass in path as list
   # TODO document constructor methods
   # TODO consider invalid cases. i.e. get request with a body (probably rely on user to not ask for invalid queries)
+  # TODO Are get requests allowed to have a body?
 end

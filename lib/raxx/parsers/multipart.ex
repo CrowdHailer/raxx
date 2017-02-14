@@ -56,7 +56,7 @@ defmodule Raxx.Parsers.Multipart do
     case :erlang.decode_packet(:httph_bin, part, []) do
       {:ok, {:http_header, _, key, _, value}, rest} ->
         headers = [{String.downcase("#{key}"), value} | headers]
-        {:ok, headers, body} = read_multipart_headers(rest, headers)
+        {:ok, _headers, _body} = read_multipart_headers(rest, headers)
       {:ok, :http_eoh, rest} ->
         {:ok, Enum.reverse(headers), rest}
     end

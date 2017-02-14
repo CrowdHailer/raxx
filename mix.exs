@@ -3,14 +3,14 @@ defmodule Raxx.Mixfile do
 
   def project do
     [app: :raxx,
-     version: "0.10.3",
+     version: "0.10.4",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps,
-     description: description,
+     deps: deps(),
+     description: description(),
      docs: [extras: ["README.md"], main: "readme"],
-     package: package]
+     package: package()]
   end
 
   def application do

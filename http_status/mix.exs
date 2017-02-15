@@ -3,7 +3,7 @@ defmodule StatusCodes.Mixfile do
 
   def project do
     [app: :http_status,
-     version: "0.2.0",
+     version: "0.2.1",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -24,7 +24,7 @@ defmodule StatusCodes.Mixfile do
 
   defp description do
     """
-    Every status code for HTTP responses
+    Every HTTP response status for Elixir applications
     """
   end
 
@@ -32,6 +32,6 @@ defmodule StatusCodes.Mixfile do
     [
      maintainers: ["Peter Saxton"],
      licenses: ["Apache 2.0"],
-     links: %{"GitHub" => "https://github.com/crowdhailer/raxx"}]
+     links: %{"GitHub" => "https://github.com/CrowdHailer/raxx/tree/master/http_status"}]
   end
 end

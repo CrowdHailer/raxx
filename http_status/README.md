@@ -1,6 +1,8 @@
-# StatusCodes
+# HTTPStatus
 
-**Every HTTP status**
+**Every HTTP response status for Elixir applications**
+
+[Documentation available on hex.pm](https://hex.pm/packages/http_status)
 
 ## Installation
 

@@ -1,8 +1,8 @@
 defmodule HTTPStatus do
   @moduledoc """
-  Working with status codes for HTTP responses.
+  Every HTTP response status for Elixir applications.
 
-  Defined status-lines are from https://tools.ietf.org/html/rfc7231#section-6.1
+  All HTTP response codes are defined in [RFC7231](https://tools.ietf.org/html/rfc7231#section-6.1)
   """
   @external_resource "./rfc7231.status_codes"
   @default_http_version "1.1"
@@ -18,7 +18,7 @@ defmodule HTTPStatus do
   end)
 
   @doc """
-  Expand a status code into the correct status line
+  Expand a status code into the full response status line.
 
   Variable naming from https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html
 
@@ -39,8 +39,9 @@ defmodule HTTPStatus do
   end
 
   @doc """
-  List of all statuses as tuples of `{code, reason}`
+  Code and Reason-Phrase for all statuses
 
+  Returned as a list of `{code, reason_phrase}` pairs. 
   ## Examples
 
       iex> HTTPStatus.every_status |> List.first

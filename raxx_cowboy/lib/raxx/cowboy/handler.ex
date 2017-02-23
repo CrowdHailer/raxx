@@ -1,5 +1,16 @@
 defmodule Raxx.Cowboy.Handler do
   @moduledoc false
+
+  def init({:ssl, :http}, req, opts = {router, raxx_options}) do
+    case router.handle_request(normalise_request(req), raxx_options) do
+      upgrade = %Raxx.Chunked{headers: headers} ->
+        {:ok, chunked_request} = :cowboy_req.chunked_reply(200, headers, req)
+        {:loop, chunked_request, upgrade}
+      response ->
+        respond(req, response, opts)
+    end
+  end
+
   def init({:tcp, :http}, req, opts = {router, raxx_options}) do
     case router.handle_request(normalise_request(req), raxx_options) do
       upgrade = %Raxx.Chunked{headers: headers} ->
@@ -37,6 +48,9 @@ defmodule Raxx.Cowboy.Handler do
   end
 
   defp normalise_request(req) do
+    IO.puts "req:
+#{inspect(req, [pretty: true, limit: :infinity, width: :infinity])}"
+
     # Server information
     {host, req} = :cowboy_req.host req
 

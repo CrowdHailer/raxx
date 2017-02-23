@@ -48,9 +48,6 @@ defmodule Raxx.Cowboy.Handler do
   end
 
   defp normalise_request(req) do
-    IO.puts "req:
-#{inspect(req, [pretty: true, limit: :infinity, width: :infinity])}"
-
     # Server information
     {host, req} = :cowboy_req.host req
 

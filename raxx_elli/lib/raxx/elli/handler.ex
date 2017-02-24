@@ -31,9 +31,14 @@ defmodule Raxx.Elli.Handler do
       {String.downcase(k), String.downcase(v)}
     end)
     {"Host", authority} = :elli_request.headers(elli_request) |> List.keyfind("Host", 0)
-    [host, port] = String.split(authority, ":")
+    # [host, port] = String.split(authority, ":") - authority might not contain a port, and may crash here
+    [host, port] = case String.split(authority, ":") do
+       [host, port] -> [host, port]
+       [host] -> [host, 80] # we need to set the correct port some how...
+     end
+     
     %{
-      scheme: "http",
+      scheme: "http", # we need to set the correct scheme too for :ssl
       host: host,
       port: :erlang.binary_to_integer(port),
       method: method,

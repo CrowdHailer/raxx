@@ -1,18 +1,8 @@
 defmodule Raxx.Cowboy.Handler do
   @moduledoc false
 
-  def init({:ssl, :http}, req, opts = {router, raxx_options}) do
-    case router.handle_request(normalise_request(req), raxx_options) do
-      upgrade = %Raxx.Chunked{headers: headers} ->
-        {:ok, chunked_request} = :cowboy_req.chunked_reply(200, headers, req)
-        {:loop, chunked_request, upgrade}
-      response ->
-        respond(req, response, opts)
-    end
-  end
-
-  def init({:tcp, :http}, req, opts = {router, raxx_options}) do
-    case router.handle_request(normalise_request(req), raxx_options) do
+  def init({transport, :http}, req, opts = {router, raxx_options}) when transport in [:ssl, :tcp] do
+    case router.handle_request(normalise_request(req, transport), raxx_options) do
       upgrade = %Raxx.Chunked{headers: headers} ->
         {:ok, chunked_request} = :cowboy_req.chunked_reply(200, headers, req)
         {:loop, chunked_request, upgrade}
@@ -47,7 +37,7 @@ defmodule Raxx.Cowboy.Handler do
     {:ok, resp, opts}
   end
 
-  defp normalise_request(req) do
+  defp normalise_request(req, transport) do
     # Server information
     {host, req} = :cowboy_req.host req
 
@@ -70,10 +60,15 @@ defmodule Raxx.Cowboy.Handler do
     {:ok, body, _req} = parse_req_body(req, content_type)
 
     # {peer, req} = :cowboy_req.peer req
+    
+    scheme = case transport do
+      :ssl -> "https"
+      :tcp -> "http"
+    end
 
     # Request
     %Raxx.Request{
-      scheme: "http",
+      scheme: scheme,
       host: host,
       port: port,
       method: String.to_atom(method),

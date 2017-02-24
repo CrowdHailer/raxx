@@ -34,7 +34,7 @@ defmodule Raxx.Elli.Handler do
     # [host, port] = String.split(authority, ":") - authority might not contain a port, and may crash here
     [host, port] = case String.split(authority, ":") do
        [host, port] -> [host, port]
-       [host] -> [host, 80] # we need to set the correct port some how...
+       [host] -> [host, "80"] # we need to set the correct port some how...
      end
      
     %{

@@ -2,17 +2,14 @@ defmodule CowboyExample do
   use Application
 
   def start(_type, _args) do
-    routes = [
-      {:_, Raxx.Cowboy.Handler, {__MODULE__, []}}
+    import Supervisor.Spec, warn: false
+
+    children = [
+      worker(Raxx.Cowboy, [{__MODULE__, []}, [port: 8080, name: __MODULE__]])
     ]
 
-    dispatch = :cowboy_router.compile([{:_, routes}])
-
-    opts = [port: 8080]
-    env = [dispatch: dispatch]
-
-    # Don't forget can set any name
-    {:ok, _pid} = :cowboy.start_http(:http, 100, opts, [env: env])
+    opts = [strategy: :one_for_one]
+    Supervisor.start_link(children, opts)
   end
 
   import Raxx.Response

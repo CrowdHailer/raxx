@@ -9,8 +9,8 @@ defmodule Raxx.Cowboy do
     {:ok, pid} = :ranch_listener_sup.start_link(
       name,
       acceptors,
-      :ranch_tcp,
-      [port: port],
+      :ranch_ssl,
+      [port: port, certfile: Keyword.get(server_options, :cert_path), keyfile: Keyword.get(server_options, :key_path)],
       :cowboy_protocol,
       [env: [dispatch: dispatch]]
     )

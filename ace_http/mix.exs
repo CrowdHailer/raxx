@@ -3,7 +3,7 @@ defmodule Ace.HTTP.Mixfile do
 
   def project do
     [app: :ace_http,
-     version: "0.1.3",
+     version: "0.2.0",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -20,7 +20,7 @@ defmodule Ace.HTTP.Mixfile do
     [
       {:raxx, "~> 0.10.1"},
       {:http_status, "~> 0.2.0"},
-      {:ace, "~> 0.7.1"},
+      {:ace, "~> 0.8.0"},
       {:raxx_verify, path: "../raxx_verify", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]

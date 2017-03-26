@@ -1,6 +1,7 @@
 defmodule Ace.HTTP.Handler do
+  use Ace.Application
   @moduledoc false
-  def init(conn, app) do
+  def handle_connect(conn, app) do
     partial = {:start_line, conn}
     buffer = ""
     # Need to keep track of conn for keep-alive, 4th spot might also be where to keep upgrade
@@ -73,7 +74,7 @@ defmodule Ace.HTTP.Handler do
         {:send, Raxx.Chunked.end_chunk, {%Raxx.Chunked{app: {mod, state}}, partial, buffer}}
     end
   end
-  def terminate(_reason, {_app, _partial, _buffer}) do
+  def handle_disconnect(_reason, {_app, _partial, _buffer}) do
     :ok
   end
 

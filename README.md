@@ -6,7 +6,7 @@ Raxx is:
 - A simple and powerful tools library for building refined web applications
 
 
-To use Raxx provide an app: A module that implements `handle_request/2`, taking a request and config as arguments and return a respone map
+To use Raxx provide an app: A module that implements `handle_request/2`, taking a request and config as arguments and return a response map
 
 - `status`:  The HTTP response code
 - `headers`: A collection of headers

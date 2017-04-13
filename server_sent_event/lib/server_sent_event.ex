@@ -16,6 +16,14 @@ defmodule ServerSentEvent do
   ```
 
   A living standard is available from [WHATWG](https://html.spec.whatwg.org/#server-sent-events).
+
+  The contents of a server-sent-event are:
+
+  | **type** | The type of an event |
+  | **lines** | The data contents of the event split by line |
+  | **id** | Value to send in `last-event-id` header when reconnecting |
+  | **retry** | Time to wait before retrying connection in milliseconds |
+  | **comments** | Any lines from original block that were marked as comments |
   """
 
   @new_line ~r/\R/
@@ -28,20 +36,40 @@ defmodule ServerSentEvent do
     comments: []
   ]
 
+  @doc """
+  This event stream format's MIME type is `text/event-stream`.
+  """
   def mime_type do
     "text/event-stream"
   end
 
+  @doc """
+  Does the event have any data lines.
+
+  An event without any data lines will not trigger any browser events.
+  """
   def empty?(%{lines: []}), do: true
   def empty?(%{lines: _}), do: false
 
   @doc """
+  Format an event to be sent as part of a stream
+
+  **NOTE:** Each data/comment line must be without new line charachters.
 
   ## Examples
+  *In these examples this module has been aliased to `SSE`*.
 
       iex> %SSE{type: "greeting", lines: ["Hi,", "there"], comments: ["comment"]}
       ...> |> SSE.serialize()
       "event: greeting\\n: comment\\ndata: Hi,\\ndata: there"
+
+      iex> %SSE{lines: ["message with id"], id: "some-id"}
+      ...> |> SSE.serialize()
+      "data: message with id\\nid: some-id"
+
+      iex> %SSE{lines: ["message setting retry to 10s"], retry: 10_000}
+      ...> |> SSE.serialize()
+      "data: message setting retry to 10s\\nretry: 10000"
   """
   def serialize(event = %__MODULE__{}) do
     type_line(event)
@@ -85,9 +113,8 @@ defmodule ServerSentEvent do
   defp retry_line(%{retry: nil}) do
     []
   end
-  defp retry_line(%{retry: retry}) do
-    single_line?(retry) || raise "Bad"
-    ["retry: " <> retry]
+  defp retry_line(%{retry: retry}) when is_integer(retry) do
+    ["retry: " <> to_string(retry)]
   end
 
   defp single_line?(text) do
@@ -95,10 +122,10 @@ defmodule ServerSentEvent do
   end
 
   @doc """
-  Parse an event from text stream.
+  Parse the next event from text stream, if present.
 
   ## Examples
-  *In these examples this module has been aliased to `SSE`.
+  *In these examples this module has been aliased to `SSE`*.
 
       iex> SSE.parse("data: This is the first message\\n\\n")
       {%SSE{lines: ["This is the first message"]}, ""}
@@ -126,7 +153,11 @@ defmodule ServerSentEvent do
 
   """
   # parse_block block has comments event does not
-  def parse(stream, event \\ %__MODULE__{}) do
+  def parse(stream) do
+    do_parse(stream, %__MODULE__{})
+  end
+
+  defp do_parse(stream, event) do
     case pop_line(stream) do
       nil ->
         nil
@@ -134,7 +165,7 @@ defmodule ServerSentEvent do
         {event, rest}
       {line, rest} ->
         event = process_line(line, event)
-        parse(rest, event)
+        do_parse(rest, event)
     end
   end
 

@@ -61,15 +61,15 @@ defmodule ServerSentEvent do
 
       iex> %SSE{type: "greeting", lines: ["Hi,", "there"], comments: ["comment"]}
       ...> |> SSE.serialize()
-      "event: greeting\\n: comment\\ndata: Hi,\\ndata: there"
+      "event: greeting\\n: comment\\ndata: Hi,\\ndata: there\\n\\n"
 
       iex> %SSE{lines: ["message with id"], id: "some-id"}
       ...> |> SSE.serialize()
-      "data: message with id\\nid: some-id"
+      "data: message with id\\nid: some-id\\n\\n"
 
       iex> %SSE{lines: ["message setting retry to 10s"], retry: 10_000}
       ...> |> SSE.serialize()
-      "data: message setting retry to 10s\\nretry: 10000"
+      "data: message setting retry to 10s\\nretry: 10000\\n\\n"
   """
   def serialize(event = %__MODULE__{}) do
     type_line(event)
@@ -77,6 +77,7 @@ defmodule ServerSentEvent do
     ++ data_lines(event)
     ++ id_line(event)
     ++ retry_line(event)
+    ++ ["\n"]
     |> Enum.join("\n")
   end
 

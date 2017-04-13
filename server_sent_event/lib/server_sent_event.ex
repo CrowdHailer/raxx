@@ -136,6 +136,9 @@ defmodule ServerSentEvent do
       iex> SSE.parse("data: This message\\ndata: has two lines.\\n\\n")
       {%SSE{lines: ["This message", "has two lines."]}, ""}
 
+      iex> SSE.parse("data: This message is not complete")
+      nil
+
       iex> SSE.parse("event: custom\\ndata: This message is type custom\\n\\n")
       {%SSE{type: "custom", lines: ["This message is type custom"]}, ""}
 
@@ -148,8 +151,8 @@ defmodule ServerSentEvent do
       iex> SSE.parse(": This is a comment\\n\\n")
       {%SSE{comments: ["This is a comment"]}, ""}
 
-      iex> SSE.parse("data: This message is not complete")
-      nil
+      iex> SSE.parse("data: data can have more :'s in it'\\n\\n")
+      {%SSE{lines: ["data can have more :'s in it'"]}, ""}
 
   """
   # parse_block block has comments event does not
@@ -179,7 +182,7 @@ defmodule ServerSentEvent do
   end
 
   defp process_line(line, event) do
-    case String.split(line, ~r/: ?/) do
+    case String.split(line, ~r/: ?/, parts: 2) do
       ["", value] ->
         process_field("comment", value, event)
       [field, value] ->

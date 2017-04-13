@@ -1,6 +1,8 @@
 # ServerSentEvent
 
-**TODO: Add description**
+**To enable servers to push event data to Web pages over HTTP or using dedicated server-push protocols.**
+
+Documentation available on [hexdoc](https://hexdocs.pm/server_sent_event/index.html).
 
 ## Installation
 
@@ -21,4 +23,3 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
       [applications: [:server_sent_event]]
     end
     ```
-

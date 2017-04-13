@@ -1,0 +1,2 @@
+defmodule ServerSentEvent do
+end

@@ -35,8 +35,63 @@ defmodule ServerSentEvent do
   def empty?(%{lines: []}), do: true
   def empty?(%{lines: _}), do: false
 
-  def serialize(event) do
+  @doc """
 
+  ## Examples
+
+      iex> %SSE{type: "greeting", lines: ["Hi,", "there"], comments: ["comment"]}
+      ...> |> SSE.serialize()
+      "event: greeting\\n: comment\\ndata: Hi,\\ndata: there"
+  """
+  def serialize(event = %__MODULE__{}) do
+    type_line(event)
+    ++ comment_lines(event)
+    ++ data_lines(event)
+    ++ id_line(event)
+    ++ retry_line(event)
+    |> Enum.join("\n")
+  end
+
+  defp type_line(%{type: nil}) do
+    []
+  end
+  defp type_line(%{type: type}) do
+    single_line?(type) || raise "Bad"
+    ["event: " <> type]
+  end
+
+  defp comment_lines(%{comments: comments}) do
+    Enum.map(comments, fn(comment) ->
+      single_line?(comment) || raise "Bad"
+      ": " <> comment
+    end)
+  end
+
+  defp data_lines(%{lines: lines}) do
+    Enum.map(lines, fn(line) ->
+      single_line?(line) || raise "Bad"
+      "data: " <> line
+    end)
+  end
+
+  defp id_line(%{id: nil}) do
+    []
+  end
+  defp id_line(%{id: id}) do
+    single_line?(id) || raise "Bad"
+    ["id: " <> id]
+  end
+
+  defp retry_line(%{retry: nil}) do
+    []
+  end
+  defp retry_line(%{retry: retry}) do
+    single_line?(retry) || raise "Bad"
+    ["retry: " <> retry]
+  end
+
+  defp single_line?(text) do
+    length(String.split(text, @new_line, parts: 2)) == 1
   end
 
   @doc """

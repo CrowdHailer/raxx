@@ -5,7 +5,7 @@ defmodule Raxx.Response do
   The contents are itemised below:
 
   | **status** | The HTTP status code for the response: `1xx, 2xx, 3xx, 4xx, 5xx` |
-  | **headers** | The response headers as a map: `%{"content-type" => ["text/plain"]}` |
+  | **headers** | The response headers as a list: `[{"content-type", "text/plain"}` |
   | **body** | The response body, by default an empty string. |
 
   ## Examples

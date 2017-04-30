@@ -23,6 +23,7 @@ defmodule Raxx.Request do
   | **query** | The query parameters from the URL search string, formatted as a map of strings. |
   | **headers** | The headers from the HTTP request as a map of strings. Note all headers will be downcased, e.g. `%{"content-type" => "text/plain"}` |
   | **body** | The body content sent with the request |
+  | **peer** | The TCP peer that connected to the server machine, example: `{{127, 0, 0, 1}, 12345}`. Often this is a load-balancer or request-router. |
 
   ## Examples
 
@@ -43,7 +44,8 @@ defmodule Raxx.Request do
     path: [binary],
     query: %{binary => binary},
     headers: [{binary, binary}],
-    body: binary
+    body: binary,
+    peer: {:inet.ip_address, :inet.port_number}
   }
 
   defstruct [
@@ -55,7 +57,8 @@ defmodule Raxx.Request do
     path: [],
     query: %{},
     headers: [],
-    body: nil
+    body: nil,
+    peer: {{127, 0, 0, 1}, 0}
   ]
 
   @doc """

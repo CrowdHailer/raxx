@@ -3,8 +3,50 @@ defmodule SetCookie do
 
   end
 
+  @epoch {{1970, 1, 1}, {0, 0, 0}}
+
   @doc """
-  Encode a cookie with options to format for `set-cookie` header.
+  Serialize a `set-cookie` header to expire the cookie.
+
+  Options are the same as `serialize/3` minus `:max_age` and `:expires`.
+
+  ## Examples
+
+      # Expire a cookie value
+      iex> expire("foo")
+      "foo=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; HttpOnly"
+
+      # Expire a cookie with routing options
+      iex> expire("foo", secure: true, http_only: false)
+      "foo=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; secure"
+
+  """
+  def expire(key, opts \\ []) do
+    opts = Enum.into(opts, %{})
+    opts = Map.merge(opts, %{max_age: 0, universal_time: @epoch})
+
+    serialize(key, "", opts)
+  end
+
+  @doc """
+  Serialize a cookie with options to format for `set-cookie` header.
+
+  The cookie value is not automatically escaped. Therefore, if you
+  want to store values with comma, quotes, etc, you need to explicitly
+  escape them or use a function such as `Base.encode64` when writing
+  and `Base.decode64` when reading the cookie.
+
+  ## Options
+
+  * `:domain` - the domain the cookie applies to
+  * `:max_age` - the cookie max-age, in seconds. Providing a value for this
+    option will set both the _max-age_ and _expires_ cookie attributes
+  * `:path` - the path the cookie applies to
+  * `:http_only` - when false, the cookie is accessible beyond http
+  * `:secure` - if the cookie must be sent only over https. Defaults
+    to true when the connection is https
+  * `:extra` - string to append to cookie. Use this to take advantage of
+    non-standard cookie attributes.
 
   ## Examples
 

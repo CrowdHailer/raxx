@@ -1,7 +1,59 @@
 defmodule SetCookie do
-  def parse(cookie_string) do
+  @doc """
+  Parse a `set-cookie` header, into key, value and attributes.
 
+  ## Examples
+
+      # Will parse cookie content
+      iex> parse("foo=bar; path=/; HttpOnly")
+      ...> |> Map.take([:key, :value])
+      %{key: "foo", value: "bar"}
+
+      # Will parse cookie attributes
+      iex> parse("foo=bar; path=/; HttpOnly")
+      ...> |> Map.get(:attributes)
+      %{http_only: true, path: "/"}
+
+      # Will parse cookie with empty value
+      iex> parse("foo=; path=/; HttpOnly")
+      ...> |> Map.take([:key, :value])
+      %{key: "foo", value: ""}
+
+      # Will parse domain attribute
+      iex> parse("foo=bar; domain=example.com")
+      ...> |> Map.get(:attributes)
+      %{domain: "example.com"}
+
+      # Will parse secure attribute
+      iex> parse("foo=bar; secure")
+      ...> |> Map.get(:attributes)
+      %{secure: true}
+
+      # Will parse max_age attribute
+      iex> parse("foo=bar; max-age=20")
+      ...> |> Map.get(:attributes)
+      %{max_age: "20"}
+
+      # Will parse expires attribute
+      iex> parse("foo=bar; expires=Thu, 01 Jan 1970 00:00:00 GMT")
+      ...> |> Map.get(:attributes)
+      %{expires: "Thu, 01 Jan 1970 00:00:00 GMT"}
+
+  """
+  def parse(set_cookie_string) do
+    [content | attributes] = String.split(set_cookie_string, ~r/;\s*/)
+    [key, value] = String.split(content, "=", parts: 2)
+    attributes = Enum.map(attributes, &parse_attribute/1) |> Enum.into(%{})
+    %{key: key, value: value, attributes: attributes}
   end
+
+  defp parse_attribute("domain=" <> domain), do: {:domain, domain}
+  defp parse_attribute("path=" <> path), do: {:path, path}
+  defp parse_attribute("HttpOnly"), do: {:http_only, true}
+  defp parse_attribute("secure"), do: {:secure, true}
+  defp parse_attribute("max-age=" <> max_age), do: {:max_age, max_age}
+  defp parse_attribute("expires=" <> expires), do: {:expires, expires}
+  defp parse_attribute(extra), do: {:extra, extra}
 
   @epoch {{1970, 1, 1}, {0, 0, 0}}
 

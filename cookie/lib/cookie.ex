@@ -84,4 +84,33 @@ defmodule Cookie do
     do: false
   defp decode_value(<< h, t :: binary >>, spaces, key, value),
     do: decode_value(t, "", key, << value :: binary, spaces :: binary , h >>)
+
+  @doc """
+  Serialize cookies to format for `cookie` header.
+
+  ## Examples
+
+      # Can serialize individual cookie
+      iex> serialize({"key1", "value1"})
+      "key1=value1"
+
+      # Cookie value can be empty string
+      iex> serialize({"key1", ""})
+      "key1="
+
+      # Can serialize collection of cookies
+      iex> serialize(%{"key1" => "value1", "key2" => "value2"})
+      "key1=value1, key2=value2"
+
+  Be nice to property test serialize and parse.
+  """
+  # TODO handle invalid keys, ie with equals or $
+  def serialize({key, value}) do
+    "#{key}=#{value}"
+  end
+  def serialize(cookies) do
+    cookies
+    |> Enum.map(&serialize/1)
+    |> Enum.join(", ")
+  end
 end

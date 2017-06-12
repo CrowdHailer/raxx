@@ -1,6 +1,6 @@
 defmodule ServerSentEvent do
   @moduledoc """
-  To enable servers to push data to Web pages over HTTP or using dedicated server-push protocols.
+  **Push updates to Web clients over HTTP or using dedicated server-push protocols.**
 
   Messages are sent in the following form, with the `text/event-stream` MIME type:
 
@@ -136,6 +136,9 @@ defmodule ServerSentEvent do
 
       iex> SSE.parse("data: This message\\ndata: has two lines.\\n\\n")
       {%SSE{lines: ["This message", "has two lines."]}, ""}
+
+      iex> SSE.parse("data: This is the first message\\n\\nrest")
+      {%SSE{lines: ["This is the first message"]}, "rest"}
 
       iex> SSE.parse("data: This message is not complete")
       nil

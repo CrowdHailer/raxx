@@ -3,8 +3,8 @@ defmodule ServerSentEvent.Mixfile do
 
   def project do
     [app: :server_sent_event,
-     version: "0.1.0",
-     elixir: "~> 1.3",
+     version: "0.2.0",
+     elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),
@@ -14,7 +14,7 @@ defmodule ServerSentEvent.Mixfile do
   end
 
   def application do
-    [applications: [:logger]]
+    [extra_applications: [:logger]]
   end
 
   defp deps do
@@ -25,7 +25,7 @@ defmodule ServerSentEvent.Mixfile do
 
   defp description do
     """
-    To enable servers to push event data to Web pages over HTTP or using dedicated server-push protocols.
+    Push updates to Web clients over HTTP or using dedicated server-push protocols.
     """
   end
 

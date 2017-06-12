@@ -1,25 +1,24 @@
 # ServerSentEvent
 
-**To enable servers to push event data to Web pages over HTTP or using dedicated server-push protocols.**
+**Push updates to Web clients over HTTP or using dedicated server-push protocols.**
 
-Documentation available on [hexdoc](https://hexdocs.pm/server_sent_event/index.html).
+- [Install from Hex](https://hex.pm/packages/server_sent_event)
+- [Documentation available on hexdoc](https://hexdocs.pm/server_sent_event)
 
-## Installation
+## Community
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+- [elixir-lang slack channel](https://elixir-lang.slack.com/messages/C56H3TBH8/)
 
-  1. Add `server_sent_event` to your list of dependencies in `mix.exs`:
+## Contributing
 
-    ```elixir
-    def deps do
-      [{:server_sent_event, "~> 0.1.0"}]
-    end
-    ```
+- See [Raxx Project](https://github.com/CrowdHailer/raxx) to contribute.
 
-  2. Ensure `server_sent_event` is started before your application:
+## Testing
 
-    ```elixir
-    def application do
-      [applications: [:server_sent_event]]
-    end
-    ```
+```
+git clone git@github.com:CrowdHailer/raxx.git
+cd raxx/server_sent_event
+
+mix deps.get
+mix test
+```

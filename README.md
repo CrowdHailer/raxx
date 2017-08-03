@@ -42,11 +42,15 @@ defmodule HelloWeb.Server do
   import Raxx.Response
 
   def handle_request(%{path: []}, _env) do
-    ok("Hello, World!")
+    body = "Hello, World!"
+    content_length = :erlang.iolist_size(body)
+    ok(body, [{"content-length", content_length}])
   end
 
   def handle_request(%{path: [name]}, _env) do
-    ok("Hello, #{name}!")
+    body = "Hello, #{name}!"
+    content_length = :erlang.iolist_size(body)
+    ok(body, [{"content-length", content_length}])
   end
 
   def handle_request(%{path: _unknown}, _env) do

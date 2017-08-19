@@ -241,8 +241,6 @@ end
 
 If you have Elixir installed on your machine then you can treat this project as a normal mix project and run tests via `mix test`.
 
-If required a development environment can be created using [Vagrant](www.vagrantup.com).
-
 ## Discussions
 
 These are not issues because there is not a decision on how best to proceed.

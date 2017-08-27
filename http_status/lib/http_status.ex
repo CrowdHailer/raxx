@@ -9,7 +9,7 @@ defmodule HTTPStatus do
 
   path = Path.expand(@external_resource, Path.dirname(__ENV__.file))
   {:ok, file} = File.read(path)
-  file = String.strip(file)
+  file = String.trim(file)
   [_header | lines] = String.split(file, "\n")
   statuses = Enum.map(lines, fn
     (status_string) ->
@@ -41,7 +41,7 @@ defmodule HTTPStatus do
   @doc """
   Code and Reason-Phrase for all statuses
 
-  Returned as a list of `{code, reason_phrase}` pairs. 
+  Returned as a list of `{code, reason_phrase}` pairs.
   ## Examples
 
       iex> HTTPStatus.every_status |> List.first
@@ -50,5 +50,4 @@ defmodule HTTPStatus do
   def every_status do
     unquote(statuses)
   end
-
 end

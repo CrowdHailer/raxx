@@ -42,6 +42,21 @@ defmodule Raxx.Response do
     end
   end
 
+  def new(code, headers, body) when is_integer(code) do
+    struct(Raxx.Response, status: code, body: body, headers: headers)
+  end
+  for {code, reason_phrase} <- HTTPStatus.every_status do
+    reason = reason_phrase
+    |> String.downcase
+    |> String.replace(" ", "_")
+    |> String.to_atom
+
+    def new(unquote(reason), headers, body) do
+      new(unquote(code), headers, body)
+    end
+  end
+
+
   # This pattern match cannot be an iolist, it contains a tuple.
   # It is therefore assumed to be body content
   defp build(code, body = [{_, _} | _], headers) do

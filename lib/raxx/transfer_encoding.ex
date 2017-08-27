@@ -2,6 +2,8 @@ defmodule Raxx.TransferEncoding do
   @moduledoc """
   Manipulate transfer-encoding header on raxx messages
 
+
+  TODO do not show deprecated headers at raxx level
   """
 
   @field_name "transfer-encoding"

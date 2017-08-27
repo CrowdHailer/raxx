@@ -1,6 +1,8 @@
 defmodule Raxx.Connection do
   @moduledoc """
   Manipulate connection header on raxx messages
+
+  TODO do not show deprecated headers at raxx level
   """
 
   @field_name "connection"

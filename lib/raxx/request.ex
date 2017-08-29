@@ -15,50 +15,46 @@ defmodule Raxx.Request do
   The contents are itemised below:
 
   | **scheme** | `http` or `https`, depending on the transport used. |
-  | **host** | The location of the hosting server, as a binary. e.g. `www.example.com`. |
-  | **port** | The connection port on the server, as an integer. |
+  | **authority** | The location of the hosting server, as a binary. e.g. `www.example.com`. Plus an optional port number, separated from the hostname by a colon |
   | **method** | The HTTP request method, such as “GET” or “POST”, as a binary. This cannot ever be an empty string, and is always uppercase. |
   | **mount** | The segments of the request URL's “path”, that have already been matched. Same as rack path_info. This may be an empty array, if the requested URL targets the application root. |
   | **path** | The remainder of the request URL's “path”, split into segments. It designates the virtual “location” of the request's target within the application. This may be an empty array, if the requested URL targets the application root. |
   | **query** | The query parameters from the URL search string, formatted as a map of strings. |
   | **headers** | The headers from the HTTP request as a map of strings. Note all headers will be downcased, e.g. `%{"content-type" => "text/plain"}` |
   | **body** | The body content sent with the request |
-  | **peer** | The TCP peer that connected to the server machine, example: `{{127, 0, 0, 1}, 12345}`. Often this is a load-balancer or request-router. |
 
   ## Examples
 
-      iex> get("http://example.com:80/some/path?query=foo", "Hello, World!", [{"content-type", "tex/plain"}])
+      iex> get("http://example.com:8080/some/path?query=foo")
+      ...> |> set_header("content-type", "text/plain")
+      ...> |> set_body("Hello, World!")
       %Raxx.Request{body: "Hello, World!",
-          headers: [{"content-type", "tex/plain"}], host: "example.com",
-          method: :GET, mount: [], path: ["some", "path"], port: 80,
-          query: %{"query" => "foo"}, scheme: "http"}
+          headers: [{"content-type", "text/plain"}], authority: "example.com:8080",
+          method: :GET, mount: [], path: ["some", "path"],
+          query: %{"query" => "foo"}, scheme: :http}
 
   """
 
   @type request :: %__MODULE__{
     scheme: binary,
-    host: binary,
-    port: :inet.port_number,
+    authority: binary,
     method: binary,
     mount: [binary],
     path: [binary],
     query: %{binary => binary},
     headers: [{binary, binary}],
     body: binary,
-    peer: {:inet.ip_address, :inet.port_number}
   }
 
   defstruct [
     scheme: nil,
-    host: nil,
-    port: nil,
+    authority: nil,
     method: nil,
     mount: [],
     path: [],
     query: %{},
     headers: [],
     body: nil,
-    peer: {{127, 0, 0, 1}, 0}
   ]
 
   @doc """
@@ -68,109 +64,122 @@ defmodule Raxx.Request do
 
   ## Examples
 
+      iex> get("/").path
+      []
+
+      iex> get("/foo/bar").path
+      ["foo", "bar"]
+
+      iex> get("https:///").scheme
+      :https
+
+      iex> get("https://example.com").authority
+      "example.com"
+
       iex> get("/?foo=bar").query
       %{"foo" => "bar"}
-
-      iex> get({"/", %{foo: "bar"}}).query
-      %{"foo" => "bar"}
-
-      iex> get("/", "Hello, World!").body
-      "Hello, World!"
-
-      iex> get("/", [{"referer", "/home"}]).headers
-      [{"referer", "/home"}]
   """
-  def get(url, content \\ "", headers \\ []) do
-    build(:GET, url, content, headers)
+  def get(url) do
+    new(:GET, url)
   end
 
   @doc """
   Create a `POST` request for the given url.
 
-  See `get/3` for examples on adding content and headers
+  See `get/1` for examples on adding content and headers
   """
-  def post(url, content \\ "", headers \\ []) do
-    build(:POST, url, content, headers)
+  def post(url) do
+    new(:POST, url)
   end
 
   @doc """
   Create a `PUT` request for the given url.
 
-  See `get/3` for examples on adding content and headers
+  See `get/1` for examples on adding content and headers
   """
-  def put(url, content \\ "", headers \\ []) do
-    build(:PUT, url, content, headers)
+  def put(url) do
+    new(:PUT, url)
   end
 
   @doc """
   Create a `PATCH` request for the given url.
 
-  See `get/3` for examples on adding content and headers
+  See `get/1` for examples on adding content and headers
   """
-  def patch(url, content \\ "", headers \\ []) do
-    build(:PATCH, url, content, headers)
+  def patch(url) do
+    new(:PATCH, url)
   end
 
   @doc """
   Create a `DELETE` request for the given url.
 
-  See `get/3` for examples on adding content and headers
+  See `get/1` for examples on adding content and headers
   """
-  def delete(url, content \\ "", headers \\ []) do
-    build(:DELETE, url, content, headers)
+  def delete(url) do
+    new(:DELETE, url)
   end
 
   @doc """
   Create a `OPTIONS` request for the given url.
 
-  See `get/3` for examples on adding content and headers
+  See `get/1` for examples on adding content and headers
   """
-  def options(url, content \\ "", headers \\ []) do
-    build(:OPTIONS, url, content, headers)
+  def options(url) do
+    new(:OPTIONS, url)
   end
 
   @doc """
   Create a `HEAD` request for the given url.
 
-  See `get/3` for examples on adding content and headers
+  See `get/1` for examples on adding content and headers
   """
-  def head(url, content \\ "", headers \\ []) do
-    build(:HEAD, url, content, headers)
+  def head(url) do
+    new(:HEAD, url)
   end
 
-  # This should be the `Raxx.request` function
-  defp build(method, url, body, headers) when is_binary(url) do
+  @doc """
+  Add a query value to a request
+
+  Examples
+      # TODO
+      # iex> get({"/", %{foo: "bar"}}).query
+      # %{"foo" => "bar"}
+  """
+  def set_query(request, query) do
+    %{request | query: query}
+  end
+
+  @doc """
+      # iex> get("/", [{"referer", "/home"}]).headers
+      # [{"referer", "/home"}]
+  """
+  def set_header(request = %{headers: headers}, name, value) do
+    # TODO check lowercase
+    %{request | headers: headers ++ [{name, value}]}
+  end
+
+  def set_body(request, body) do
+    # TODO raise if body already set
+    %{request | body: body}
+  end
+  defp new(method, url) when is_binary(url) do
     url = URI.parse(url)
     url = %{url | query: Plug.Conn.Query.decode(url.query || "")}
-    build(method, url, body, headers)
+    new(method, url)
   end
-  defp build(method, {url, query}, body, headers) do
-    # DEBT check url string for query
-    url = URI.parse(url)
-    url_query = Plug.Conn.Query.decode(url.query || "")
-    query = query |> Plug.Conn.Query.encode |> Plug.Conn.Query.decode
-    query = Map.merge(url_query, query)
-    url = %{url | query: query}
-    build(method, url, body, headers)
-  end
-  # This pattern match cannot be an iolist, it contains a tuple.
-  # It is therefore assumed to be body content
-  defp build(method, url, body = [{_, _} | _], headers) do
-    build(method, url, "", body ++ headers)
-  end
-  defp build(method, url, %{headers: headers, body: body}, extra_headers) do
-    build(method, url, body, headers ++ extra_headers)
-  end
-  defp build(method, url, body, headers) do
+  defp new(method, url) do
+    scheme = if url.scheme do
+      url.scheme |> String.to_existing_atom()
+    end
+    segments = Raxx.Request.split_path(url.path || "/")
     struct(Raxx.Request,
-      scheme: url.scheme,
-      host: url.host,
-      port: url.port,
+      scheme: scheme,
+      authority: url.authority,
       method: method,
-      path: Raxx.Request.split_path(url.path),
+      path: segments,
       query: url.query,
-      headers: headers,
-      body: body
+      headers: [],
+      body: false
     )
   end
 
@@ -186,5 +195,15 @@ defmodule Raxx.Request do
   end
   defp empty_string?(str) when is_binary(str) do
     false
+  end
+
+  @doc """
+  Just the request contain all content the will be part of the request stream.
+  """
+  def complete?(%__MODULE__{body: body}) when is_binary(body) do
+    true
+  end
+  def complete?(%__MODULE__{body: body}) do
+    !body
   end
 end

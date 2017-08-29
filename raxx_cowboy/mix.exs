@@ -13,7 +13,7 @@ defmodule Raxx.Cowboy.Mixfile do
   end
 
   def application do
-    [applications: [:logger]]
+    [applications: [:logger, :cowboy]]
   end
 
   defp deps do

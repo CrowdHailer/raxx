@@ -1,82 +1,21 @@
-# Raxx: an Elixir webserver interface
+# Raxx
+### HTTP interface for Elixir
 
-Raxx is:
+- [Install from hex.pm](https://hex.pm/packages/raxx)
+- [Documentation available on hexdoc](https://hexdocs.pm/raxx)
 
-- The specification of a **pure** interface for webservers and frameworks.
-- A simple and powerful tools library for building refined web applications
+### Features
 
-
-To use Raxx provide an app: A module that implements `handle_request/2`, taking a request and config as arguments and return a response map
-
-- `status`:  The HTTP response code
-- `headers`: A collection of headers
-- `body`: An binary or io_list
+- Specification of a **pure** interface for webservers and frameworks.
+- A simple and powerful tools library for building web applications.
 
 
-```elixir
-defmodule MyApp do
-  def handle_request(_request, _config) do
-    %{status: 200, headers: [{"content-type", "text/html"}], body: "A barebones raxx app."}
-  end
-end
 
-Ace.HTTP.start_link({MyApp, :no_config}, port: 8080)
-```
 
-[Documentation for Raxx is available online](https://hexdocs.pm/raxx)
 
-[Introductory presentation of Raxx](https://www.youtube.com/watch?v=80AXtvXFIA4&index=2&list=PLWbHc_FXPo2ivlIjzcaHS9N_Swe_0hWj0)
 
-## Supported Web servers
 
-- [ace](https://github.com/CrowdHailer/raxx/tree/master/ace_http)
-- [cowboy](https://github.com/CrowdHailer/raxx/tree/master/raxx_cowboy)
-- [elli](https://github.com/CrowdHailer/raxx/tree/master/raxx_elli)
 
-## Hello, World!
-
-A (slightly) less simplistic example utilitising `Raxx.Response` for convenience.
-
-```elixir
-defmodule HelloWeb.Server do
-  import Raxx.Response
-
-  def handle_request(%{path: []}, _env) do
-    body = "Hello, World!"
-    content_length = :erlang.iolist_size(body)
-    ok(body, [{"content-length", content_length}])
-  end
-
-  def handle_request(%{path: [name]}, _env) do
-    body = "Hello, #{name}!"
-    content_length = :erlang.iolist_size(body)
-    ok(body, [{"content-length", content_length}])
-  end
-
-  def handle_request(%{path: _unknown}, _env) do
-    not_found()
-  end
-end
-```
-
-Mount your server in you application. *Example using [Ace](https://github.com/CrowdHailer/Ace)*
-
-```elixir
-defmodule HelloWeb do
-  use Application
-
-  def start(_type, _args) do
-    import Supervisor.Spec, warn: false
-
-    children = [
-      worker(Ace.HTTP, [{HelloWeb.Server, []}, [port: 8080]])
-    ]
-
-    opts = [strategy: :one_for_one]
-    Supervisor.start_link(children, opts)
-  end
-end
-```
 
 ### Principles
 

@@ -3,6 +3,7 @@ defmodule Raxx.ContentLength do
   Manipulate content-length header on raxx messages
 
   """
+  @moduledoc false
 
   @field_name "content-length"
 

@@ -3,6 +3,7 @@ defmodule Raxx.Location do
   Manipulate location header on raxx messages
 
   """
+  @moduledoc false
 
   @field_name "location"
 

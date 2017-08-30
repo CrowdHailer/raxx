@@ -4,6 +4,7 @@ defmodule Raxx.Referrer do
 
   *NOTE: The `Referrer` module uses the correct spelling however due to historic reasons the field_name is spelt `referer`
   """
+  @moduledoc false
 
   @field_name "referer"
 

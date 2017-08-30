@@ -3,6 +3,7 @@ defmodule Raxx.UserAgent do
   Manipulate user-agent header on raxx messages
 
   """
+  @moduledoc false
 
   @field_name "user-agent"
 

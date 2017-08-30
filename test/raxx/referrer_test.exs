@@ -1,4 +1,4 @@
 defmodule Raxx.ReferrerTest do
   use ExUnit.Case
-  doctest Raxx.Referrer
+  # doctest Raxx.Referrer
 end

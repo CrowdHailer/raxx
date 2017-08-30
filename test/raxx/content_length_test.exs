@@ -1,4 +1,4 @@
 defmodule Raxx.ContentLengthTest do
   use ExUnit.Case
-  doctest Raxx.ContentLength
+  # doctest Raxx.ContentLength
 end

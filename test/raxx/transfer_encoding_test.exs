@@ -1,4 +1,4 @@
 defmodule Raxx.TransferEncodingTest do
   use ExUnit.Case
-  doctest Raxx.TransferEncoding
+  # doctest Raxx.TransferEncoding
 end

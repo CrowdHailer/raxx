@@ -5,6 +5,7 @@ defmodule Raxx.TransferEncoding do
 
   TODO do not show deprecated headers at raxx level
   """
+  @moduledoc false
 
   @field_name "transfer-encoding"
 

@@ -9,7 +9,7 @@ defmodule Raxx.Mixfile do
      start_permanent: Mix.env == :prod,
      deps: deps(),
      description: description(),
-     docs: [extras: ["README.md"], main: "readme"],
+     docs: [extras: ["README.md"], main: "Raxx"],
      package: package()]
   end
 

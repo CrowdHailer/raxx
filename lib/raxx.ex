@@ -112,6 +112,23 @@ defmodule Raxx do
   end
 
   @doc """
+  Construct a `Raxx.Fragment`
+
+  A fragment encapsulates a section of message content that has been generated.
+  If a stream has no trailers then the final fragment should mark the stream as ended.
+  """
+  def fragment(data, end_stream \\ false) do
+    %Raxx.Fragment{data: data, end_stream: end_stream}
+  end
+
+  @doc """
+  Construct a `Raxx.Trailer`
+  """
+  def trailer(headers) do
+    %Raxx.Trailer{headers: headers}
+  end
+
+  @doc """
   Does the message struct contain all the data to be sent.
   """
   def complete?(%{body: body}) when is_binary(body) do

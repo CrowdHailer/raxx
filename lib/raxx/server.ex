@@ -2,6 +2,8 @@ defmodule Raxx.Server do
   @moduledoc """
   Callbacks required to implement a Raxx application.
 
+  exit normal to cancel stream
+  any other exit to send reset with internal error
   """
   @doc """
   Called when a client starts a stream,

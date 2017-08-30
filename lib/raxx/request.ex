@@ -26,14 +26,14 @@ defmodule Raxx.Request do
   """
 
   @type request :: %__MODULE__{
-    scheme: binary,
+    scheme: atom,
     authority: binary,
-    method: binary,
+    method: atom,
     mount: [binary],
     path: [binary],
     query: %{binary => binary},
     headers: [{binary, binary}],
-    body: binary,
+    body: binary | boolean,
   }
 
   defstruct [

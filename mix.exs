@@ -28,9 +28,9 @@ defmodule Raxx.Mixfile do
 
   defp description do
     """
-    Pure interface for webservers and frameworks.
+    Streaming HTTP interface for Elixir.
 
-    Including a powerful tools library for building refined web applications
+    Including a simple and powerful library for building HTTP clients and web applications.
     """
   end
 

@@ -1,5 +1,17 @@
 defmodule Raxx do
   @moduledoc """
+  Tooling to work with HTTP.
+
+  Several data structures are defined to model parts of the communication between client and server.
+
+  - `Raxx.Request`: metadata sent by a client before sending content.
+  - `Raxx.Response`: metadata sent by a server before sending content.
+  - `Raxx.Fragment`: A part of a messages content.
+  - `Raxx.Trailer`: metadata set by client or server to conclude communication.
+
+  This module contains functions to create and manipulate these structures.
+
+  **See `Raxx.Server` for implementing a web application.**
   """
 
   @http_methods [
@@ -55,7 +67,10 @@ defmodule Raxx do
   """
   def request(method, url) when is_binary(url) do
     url = URI.parse(url)
-    url = %{url | query: Plug.Conn.Query.decode(url.query || "")}
+    query = if url.query do
+      Plug.Conn.Query.decode(url.query)
+    end
+    url = %{url | query: query}
     request(method, url)
   end
   def request(method, url) when method in @http_methods do
@@ -116,6 +131,17 @@ defmodule Raxx do
 
   A fragment encapsulates a section of message content that has been generated.
   If a stream has no trailers then the final fragment should mark the stream as ended.
+
+  ## Examples
+
+      iex> fragment("Hi").data
+      "Hi"
+
+      iex> fragment("Hi", true).end_stream
+      true
+
+      iex> fragment("Hi").end_stream
+      false
   """
   def fragment(data, end_stream \\ false) do
     %Raxx.Fragment{data: data, end_stream: end_stream}
@@ -123,6 +149,11 @@ defmodule Raxx do
 
   @doc """
   Construct a `Raxx.Trailer`
+
+  ## Examples
+
+      iex> trailer([{"digest", "opaque-data"}]).headers
+      [{"digest", "opaque-data"}]
   """
   def trailer(headers) do
     %Raxx.Trailer{headers: headers}
@@ -130,6 +161,22 @@ defmodule Raxx do
 
   @doc """
   Does the message struct contain all the data to be sent.
+
+  ## Examples
+
+      iex> request(:GET, "/")
+      ...> |> complete?()
+      true
+
+      iex> response(:ok)
+      ...> |> set_body("Hello, World!")
+      ...> |> complete?()
+      true
+
+      iex> response(:ok)
+      ...> |> set_body(true)
+      ...> |> complete?()
+      false
   """
   def complete?(%{body: body}) when is_binary(body) do
     true
@@ -141,38 +188,54 @@ defmodule Raxx do
   @doc """
   Add a query value to a request
 
-  Examples
-      # TODO
-      # iex> get({"/", %{foo: "bar"}}).query
-      # %{"foo" => "bar"}
+  ## Examples
+
+      iex> request(:GET, "/")
+      ...> |> set_query(%{"value" => "1"})
+      ...> |> Map.get(:query)
+      %{"value" => "1"}
   """
-  def set_query(request = %Raxx.Request{}, query) do
+  def set_query(request = %Raxx.Request{query: nil}, query) do
     %{request | query: query}
   end
 
   # get_header
-
-  @doc """
-      # iex> get("/", [{"referer", "/home"}]).headers
-      # [{"referer", "/home"}]
-  """
-  def set_header(request = %{headers: headers}, name, value) do
-    # TODO check lowercase
-    # TODO fail if already set to different value
-    %{request | headers: headers ++ [{name, value}]}
-  end
-
-  def set_body(request, body) do
-    # TODO raise if body already set
-    %{request | body: body}
-  end
-
   # def set_header(r, name, value) do
   #   if has_header?(r, name) do
   #     raise "set only once"
   #   end
   # end
 
+  @doc """
+  Set the value of a header field.
+
+  ## Examples
+
+      iex> request(:GET, "/")
+      ...> |> set_header("referer", "example.com")
+      ...> |> set_header("accept", "text/html")
+      ...> |> Map.get(:headers)
+      [{"referer", "example.com"}, {"accept", "text/html"}]
+  """
+  def set_header(message = %{headers: headers}, name, value) do
+    # TODO check lowercase
+    # TODO fail if already set to different value
+    %{message | headers: headers ++ [{name, value}]}
+  end
+
+  @doc """
+  Add a complete body to a message.
+
+  ## Examples
+
+      iex> request(:GET, "/")
+      ...> |> set_body("Hello")
+      ...> |> Map.get(:body)
+      "Hello"
+  """
+  def set_body(message = %{body: false}, body) do
+    %{message | body: body}
+  end
 
   @doc false
   def split_path(path_string) do

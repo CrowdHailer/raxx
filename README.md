@@ -1,4 +1,4 @@
-# Raxx: HTTP interface for Elixir
+# Raxx: Streaming HTTP interface for Elixir
 
 - [Install from hex.pm](https://hex.pm/packages/raxx)
 - [Documentation available on hexdoc](https://hexdocs.pm/raxx)

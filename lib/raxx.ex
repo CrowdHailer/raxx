@@ -237,7 +237,15 @@ defmodule Raxx do
     %{message | body: body}
   end
 
-  @doc false
+  @doc """
+  Split a path on forward slashes.
+
+  ## Examples
+
+      iex> split_path("/foo/bar")
+      ["foo", "bar"]
+
+  """
   def split_path(path_string) do
     path_string
     |> String.split("/")

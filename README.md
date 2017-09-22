@@ -22,8 +22,6 @@ Reach out in the slack channel to ask questions.
 
 To work with Raxx locally Elixir 1.4 or greater must be [installed](https://elixir-lang.org/install.html).
 
-TODO add link to Tokumei page with docker development tips.
-
 ```
 git clone git@github.com:CrowdHailer/raxx.git
 cd raxx

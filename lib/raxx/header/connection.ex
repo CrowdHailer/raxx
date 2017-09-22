@@ -2,7 +2,7 @@ defmodule Raxx.Connection do
   @moduledoc """
   Manipulate connection header on raxx messages
 
-  TODO do not show deprecated headers at raxx level
+  DEBT do not show deprecated headers at raxx level
   """
   @moduledoc false
 
@@ -34,7 +34,7 @@ defmodule Raxx.Connection do
   Test if a Connection is marked as reuseable
 
   This behaviour depends if the HTTP version is 1.0 or 1.1.
-  # TODO add a version field to the request/response types.
+  # DEBT add a version field to the request/response types.
   # Assumes 1.1
 
   ## Examples

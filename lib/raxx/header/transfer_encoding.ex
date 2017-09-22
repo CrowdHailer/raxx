@@ -3,7 +3,7 @@ defmodule Raxx.TransferEncoding do
   Manipulate transfer-encoding header on raxx messages
 
 
-  TODO do not show deprecated headers at raxx level
+  DEBT do not show deprecated headers at raxx level
   """
   @moduledoc false
 

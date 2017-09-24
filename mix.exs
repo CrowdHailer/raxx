@@ -3,7 +3,7 @@ defmodule Raxx.Mixfile do
 
   def project do
     [app: :raxx,
-     version: "0.12.0",
+     version: "0.12.1",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -19,7 +19,6 @@ defmodule Raxx.Mixfile do
 
   defp deps do
     [
-      {:mime, "~> 1.0"},
       {:plug, "~> 1.2"}, # DEBT remove; currently used for query strings etc
       {:http_status, "~> 0.2"},
       {:ex_doc, ">= 0.0.0", only: :dev},

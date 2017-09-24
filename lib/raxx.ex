@@ -218,8 +218,12 @@ defmodule Raxx do
       [{"referer", "example.com"}, {"accept", "text/html"}]
   """
   def set_header(message = %{headers: headers}, name, value) do
-    # TODO check lowercase
-    # TODO fail if already set to different value
+    if String.downcase(name) != name do
+      raise "Header keys must be lowercase"
+    end
+    if :proplists.is_defined(name, headers) do
+      raise "Headers should not be duplicated"
+    end
     %{message | headers: headers ++ [{name, value}]}
   end
 

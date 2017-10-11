@@ -4,7 +4,7 @@ defmodule Raxx.Router do
 
     routes = for {match, controller} <- actions do
       {resolved_module, []} = Module.eval_quoted(__CALLER__, controller)
-      case Code.ensure_loaded(resolved_module) do
+      case Code.ensure_compiled(resolved_module) do
         {:module, ^resolved_module} ->
           behaviours = resolved_module.module_info[:attributes]
           |> Keyword.get(:behaviour, [])

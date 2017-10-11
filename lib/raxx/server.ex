@@ -8,6 +8,19 @@ defmodule Raxx.Server do
 
   ## Getting Started
 
+  **Send complete response after receiving complete request.**
+
+      defmodule EchoServer do
+        use Raxx.Server
+
+        def handle_request(%Raxx.Request{method: :POST, path: [], body: body}, _state) do
+          Raxx.response(:ok)
+          |> Raxx.set_header("content-type", "text/plain")
+          |> Raxx.set_body(body)
+        end
+      end
+
+
   **Send complete response as soon as request headers are received.**
 
 

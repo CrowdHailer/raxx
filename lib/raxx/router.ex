@@ -1,4 +1,32 @@
 defmodule Raxx.Router do
+  @moduledoc """
+  Simple router for Raxx applications.
+
+  A router is a list of associations between a request pattern and controller module.
+  `Raxx.Router` needs to be used after `Raxx.Server`,
+  it is an extension to a standard Raxx.Server.
+
+  Each controller module that is passed requests from `Raxx.Router` are also standalone `Raxx.Server`s.
+
+  *`Raxx.Router` is a deliberatly low level interface that can act as a base for more sophisticated routers.
+  `Raxx.Blueprint` part of the [tokumei project](https://hexdocs.pm/tokumei/Raxx.Blueprint.html) is one example.
+
+
+  ## Examples
+
+      defmodule MyRouter do
+        use Raxx.Server
+
+        use Raxx.Router, [
+          {%{method: :GET, path: []}, HomePage},
+          {%{method: :GET, path: ["users"]}, UsersPage},
+          {%{method: :GET, path: ["users", _id]}, UserPage},
+          {%{method: :POST, path: ["users"]}, CreateUser},
+          {_, NotFoundPage}
+        ]
+      end
+  """
+
   @doc false
   defmacro __using__(actions) when is_list(actions) do
 

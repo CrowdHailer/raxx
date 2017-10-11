@@ -8,6 +8,8 @@ Supports server, client and bidirectional streaming.**
 
 ### Hello World!
 
+*Hello world example where the client sends a single request to the server and gets a single response back.*
+
 ```elixir
 defmodule MyApp.WW do
   use Raxx.Server
@@ -21,7 +23,7 @@ defmodule MyApp.WW do
 end
 ```
 
-*Simplest example where the client sends a single request to the server and gets a single response back.*
+*Echo server example where the request body is streamed back to the client as it becomes available.*
 
 ```elixir
 defmodule MyApp.Echo do
@@ -51,7 +53,14 @@ defmodule MyApp.Echo do
 end
 ```
 
-`Raxx.Server` specifies  
+`Raxx.Server` specifies 5 callbacks allowing implementers to handle:
+
+- Unary request/response exchanges.
+- Client streamed requests.
+- Server streamed responses.
+- Bidirectional streaming.
+
+See documentation on [hexdocs](https://hexdocs.pm/raxx/Raxx.Server.html) for details.
 
 ## Community
 

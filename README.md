@@ -1,22 +1,62 @@
-# Raxx: Streaming HTTP interface for Elixir
+# Raxx
+
+**Interface for HTTP webservers and frameworks.
+Supports server, client and bidirectional streaming.**
 
 - [Install from hex.pm](https://hex.pm/packages/raxx)
 - [Documentation available on hexdoc](https://hexdocs.pm/raxx)
 
-## Features
+### Hello World!
 
-- Specification of HTTP streaming interface.
-- A simple and powerful library for building HTTP clients and web applications.
+```elixir
+defmodule MyApp.WW do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_request(_request, _config) do
+    Raxx.response(:ok)
+    |> Raxx.set_header("content-type", "text/plain")
+    |> Raxx.set_body("Hello, World!")
+  end
+end
+```
+
+*Simplest example where the client sends a single request to the server and gets a single response back.*
+
+```elixir
+defmodule MyApp.Echo do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_headers(_request, state) do
+    outbound = Raxx.response(:ok)
+    |> Raxx.set_body(true)
+
+    {[outbound], state}
+  end
+
+  @impl Raxx.Server
+  def handle_fragment(data, state) do
+    outbound = Raxx.fragment(data)
+
+    {[outbound], state}
+  end
+
+  @impl Raxx.Server
+  def handle_trailers(_trailers, state) do
+    outbound = Raxx.trailer()
+
+    {[outbound], state}
+  end
+end
+```
+
+`Raxx.Server` specifies  
 
 ## Community
 
 - [elixir-lang slack channel](https://elixir-lang.slack.com/messages/C56H3TBH8/)
 - [FAQ](FAQ.md)
-
-## Contributing
-
-Please do.
-Reach out in the slack channel to ask questions.
 
 ## Testing
 

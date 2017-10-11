@@ -155,7 +155,7 @@ defmodule Raxx do
       iex> trailer([{"digest", "opaque-data"}]).headers
       [{"digest", "opaque-data"}]
   """
-  def trailer(headers) do
+  def trailer(headers \\ []) do
     %Raxx.Trailer{headers: headers}
   end
 

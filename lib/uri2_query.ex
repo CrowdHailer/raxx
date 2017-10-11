@@ -1,3 +1,4 @@
+# TODO remove this in next breaking release
 defmodule URI2.Query do
   @moduledoc """
   Utilities for working with url query strings.

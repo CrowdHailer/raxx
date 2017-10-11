@@ -224,9 +224,10 @@ defmodule Raxx.Server do
       end
 
       @impl unquote(__MODULE__)
-      def handle_info(message, _state) do
+      def handle_info(message, state) do
         require Logger
         Logger.warn("#{inspect(self())} received unexpected message in handle_info/2: #{inspect(message)}")
+        {[], state}
       end
 
       defoverridable unquote(__MODULE__)

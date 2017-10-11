@@ -31,6 +31,11 @@ defmodule Raxx.Router do
 
     quote location: :keep do
       @impl Raxx.Server
+      def handle_request(_request, _config) do
+        raise "This callback should never be called in a on #{__MODULE__}."
+      end
+
+      @impl Raxx.Server
       unquote(routes)
 
       @impl Raxx.Server

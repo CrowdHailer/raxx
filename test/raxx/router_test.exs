@@ -41,6 +41,16 @@ defmodule Raxx.RouterTest do
     end
   end
 
+  defmodule NotFoundPage do
+    use Raxx.Server
+
+    @impl Raxx.Server
+    def handle_request(_request, _state) do
+      Raxx.response(:not_found)
+      |> Raxx.set_body("Not found")
+    end
+  end
+
   defmodule MyRouter do
     use Raxx.Server
 
@@ -49,7 +59,7 @@ defmodule Raxx.RouterTest do
       {%{method: :GET, path: ["users"]}, UsersPage},
       {%{method: :GET, path: ["users", _id]}, UserPage},
       {%{method: :POST, path: ["users"]}, CreateUser},
-      # {_, NotFoundPage}
+      {_, NotFoundPage}
     ]
   end
 
@@ -84,5 +94,11 @@ defmodule Raxx.RouterTest do
     {[], state} = MyRouter.handle_fragment("Bob", state)
     response = MyRouter.handle_trailers([], state)
     assert "User created Bob" == response.body
+  end
+
+  test "will route on catch all" do
+    request = Raxx.request(:GET, "/random")
+    response = MyRouter.handle_headers(request, :state)
+    assert "Not found" == response.body
   end
 end

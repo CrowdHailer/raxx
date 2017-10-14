@@ -186,6 +186,7 @@ defmodule Raxx.Server do
   defmacro __using__(_opts) do
     quote do
       import Raxx
+      alias Raxx.{Request, Response}
       @behaviour unquote(__MODULE__)
 
       @impl unquote(__MODULE__)

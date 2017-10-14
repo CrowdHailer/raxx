@@ -20,9 +20,9 @@ defmodule MyApp.WW do
 
   @impl Raxx.Server
   def handle_request(_request, _config) do
-    Raxx.response(:ok)
-    |> Raxx.set_header("content-type", "text/plain")
-    |> Raxx.set_body("Hello, World!")
+    response(:ok)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Hello, World!")
   end
 end
 ```

@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## master
 
 ## Added
-- Importing `Raxx` functions to modules that use `Raxx.Server`
+- Using `Raxx.Server` imports helper functions from `Raxx`.
+- Using `Raxx.Server` aliases `Raxx.Request`.
+- Using `Raxx.Server` aliases `Raxx.Response`.
 
 ## Removed
 - Dependency on `Plug` is not needed

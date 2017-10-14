@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## master
+
+## Added
+- Importing `Raxx` functions to modules that use `Raxx.Server`
+
+## Removed
+- Dependency on `Plug` is not needed
+- Support for Elixir 1.4, `Raxx.Router` had bugs
+
 ## [0.12.2](https://github.com/CrowdHailer/raxx/tree/0.12.2) - 2017-10-11
 
 ## Added

@@ -6,8 +6,8 @@ defmodule Raxx.RouterTest do
 
     @impl Raxx.Server
     def handle_request(_request, _state) do
-      Raxx.response(:ok)
-      |> Raxx.set_body("Home page")
+      response(:ok)
+      |> set_body("Home page")
     end
   end
 
@@ -16,8 +16,8 @@ defmodule Raxx.RouterTest do
 
     @impl Raxx.Server
     def handle_request(_request, _state) do
-      Raxx.response(:ok)
-      |> Raxx.set_body("Users page")
+      response(:ok)
+      |> set_body("Users page")
     end
   end
 
@@ -26,8 +26,8 @@ defmodule Raxx.RouterTest do
 
     @impl Raxx.Server
     def handle_request(%{path: ["users", id]}, _state) do
-      Raxx.response(:ok)
-      |> Raxx.set_body("User page #{id}")
+      response(:ok)
+      |> set_body("User page #{id}")
     end
   end
 
@@ -36,8 +36,8 @@ defmodule Raxx.RouterTest do
 
     @impl Raxx.Server
     def handle_request(%{body: body}, _state) do
-      Raxx.response(:created)
-      |> Raxx.set_body("User created #{body}")
+      response(:created)
+      |> set_body("User created #{body}")
     end
   end
 
@@ -46,8 +46,8 @@ defmodule Raxx.RouterTest do
 
     @impl Raxx.Server
     def handle_request(_request, _state) do
-      Raxx.response(:not_found)
-      |> Raxx.set_body("Not found")
+      response(:not_found)
+      |> set_body("Not found")
     end
   end
 

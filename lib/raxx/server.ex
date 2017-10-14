@@ -14,9 +14,9 @@ defmodule Raxx.Server do
         use Raxx.Server
 
         def handle_request(%Raxx.Request{method: :POST, path: [], body: body}, _state) do
-          Raxx.response(:ok)
-          |> Raxx.set_header("content-type", "text/plain")
-          |> Raxx.set_body(body)
+          response(:ok)
+          |> set_header("content-type", "text/plain")
+          |> set_body(body)
         end
       end
 
@@ -28,9 +28,9 @@ defmodule Raxx.Server do
         use Raxx.Server
 
         def handle_headers(%Raxx.Request{method: :GET, path: []}, _state) do
-          Raxx.response(:ok)
-          |> Raxx.set_header("content-type", "text/plain")
-          |> Raxx.set_body("Hello, World!")
+          response(:ok)
+          |> set_header("content-type", "text/plain")
+          |> set_body("Hello, World!")
         end
       end
 
@@ -50,8 +50,8 @@ defmodule Raxx.Server do
         end
 
         def handle_trailers(_trailers, state) do
-          Raxx.response(:see_other)
-          |> Raxx.set_header("location", "/")
+          response(:see_other)
+          |> set_header("location", "/")
         end
       end
 
@@ -62,13 +62,13 @@ defmodule Raxx.Server do
 
         def handle_headers(_request, _state) do
           {:ok, _} = ChatRoom.join()
-          Raxx.response(:ok)
-          |> Raxx.set_header("content-type", "text/plain")
-          |> Raxx.set_body(true)
+          response(:ok)
+          |> set_header("content-type", "text/plain")
+          |> set_body(true)
         end
 
         def handle_info({ChatRoom, data}, config) do
-          {[Raxx.fragment(data)], config}
+          {[fragment(data)], config}
         end
       end
 
@@ -185,6 +185,7 @@ defmodule Raxx.Server do
 
   defmacro __using__(_opts) do
     quote do
+      import Raxx
       @behaviour unquote(__MODULE__)
 
       @impl unquote(__MODULE__)

@@ -35,22 +35,22 @@ defmodule MyApp.Echo do
 
   @impl Raxx.Server
   def handle_headers(_request, state) do
-    outbound = Raxx.response(:ok)
-    |> Raxx.set_body(true)
+    outbound = response(:ok)
+    |> set_body(true)
 
     {[outbound], state}
   end
 
   @impl Raxx.Server
   def handle_fragment(data, state) do
-    outbound = Raxx.fragment(data)
+    outbound = fragment(data)
 
     {[outbound], state}
   end
 
   @impl Raxx.Server
   def handle_trailers(_trailers, state) do
-    outbound = Raxx.trailer()
+    outbound = trailer()
 
     {[outbound], state}
   end

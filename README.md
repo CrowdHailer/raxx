@@ -33,18 +33,20 @@ defmodule HomePage do
   use Raxx.Server
 
   @impl Raxx.Server
-  def handle_request(%Request{method: :GET, path: []}, _state) do
+  def handle_request(%{method: :GET, path: []}, _state) do
     response(:ok)
     |> set_header("content-type", "text/plain")
     |> set_body("Hello, World!")
   end
 end
 ```
-
-- *A request's path is split into segments, so the root "/" becomes `[]`*.
-- *The `_state` is any term that the server was started with*.
+- *A request's path is split into segments, so the root "/" becomes `[]`.*
+- *The `_state` is a configuration provided when the server was started.*
 
 #### Stateful server
+
+This server is stateful.
+After receving a complete request this server has to wait for extra input before sending a response to the client.
 
 ```elixir
 defmodule LongPoll do
@@ -65,11 +67,8 @@ defmodule LongPoll do
   end
 end
 ```
-- *Return tuple in `handle_request` consists of response part to send, in this case nothing `[]`;
+- *Return tuple in `handle_request` consists of response parts to send, in this case nothing `[]`;
   and the updated state of the server, in this case no change `state`.*
-
-The `LongPoll` server is stateful.
-After receving a complete request this server has to wait for extra input before sending a response to the client.
 
 #### Streaming
 
@@ -84,7 +83,6 @@ Client ============================================ Server
            <   head(response) | body(1+) | tail
 ```
 
-
 #### Server streaming
 
 This server will send the head of the response immediatly.
@@ -96,7 +94,7 @@ defmodule SubscribeToMessages do
   use Raxx.Server
 
   @impl Raxx.Server
-  def handle_headers(%{method: :GET, path: ["message"]}, state) do
+  def handle_head(%{method: :GET, path: ["messages"]}, state) do
     {:ok, _} = ChatRoom.join()
     outbound = [response(:ok)
     |> set_header("content-type", "text/plain")
@@ -132,7 +130,7 @@ defmodule Upload do
   use Raxx.Server
 
   @impl Raxx.Server
-  def handle_head(%Raxx.Request{method: :PUT, body: true}, _state) do
+  def handle_head(%{method: :PUT, path: ["upload"] body: true}, _state) do
     {:ok, io_device} = File.open("my/path")
     {[], {:file, device}}
   end
@@ -153,7 +151,28 @@ end
 - *A body may arrive split by packets, chunks or frames.
   An application should never assume how a message is broken up*
 
+#### Routing
 
+The `Raxx.Router` will call a server based on a list of patterns that it will match each request against.
+
+```elixir
+defmodule MyApp do
+  use Raxx.Server
+
+  use Raxx.Router, [
+    {%{method: :GET, path: []}, HomePage},
+    {%{method: :GET, path: ["slow"]}, LongPoll},
+    {%{method: :GET, path: ["messages"]}, SubscribeToMessages},
+    {%{method: :PUT, path: ["upload"]}, Upload},
+    {_, NotFoundPage}
+  ]
+end
+```
+
+pure
+simple is simple
+easy to test
+extensible building blocks
 
 ## Community
 

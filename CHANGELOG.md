@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## master
+## [0.12.3](https://github.com/CrowdHailer/raxx/tree/0.12.3) - 2017-10-14
 
 ## Added
 - Using `Raxx.Server` imports helper functions from `Raxx`.

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## master
+
+## Removed
+- Specific header modules that were prevously deprecated.
+  - `Raxx.Connection`
+  - `Raxx.ContentLength`
+  - `Raxx.Location`
+  - `Raxx.Referrer`
+  - `Raxx.TransferEncoding`
+  - `Raxx.UserAgent`
+
 ## [0.12.3](https://github.com/CrowdHailer/raxx/tree/0.12.3) - 2017-10-14
 
 ## Added
@@ -12,8 +23,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Using `Raxx.Server` aliases `Raxx.Response`.
 
 ## Removed
-- Dependency on `Plug` is not needed
-- Support for Elixir 1.4, `Raxx.Router` had bugs
+- Dependency on `Plug` is not needed.
+- Support for Elixir 1.4, `Raxx.Router` had bugs.
 
 ## [0.12.2](https://github.com/CrowdHailer/raxx/tree/0.12.2) - 2017-10-11
 

@@ -4,7 +4,7 @@ defmodule Raxx.Mixfile do
   def project do
     [app: :raxx,
      version: "0.12.2",
-     elixir: "~> 1.4",
+     elixir: "~> 1.5",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),

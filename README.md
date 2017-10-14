@@ -1,7 +1,10 @@
 # Raxx
 
-**Interface for HTTP webservers and frameworks.
-Supports server, client and bidirectional streaming.**
+**Interface for HTTP webservers, frameworks and clients.**
+
+[![Hex pm](http://img.shields.io/hexpm/v/raxx.svg?style=flat)](https://hex.pm/packages/raxx)
+[![Build Status](https://secure.travis-ci.org/CrowdHailer/raxx.svg?branch=master
+"Build Status")](https://travis-ci.org/CrowdHailer/raxx)
 
 - [Install from hex.pm](https://hex.pm/packages/raxx)
 - [Documentation available on hexdoc](https://hexdocs.pm/raxx)

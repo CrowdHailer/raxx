@@ -19,7 +19,6 @@ defmodule Raxx.Mixfile do
 
   defp deps do
     [
-      {:plug, "~> 1.2"}, # DEBT remove; currently used for query strings etc
       {:http_status, "~> 0.2"},
       {:ex_doc, ">= 0.0.0", only: :dev},
     ]

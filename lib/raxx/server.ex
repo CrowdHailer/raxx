@@ -189,8 +189,8 @@ defmodule Raxx.Server do
 
       @impl unquote(__MODULE__)
       def handle_request(_request, _state) do
-        home_page = Plug.HTML.html_escape("<h1>Home Page</h1>")
-        not_found_page = Plug.HTML.html_escape("<h1>Ooops! Page not found.</h1>")
+        home_page = Raxx.html_escape("<h1>Home Page</h1>")
+        not_found_page = Raxx.html_escape("<h1>Ooops! Page not found.</h1>")
         Raxx.response(:ok)
         |> Raxx.set_header("content-type", "text/html")
         |> Raxx.set_body("""

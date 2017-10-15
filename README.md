@@ -43,6 +43,21 @@ end
 - *A request's path is split into segments, so the root "/" becomes `[]`.*
 - *The `_state` is a configuration provided when the server was started.*
 
+#### Running a server
+
+To start a web service a Raxx compatable server is needed.
+For example [Ace](https://github.com/crowdhailer/ace).
+
+```elixir
+server = HomePage
+initial_state = %{}
+options = [port: 8080, cleartext: true]
+
+{:ok, pid} = Ace.HTTP.Service.start_link({server, initial_state}, options)
+```
+
+Visit http://localhost:8080.
+
 #### Stateful server
 
 This server is stateful.

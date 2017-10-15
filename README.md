@@ -15,17 +15,17 @@
 HTTP is an exchange where a client send a request to a server and expects a response.
 At its simplest this can be viewed as follows
 
-```
+```txt
 Simple client server exchange.
 
-           request   >
+           request -->
 Client ============================================ Server
-                                   <   response
+                                   <-- response
 ```
 
 #### Simple server
 
-This server implements the simplest HTTP message exchange,
+The `HomePage` server implements the simplest HTTP message exchange.
 The complete response is constructed from the request.
 
 ```elixir
@@ -41,7 +41,6 @@ defmodule HomePage do
 end
 ```
 - *A request's path is split into segments, so the root "/" becomes `[]`.*
-- *The `_state` is a configuration provided when the server was started.*
 
 #### Running a server
 
@@ -56,11 +55,11 @@ options = [port: 8080, cleartext: true]
 {:ok, pid} = Ace.HTTP.Service.start_link({server, initial_state}, options)
 ```
 
-Visit http://localhost:8080.
+Visit [http://localhost:8080](http://localhost:8080).
 
 #### Stateful server
 
-This server is stateful.
+The `LongPoll` server is stateful.
 After receving a complete request this server has to wait for extra input before sending a response to the client.
 
 ```elixir
@@ -82,25 +81,28 @@ defmodule LongPoll do
   end
 end
 ```
-- *Return tuple in `handle_request` consists of response parts to send, in this case nothing `[]`;
-  and the updated state of the server, in this case no change `state`.*
+- *A long lived server needs to return two tings; the message parts to send in, this case nothing `[]`;
+  and the new state of the server, in this case no change `state`.*
+- *The `initial_state` is configured when the server is started.*
 
 #### Streaming
 
 Any client server exchange is actually a stream of information in either direction.
-A Raxx server can act to parts of the request stream as well as send response parts as it is able to.
+`Raxx.Server` provides callbacks to proccess parts of a stream as they are received.
 
-```
+```txt
 Detailed view of client server exchange.
 
-           tail | body(1+) | head(request)   >
+           tail | data(1+) | head(request) -->
 Client ============================================ Server
-           <   head(response) | body(1+) | tail
+           <-- head(response) | data(1+) | tail
 ```
+- *The body of a request or a response, is the combination of all data parts sent.*
 
 #### Server streaming
 
-This server will send the head of the response immediatly.
+The `SubscribeToMessages` server streams its response,
+The server will send the head of the response upon receiving the request.
 Data is sent to the client, as part of the body, when it becomes available.
 The response is completed when the chatroom sends a `:closed` message.
 
@@ -120,13 +122,13 @@ defmodule SubscribeToMessages do
 
   @impl Raxx.Server
   def handle_info({ChatRoom, data}, config) do
-    outbound = [body(data)]
+    outbound = [data(data)]
 
     {outbound, config}
   end
 
   def handle_info({ChatRoom, :closed}, config) do
-    outbound = [tail([])]
+    outbound = [tail()]
 
     {outbound, config}
   end
@@ -137,7 +139,7 @@ end
 
 #### Client streaming
 
-The `Upload` server writes data to a file as it becomes available.
+The `Upload` server writes data to a file as it is received.
 Only once the complete request has been received is a response sent.
 
 ```elixir
@@ -151,8 +153,8 @@ defmodule Upload do
   end
 
   @impl Raxx.Server
-  def handle_body(fragment, state = {:file, device}) do
-    IO.write(device, fragment)
+  def handle_data(data, state = {:file, device}) do
+    IO.write(device, data)
     {[], state}
   end
 
@@ -164,11 +166,12 @@ defmodule Upload do
 end
 ```
 - *A body may arrive split by packets, chunks or frames.
-  An application should never assume how a message is broken up*
+  `handle_data` will be invoked as each part arrives.
+  An application should never assume how a body will be broken into data parts.*
 
 #### Routing
 
-The `Raxx.Router` will call a server based on a list of patterns that it will match each request against.
+the `Raxx.Router` can be used to match requests to specific server modules.
 
 ```elixir
 defmodule MyApp do
@@ -196,7 +199,7 @@ extensible building blocks
 
 ## Testing
 
-To work with Raxx locally Elixir 1.4 or greater must be [installed](https://elixir-lang.org/install.html).
+To work with Raxx locally Elixir 1.5 or greater must be [installed](https://elixir-lang.org/install.html).
 
 ```
 git clone git@github.com:CrowdHailer/raxx.git

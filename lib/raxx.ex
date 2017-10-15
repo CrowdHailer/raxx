@@ -6,8 +6,8 @@ defmodule Raxx do
 
   - `Raxx.Request`: metadata sent by a client before sending content.
   - `Raxx.Response`: metadata sent by a server before sending content.
-  - `Raxx.Fragment`: A part of a messages content.
-  - `Raxx.Trailer`: metadata set by client or server to conclude communication.
+  - `Raxx.Data`: A part of a messages content.
+  - `Raxx.Tail`: metadata set by client or server to conclude communication.
 
   This module contains functions to create and manipulate these structures.
 
@@ -131,36 +131,33 @@ defmodule Raxx do
   end
 
   @doc """
-  Construct a `Raxx.Fragment`
+  Construct a `Raxx.Data`
 
-  A fragment encapsulates a section of message content that has been generated.
-  If a stream has no trailers then the final fragment should mark the stream as ended.
+  Wrap a piece of data as being part of a message's body.
 
   ## Examples
 
-      iex> fragment("Hi").data
+      iex> data("Hi").data
       "Hi"
 
-      iex> fragment("Hi", true).end_stream
-      true
-
-      iex> fragment("Hi").end_stream
-      false
   """
-  def fragment(data, end_stream \\ false) do
-    %Raxx.Fragment{data: data, end_stream: end_stream}
+  def data(data) do
+    %Raxx.Data{data: data}
   end
 
   @doc """
-  Construct a `Raxx.Trailer`
+  Construct a `Raxx.Tail`
 
   ## Examples
 
-      iex> trailer([{"digest", "opaque-data"}]).headers
+      iex> tail([{"digest", "opaque-data"}]).headers
       [{"digest", "opaque-data"}]
+
+      iex> tail().headers
+      []
   """
-  def trailer(headers \\ []) do
-    %Raxx.Trailer{headers: headers}
+  def tail(headers \\ []) do
+    %Raxx.Tail{headers: headers}
   end
 
   @doc """

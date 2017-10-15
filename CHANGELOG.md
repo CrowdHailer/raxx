@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## master
 
+## Changed
+
+- `Raxx.Trailer` has been renamed to `Raxx.Tail`.
+- `handle_trailers` has been renamed to `handle_tail`.
+- `Raxx.Fragment` has been replaced by `Raxx.Data`.
+- `handle_fragment` has been replaced by `handle_data`
+
 ## Removed
 - Specific header modules that were prevously deprecated.
   - `Raxx.Connection`

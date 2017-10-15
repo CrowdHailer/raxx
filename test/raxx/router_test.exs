@@ -91,8 +91,8 @@ defmodule Raxx.RouterTest do
     request = Raxx.request(:POST, "/users")
     |> Raxx.set_body(true)
     {[], state} = MyRouter.handle_headers(request, :state)
-    {[], state} = MyRouter.handle_fragment("Bob", state)
-    response = MyRouter.handle_trailers([], state)
+    {[], state} = MyRouter.handle_data("Bob", state)
+    response = MyRouter.handle_tail([], state)
     assert "User created Bob" == response.body
   end
 

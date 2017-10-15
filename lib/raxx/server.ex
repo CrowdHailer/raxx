@@ -44,12 +44,12 @@ defmodule Raxx.Server do
           {[], {:file, device}}
         end
 
-        def handle_fragment(fragment, state = {:file, device}) do
-          IO.write(device, fragment)
+        def handle_body(body, state = {:file, device}) do
+          IO.write(device, body)
           {[], state}
         end
 
-        def handle_trailers(_trailers, state) do
+        def handle_tail(_trailers, state) do
           response(:see_other)
           |> set_header("location", "/")
         end
@@ -68,7 +68,7 @@ defmodule Raxx.Server do
         end
 
         def handle_info({ChatRoom, data}, config) do
-          {[fragment(data)], config}
+          {[body(data)], config}
         end
       end
 
@@ -133,13 +133,13 @@ defmodule Raxx.Server do
 
   @type request :: %Raxx.Request{}
   @type response :: %Raxx.Response{}
-  @type fragment :: %Raxx.Fragment{}
-  @type trailer :: %Raxx.Trailer{}
+  @type data :: %Raxx.Data{}
+  @type trailer :: %Raxx.Tail{}
 
   @typedoc """
   Set of all components that make up a message to or from server.
   """
-  @type message_part :: request | response | fragment | trailer
+  @type message_part :: request | response | data | trailer
 
   @typedoc """
   Possible return values instructing server to send client data and update state if appropriate.
@@ -147,12 +147,12 @@ defmodule Raxx.Server do
   @type return :: {[message_part], state} | response
 
   @doc """
-  Called with a complete request once the whole body is received.
+  Called with a complete request once all the data parts of a body are received.
 
   Passed a `Raxx.Request` and server configuration.
   Note the value of the request body will be a string.
 
-  This callback will never be called if handle_headers/handle_fragment/handle_trailers are overwritten.
+  This callback will never be called if handle_headers/handle_body/handle_tail are overwritten.
   """
   @callback handle_request(request, state()) :: return
 
@@ -169,14 +169,14 @@ defmodule Raxx.Server do
   @doc """
   Called every time data from the request body is received
   """
-  @callback handle_fragment(binary(), state()) :: return
+  @callback handle_data(binary(), state()) :: return
 
   @doc """
   Called once when a request finishes.
 
   This will be called with an empty list of headers is request is completed without trailers.
   """
-  @callback handle_trailers([{binary(), binary()}], state()) :: return
+  @callback handle_tail([{binary(), binary()}], state()) :: return
 
   @doc """
   Called for all other messages the server may recieve
@@ -229,12 +229,12 @@ defmodule Raxx.Server do
       end
 
       @impl unquote(__MODULE__)
-      def handle_fragment(fragment, {request, buffer, state}) do
-        {[], {request, buffer <> fragment, state}}
+      def handle_data(data, {request, buffer, state}) do
+        {[], {request, buffer <> data, state}}
       end
 
       @impl unquote(__MODULE__)
-      def handle_trailers([], {request, body, state}) do
+      def handle_tail([], {request, body, state}) do
         handle_request(%{request | body: body}, state)
       end
 

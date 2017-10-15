@@ -20,8 +20,8 @@ defmodule Raxx.ServerTest do
     request = Raxx.request(:POST, "/")
     |> Raxx.set_body(true)
     {[], state} = DefaultServer.handle_headers(request, :state)
-    {[], state} = DefaultServer.handle_fragment("Hello, World!", state)
-    response = DefaultServer.handle_trailers([], state)
+    {[], state} = DefaultServer.handle_data("Hello, World!", state)
+    response = DefaultServer.handle_tail([], state)
 
     assert String.contains?(response.body, "DefaultServer")
     assert String.contains?(response.body, "@impl Raxx.Server")

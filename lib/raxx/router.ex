@@ -67,8 +67,8 @@ defmodule Raxx.Router do
       unquote(routes)
 
       @impl Raxx.Server
-      def handle_fragment(fragment, {controller, state}) do
-        case controller.handle_fragment(fragment, state) do
+      def handle_data(data, {controller, state}) do
+        case controller.handle_data(data, state) do
           {outbound, new_state} ->
             {outbound, {controller, new_state}}
           response = %{status: _status} ->
@@ -77,8 +77,8 @@ defmodule Raxx.Router do
       end
 
       @impl Raxx.Server
-      def handle_trailers(trailers, {controller, state}) do
-        case controller.handle_trailers(trailers, state) do
+      def handle_tail(trailers, {controller, state}) do
+        case controller.handle_tail(trailers, state) do
           {outbound, new_state} ->
             {outbound, {controller, new_state}}
           response = %{status: _status} ->

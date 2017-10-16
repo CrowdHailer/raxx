@@ -187,11 +187,6 @@ defmodule MyApp do
 end
 ```
 
-pure
-simple is simple
-easy to test
-extensible building blocks
-
 ## Community
 
 - [elixir-lang slack channel](https://elixir-lang.slack.com/messages/C56H3TBH8/)

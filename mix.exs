@@ -4,7 +4,7 @@ defmodule Raxx.Mixfile do
   def project do
     [
       app: :raxx,
-      version: "0.12.3",
+      version: "0.13.0",
       elixir: "~> 1.5",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -28,9 +28,7 @@ defmodule Raxx.Mixfile do
 
   defp description do
     """
-    Streaming HTTP interface for Elixir.
-
-    Including a simple and powerful library for building HTTP clients and web applications.
+    Interface for HTTP webservers, frameworks and clients.
     """
   end
 

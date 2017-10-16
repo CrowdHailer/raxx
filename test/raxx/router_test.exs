@@ -88,8 +88,10 @@ defmodule Raxx.RouterTest do
   end
 
   test "will forward whole request to controller" do
-    request = Raxx.request(:POST, "/users")
-    |> Raxx.set_body(true)
+    request =
+      Raxx.request(:POST, "/users")
+      |> Raxx.set_body(true)
+
     {[], state} = MyRouter.handle_headers(request, :state)
     {[], state} = MyRouter.handle_data("Bob", state)
     response = MyRouter.handle_tail([], state)

@@ -46,6 +46,7 @@ defmodule URI2.Query do
     case parse(query_string) do
       {:ok, key_value_pairs} ->
         build_nested(key_value_pairs)
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -78,24 +79,31 @@ defmodule URI2.Query do
       # {:ok, %{"foo" => [%{"bar" => "1"}, %{"baz" => "2"}]}}
   """
   def build_nested(key_value_pairs, nested \\ %{})
+
   def build_nested([], nested) do
     {:ok, nested}
   end
+
   def build_nested([{key, value} | key_value_pairs], nested) do
-    updated = case :binary.split(key, "[") do
-      [key] ->
-        put_single_value(nested, key, value)
-      [key, "]"] ->
-        put_array_entry(nested, key, value)
-      [key, rest] ->
-        case :binary.split(rest, "]") do
-          [subkey, rest] ->
-            put_sub_query(nested, key, [{subkey <> rest, value}])
-        end
-    end
+    updated =
+      case :binary.split(key, "[") do
+        [key] ->
+          put_single_value(nested, key, value)
+
+        [key, "]"] ->
+          put_array_entry(nested, key, value)
+
+        [key, rest] ->
+          case :binary.split(rest, "]") do
+            [subkey, rest] ->
+              put_sub_query(nested, key, [{subkey <> rest, value}])
+          end
+      end
+
     case updated do
       {:ok, nested} ->
         build_nested(key_value_pairs, nested)
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -106,6 +114,7 @@ defmodule URI2.Query do
       subquery = %{} ->
         {:ok, subquery} = build_nested(key_value_pairs, subquery)
         {:ok, Map.put(map, key, subquery)}
+
       other ->
         {:error, {:key_already_defined_as, other}}
     end
@@ -115,6 +124,7 @@ defmodule URI2.Query do
     case Map.has_key?(map, key) do
       false ->
         {:ok, Map.put_new(map, key, value)}
+
       true ->
         {:error, {:key_already_defined_as, Map.get(map, key)}}
     end
@@ -124,6 +134,7 @@ defmodule URI2.Query do
     case Map.get(map, key, []) do
       values when is_list(values) ->
         {:ok, Map.put(map, key, values ++ [value])}
+
       other ->
         {:error, {:key_already_defined_as, other}}
     end

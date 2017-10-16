@@ -26,24 +26,22 @@ defmodule Raxx.Request do
   """
 
   @type request :: %__MODULE__{
-    scheme: atom,
-    authority: binary,
-    method: atom,
-    mount: [binary],
-    path: [binary],
-    query: %{binary => binary},
-    headers: [{binary, binary}],
-    body: binary | boolean,
-  }
+          scheme: atom,
+          authority: binary,
+          method: atom,
+          mount: [binary],
+          path: [binary],
+          query: %{binary => binary},
+          headers: [{binary, binary}],
+          body: binary | boolean
+        }
 
-  defstruct [
-    scheme: nil,
-    authority: nil,
-    method: nil,
-    mount: [],
-    path: [],
-    query: %{},
-    headers: [],
-    body: nil,
-  ]
+  defstruct scheme: nil,
+            authority: nil,
+            method: nil,
+            mount: [],
+            path: [],
+            query: %{},
+            headers: [],
+            body: nil
 end

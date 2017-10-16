@@ -17,8 +17,10 @@ defmodule Raxx.ServerTest do
   end
 
   test "default response is returned for a streamed request" do
-    request = Raxx.request(:POST, "/")
-    |> Raxx.set_body(true)
+    request =
+      Raxx.request(:POST, "/")
+      |> Raxx.set_body(true)
+
     {[], state} = DefaultServer.handle_headers(request, :state)
     {[], state} = DefaultServer.handle_data("Hello, World!", state)
     response = DefaultServer.handle_tail([], state)
@@ -29,9 +31,11 @@ defmodule Raxx.ServerTest do
   end
 
   test "handle_info logs error" do
-    logs = capture_log fn() ->
-      DefaultServer.handle_info(:foo, :state)
-    end
+    logs =
+      capture_log(fn ->
+        DefaultServer.handle_info(:foo, :state)
+      end)
+
     assert String.contains?(logs, "unexpected message")
     assert String.contains?(logs, ":foo")
   end

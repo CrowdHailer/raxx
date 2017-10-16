@@ -2,15 +2,17 @@ defmodule Raxx.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :raxx,
-     version: "0.12.3",
-     elixir: "~> 1.5",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps(),
-     description: description(),
-     docs: [extras: ["README.md"], main: "Raxx"],
-     package: package()]
+    [
+      app: :raxx,
+      version: "0.12.3",
+      elixir: "~> 1.5",
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      deps: deps(),
+      description: description(),
+      docs: [extras: ["README.md"], main: "Raxx"],
+      package: package()
+    ]
   end
 
   def application do
@@ -20,7 +22,7 @@ defmodule Raxx.Mixfile do
   defp deps do
     [
       {:http_status, "~> 0.2"},
-      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
 
@@ -34,8 +36,9 @@ defmodule Raxx.Mixfile do
 
   defp package do
     [
-     maintainers: ["Peter Saxton"],
-     licenses: ["Apache 2.0"],
-     links: %{"GitHub" => "https://github.com/crowdhailer/raxx"}]
+      maintainers: ["Peter Saxton"],
+      licenses: ["Apache 2.0"],
+      links: %{"GitHub" => "https://github.com/crowdhailer/raxx"}
+    ]
   end
 end

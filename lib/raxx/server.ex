@@ -223,7 +223,11 @@ defmodule Raxx.Server do
 
       @impl unquote(__MODULE__)
       def handle_headers(request = %{body: false}, state) do
-        handle_request(%{request | body: ""}, state)
+        response = handle_request(%{request | body: ""}, state)
+        case response do
+          %{body: true} -> raise "Incomplete response"
+          _ -> response
+        end
       end
 
       def handle_headers(request = %{body: true}, state) do
@@ -237,7 +241,11 @@ defmodule Raxx.Server do
 
       @impl unquote(__MODULE__)
       def handle_tail([], {request, body, state}) do
-        handle_request(%{request | body: body}, state)
+        response = handle_request(%{request | body: body}, state)
+        case response do
+          %{body: true} -> raise "Incomplete response"
+          _ -> response
+        end
       end
 
       @impl unquote(__MODULE__)

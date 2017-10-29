@@ -65,25 +65,25 @@ defmodule Raxx.RouterTest do
 
   test "will route to homepage" do
     request = Raxx.request(:GET, "/")
-    response = MyRouter.handle_headers(request, :state)
+    response = MyRouter.handle_head(request, :state)
     assert "Home page" == response.body
   end
 
   test "will route to fixed segment" do
     request = Raxx.request(:GET, "/users")
-    response = MyRouter.handle_headers(request, :state)
+    response = MyRouter.handle_head(request, :state)
     assert "Users page" == response.body
   end
 
   test "will route to variable segment path" do
     request = Raxx.request(:GET, "/users/34")
-    response = MyRouter.handle_headers(request, :state)
+    response = MyRouter.handle_head(request, :state)
     assert "User page 34" == response.body
   end
 
   test "will route on method" do
     request = Raxx.request(:POST, "/users")
-    response = MyRouter.handle_headers(request, :state)
+    response = MyRouter.handle_head(request, :state)
     assert "User created " == response.body
   end
 
@@ -92,7 +92,7 @@ defmodule Raxx.RouterTest do
       Raxx.request(:POST, "/users")
       |> Raxx.set_body(true)
 
-    {[], state} = MyRouter.handle_headers(request, :state)
+    {[], state} = MyRouter.handle_head(request, :state)
     {[], state} = MyRouter.handle_data("Bob", state)
     response = MyRouter.handle_tail([], state)
     assert "User created Bob" == response.body
@@ -100,7 +100,7 @@ defmodule Raxx.RouterTest do
 
   test "will route on catch all" do
     request = Raxx.request(:GET, "/random")
-    response = MyRouter.handle_headers(request, :state)
+    response = MyRouter.handle_head(request, :state)
     assert "Not found" == response.body
   end
 end

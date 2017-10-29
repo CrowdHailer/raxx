@@ -52,8 +52,8 @@ defmodule Raxx.Router do
         end
 
         quote do
-          def handle_headers(request = unquote(match), state) do
-            case unquote(controller).handle_headers(request, state) do
+          def handle_head(request = unquote(match), state) do
+            case unquote(controller).handle_head(request, state) do
               {outbound, new_state} ->
                 {outbound, {unquote(controller), new_state}}
 

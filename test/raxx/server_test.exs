@@ -21,7 +21,7 @@ defmodule Raxx.ServerTest do
       Raxx.request(:POST, "/")
       |> Raxx.set_body(true)
 
-    {[], state} = DefaultServer.handle_headers(request, :state)
+    {[], state} = DefaultServer.handle_head(request, :state)
     {[], state} = DefaultServer.handle_data("Hello, World!", state)
     response = DefaultServer.handle_tail([], state)
 

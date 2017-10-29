@@ -27,7 +27,7 @@ defmodule Raxx.Server do
       defmodule SimpleServer do
         use Raxx.Server
 
-        def handle_headers(%Raxx.Request{method: :GET, path: []}, _state) do
+        def handle_head(%Raxx.Request{method: :GET, path: []}, _state) do
           response(:ok)
           |> set_header("content-type", "text/plain")
           |> set_body("Hello, World!")
@@ -39,7 +39,7 @@ defmodule Raxx.Server do
       defmodule StreamingRequest do
         use Raxx.Server
 
-        def handle_headers(%Raxx.Request{method: :PUT, body: true}, _state) do
+        def handle_head(%Raxx.Request{method: :PUT, body: true}, _state) do
           {:ok, io_device} = File.open("my/path")
           {[], {:file, device}}
         end
@@ -60,7 +60,7 @@ defmodule Raxx.Server do
       defmodule SubscribeToMessages do
         use Raxx.Server
 
-        def handle_headers(_request, _state) do
+        def handle_head(_request, _state) do
           {:ok, _} = ChatRoom.join()
           response(:ok)
           |> set_header("content-type", "text/plain")
@@ -74,7 +74,7 @@ defmodule Raxx.Server do
 
   ### Notes
 
-  - `handle_headers/2` will always be called with a request that has body as a boolean.
+  - `handle_head/2` will always be called with a request that has body as a boolean.
     For small requests where buffering the whole request is acceptable a simple middleware can be used.
   - Acceptable return values are the same for all callbacks;
     either a `Raxx.Response`, which must be complete or
@@ -152,7 +152,7 @@ defmodule Raxx.Server do
   Passed a `Raxx.Request` and server configuration.
   Note the value of the request body will be a string.
 
-  This callback will never be called if handle_headers/handle_body/handle_tail are overwritten.
+  This callback will never be called if handle_head/handle_body/handle_tail are overwritten.
   """
   @callback handle_request(request, state()) :: return
 
@@ -164,7 +164,7 @@ defmodule Raxx.Server do
 
   This callback can be relied upon to execute before any other callbacks
   """
-  @callback handle_headers(request, state()) :: return
+  @callback handle_head(request, state()) :: return
 
   @doc """
   Called every time data from the request body is received
@@ -222,7 +222,7 @@ defmodule Raxx.Server do
       end
 
       @impl unquote(__MODULE__)
-      def handle_headers(request = %{body: false}, state) do
+      def handle_head(request = %{body: false}, state) do
         response = handle_request(%{request | body: ""}, state)
         case response do
           %{body: true} -> raise "Incomplete response"
@@ -230,7 +230,7 @@ defmodule Raxx.Server do
         end
       end
 
-      def handle_headers(request = %{body: true}, state) do
+      def handle_head(request = %{body: true}, state) do
         {[], {request, "", state}}
       end
 

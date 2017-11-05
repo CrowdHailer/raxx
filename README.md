@@ -9,6 +9,7 @@
 
 - [Install from hex.pm](https://hex.pm/packages/raxx)
 - [Documentation available on hexdoc](https://hexdocs.pm/raxx)
+- [Discuss on slack](https://elixir-lang.slack.com/messages/C56H3TBH8/)
 
 ## Getting started
 

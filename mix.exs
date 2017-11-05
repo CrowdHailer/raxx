@@ -4,13 +4,13 @@ defmodule Raxx.Mixfile do
   def project do
     [
       app: :raxx,
-      version: "1.0.0-rc.1",
+      version: "0.14.1",
       elixir: "~> 1.5",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
-      docs: [extras: ["README.md"], main: "Raxx"],
+      docs: [extras: ["README.md"], main: "readme"],
       package: package()
     ]
   end
@@ -21,7 +21,6 @@ defmodule Raxx.Mixfile do
 
   defp deps do
     [
-      {:http_status, "~> 0.2"},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end

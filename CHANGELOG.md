@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.14.1](https://github.com/CrowdHailer/raxx/tree/0.14.1) - 2017-11-05
+
+## Added
+
+- `Raxx.reason_phrase/1` Get the HTTP/1 reason phrase for each status code.
+
+## Removed
+
+- Dependency on http_status no longer necessary.
+
 ## [1.0.0-rc.1](https://github.com/CrowdHailer/raxx/tree/1.0.0-rc.1)([0.14.0](https://github.com/CrowdHailer/raxx/tree/0.14.0)) - 2017-10-29
 
 ## Changed

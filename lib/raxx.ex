@@ -128,7 +128,16 @@ defmodule Raxx do
     struct(Raxx.Response, status: status_code, headers: [], body: false)
   end
 
-  for {status_code, reason_phrase} <- HTTPStatus.every_status() do
+  filepath = Path.join(__DIR__, "status.rfc7231")
+  @external_resource filepath
+  {:ok, file} = File.read(filepath)
+  status_lines = String.split(String.trim(file), "\n")
+  statuses = status_lines |> Enum.map(fn(status_line) ->
+    {code, " " <> reason_phrase} = Integer.parse(status_line)
+    {code, reason_phrase}
+  end)
+
+  for {status_code, reason_phrase} <- statuses do
     reason =
       reason_phrase
       |> String.downcase()
@@ -137,6 +146,24 @@ defmodule Raxx do
 
     def response(unquote(reason)) do
       response(unquote(status_code))
+    end
+  end
+
+
+  @doc """
+  The RFC7231 specified reason phrase for each known HTTP status code
+
+  ## Examples
+
+      iex> reason_phrase(200)
+      "OK"
+
+      iex> reason_phrase(500)
+      "Internal Server Error"
+  """
+  for {status_code, reason_phrase} <- statuses do
+    def reason_phrase(unquote(status_code)) do
+      unquote(reason_phrase)
     end
   end
 

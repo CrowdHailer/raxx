@@ -131,20 +131,15 @@ defmodule Raxx.Server do
   """
   @type state :: any()
 
-  @type request :: %Raxx.Request{}
-  @type response :: %Raxx.Response{}
-  @type data :: %Raxx.Data{}
-  @type trailer :: %Raxx.Tail{}
-
   @typedoc """
   Set of all components that make up a message to or from server.
   """
-  @type message_part :: request | response | data | trailer
+  @type message_part :: Raxx.Request.t() | Raxx.Response.t() | Raxx.Data.t() | Raxx.Tail.t()
 
   @typedoc """
   Possible return values instructing server to send client data and update state if appropriate.
   """
-  @type return :: {[message_part], state} | response
+  @type return :: {[message_part], state} | Raxx.Response.t()
 
   @doc """
   Called with a complete request once all the data parts of a body are received.
@@ -154,7 +149,7 @@ defmodule Raxx.Server do
 
   This callback will never be called if handle_head/handle_body/handle_tail are overwritten.
   """
-  @callback handle_request(request, state()) :: return
+  @callback handle_request(Raxx.Request.t(), state()) :: return
 
   @doc """
   Called once when a client starts a stream,
@@ -164,7 +159,7 @@ defmodule Raxx.Server do
 
   This callback can be relied upon to execute before any other callbacks
   """
-  @callback handle_head(request, state()) :: return
+  @callback handle_head(Raxx.Request.t(), state()) :: return
 
   @doc """
   Called every time data from the request body is received
@@ -224,6 +219,7 @@ defmodule Raxx.Server do
       @impl unquote(__MODULE__)
       def handle_head(request = %{body: false}, state) do
         response = handle_request(%{request | body: ""}, state)
+
         case response do
           %{body: true} -> raise "Incomplete response"
           _ -> response
@@ -242,6 +238,7 @@ defmodule Raxx.Server do
       @impl unquote(__MODULE__)
       def handle_tail([], {request, body, state}) do
         response = handle_request(%{request | body: body}, state)
+
         case response do
           %{body: true} -> raise "Incomplete response"
           _ -> response

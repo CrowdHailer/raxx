@@ -10,6 +10,13 @@ defmodule Raxx.Response do
 
   """
 
+  @type header :: {String.t(), String.t()}
+  @type t :: %__MODULE__{
+          status: integer,
+          headers: [header],
+          body: boolean | String.t()
+        }
+
   @enforce_keys [:status, :headers, :body]
   defstruct @enforce_keys
 

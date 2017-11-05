@@ -25,7 +25,8 @@ defmodule Raxx.Request do
 
   """
 
-  @type request :: %__MODULE__{
+  @type method :: atom
+  @type t :: %__MODULE__{
           scheme: atom,
           authority: binary,
           method: atom,

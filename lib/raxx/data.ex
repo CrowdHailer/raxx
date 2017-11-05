@@ -4,6 +4,11 @@ defmodule Raxx.Data do
 
   *NOTE: There are no guarantees on how a message's body will be divided into data.*
   """
+
+  @type t :: %__MODULE__{
+          data: String.t()
+        }
+
   @enforce_keys [:data]
   defstruct @enforce_keys
 end

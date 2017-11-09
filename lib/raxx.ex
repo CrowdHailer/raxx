@@ -293,16 +293,7 @@ defmodule Raxx do
   """
   def split_path(path_string) do
     path_string
-    |> String.split("/")
-    |> Enum.reject(&empty_string?/1)
-  end
-
-  defp empty_string?("") do
-    true
-  end
-
-  defp empty_string?(str) when is_binary(str) do
-    false
+    |> String.split("/", [trim: true])
   end
 
   ######## COPIED FROM PLUG ########

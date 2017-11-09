@@ -70,15 +70,13 @@ defmodule Raxx do
   """
   def request(method, url) when is_binary(url) do
     url = URI.parse(url)
-
-    query =
-      if url.query do
-        {:ok, query} = URI2.Query.decode(url.query)
-        query
-      end
-
-    url = %{url | query: query}
-    request(method, url)
+    
+    if url.query do
+      {:ok, query} = URI2.Query.decode(url.query)
+      request(method, %{url | query: query})
+    else
+      request(method, url)
+    end
   end
 
   def request(method, url) when method in @http_methods do

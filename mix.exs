@@ -9,6 +9,9 @@ defmodule Raxx.Mixfile do
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      elixirc_options: [
+        warnings_as_errors: true
+      ],
       description: description(),
       docs: [extras: ["README.md"], main: "readme"],
       package: package()

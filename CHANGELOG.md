@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.14.2](https://github.com/CrowdHailer/raxx/tree/0.14.2) - 2017-11-14
+
+## Fixed
+
+- Correctly split file on new lines when generating status code helpers.
+
 ## [0.14.1](https://github.com/CrowdHailer/raxx/tree/0.14.1) - 2017-11-05
 
 ## Added

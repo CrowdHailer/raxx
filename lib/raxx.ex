@@ -129,7 +129,7 @@ defmodule Raxx do
   filepath = Path.join(__DIR__, "status.rfc7231")
   @external_resource filepath
   {:ok, file} = File.read(filepath)
-  status_lines = String.split(String.trim(file), "\n")
+  status_lines = String.split(String.trim(file), ~r/\R/)
   statuses = status_lines |> Enum.map(fn(status_line) ->
     {code, " " <> reason_phrase} = Integer.parse(status_line)
     {code, reason_phrase}

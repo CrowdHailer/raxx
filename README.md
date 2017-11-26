@@ -10,6 +10,7 @@
 - [Install from hex.pm](https://hex.pm/packages/raxx)
 - [Documentation available on hexdoc](https://hexdocs.pm/raxx)
 - [Discuss on slack](https://elixir-lang.slack.com/messages/C56H3TBH8/)
+- [Extensions](#extensions)
 
 ## Getting started
 
@@ -188,19 +189,8 @@ defmodule MyApp do
 end
 ```
 
-## Community
+## Extensions
 
-- [elixir-lang slack channel](https://elixir-lang.slack.com/messages/C56H3TBH8/)
-- [FAQ](FAQ.md)
-
-## Testing
-
-To work with Raxx locally Elixir 1.5 or greater must be [installed](https://elixir-lang.org/install.html).
-
-```
-git clone git@github.com:CrowdHailer/raxx.git
-cd raxx
-
-mix deps.get
-mix test
-```
+- [Raxx.MethodOverride](https://github.com/CrowdHailer/raxx_method_override)
+- [Raxx.Static](https://github.com/CrowdHailer/Tokumei) - Part of Tokumei project
+- [Raxx.Blueprint](https://github.com/CrowdHailer/Tokumei) - Part of Tokumei project

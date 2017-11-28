@@ -192,5 +192,5 @@ end
 ## Extensions
 
 - [Raxx.MethodOverride](https://github.com/CrowdHailer/raxx_method_override)
-- [Raxx.Static](https://github.com/CrowdHailer/Tokumei) - Part of Tokumei project
-- [Raxx.Blueprint](https://github.com/CrowdHailer/Tokumei) - Part of Tokumei project
+- [Raxx.Static](https://github.com/CrowdHailer/raxx_static)
+- [Raxx.ApiBlueprint](https://github.com/CrowdHailer/raxx_api_blueprint)

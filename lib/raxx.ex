@@ -267,6 +267,21 @@ defmodule Raxx do
   end
 
   @doc """
+  Sets multiple headers in one go
+
+  ## Examples
+
+      iex> request(:GET, "/")
+      ...> |> set_headers([{"referer", "example.com"}, {"Authorization", "Bearer 1234567890"}])
+      ...> |> Map.get(:headers)
+      [{"referer", "example.com"}, {"accept", "text/html"}, {"Authorization", "Bearer 1234567890"}]
+  """
+  def set_headers(message = %{headers: _headers}, []),
+    do: message
+  def set_headers(message = %{headers: _headers}, [{name, value} | rest] = header_list) when is_list(header_list),
+    do: set_headers(set_header(message, name, value), rest)
+
+  @doc """
   Add a complete body to a message.
 
   ## Examples

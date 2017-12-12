@@ -24,7 +24,10 @@ defmodule Raxx do
     :OPTIONS
   ]
 
-  @type status :: atom | integer
+  @typedoc """
+  Attribute value pair that can be serialized to an HTTP request or response
+  """
+  @type header :: {String.t(), String.t()}
 
   @doc """
   Construct a `Raxx.Request`.
@@ -125,7 +128,7 @@ defmodule Raxx do
       iex> response(200).body
       false
   """
-  @spec response(status) :: Raxx.Response.t()
+  @spec response(Raxx.Response.status()) :: Raxx.Response.t()
   def response(status_code) when is_integer(status_code) do
     struct(Raxx.Response, status: status_code, headers: [], body: false)
   end
@@ -134,10 +137,13 @@ defmodule Raxx do
   @external_resource filepath
   {:ok, file} = File.read(filepath)
   status_lines = String.split(String.trim(file), ~r/\R/)
-  statuses = status_lines |> Enum.map(fn(status_line) ->
-    {code, " " <> reason_phrase} = Integer.parse(status_line)
-    {code, reason_phrase}
-  end)
+
+  statuses =
+    status_lines
+    |> Enum.map(fn status_line ->
+         {code, " " <> reason_phrase} = Integer.parse(status_line)
+         {code, reason_phrase}
+       end)
 
   for {status_code, reason_phrase} <- statuses do
     reason =
@@ -239,7 +245,7 @@ defmodule Raxx do
       ...> |> Map.get(:query)
       %{"value" => "1"}
   """
-  @spec set_query(Raxx.Request.t(), map) :: Raxx.Request.t()
+  @spec set_query(Raxx.Request.t(), %{binary => binary}) :: Raxx.Request.t()
   def set_query(request = %Raxx.Request{query: nil}, query) do
     %{request | query: query}
   end
@@ -293,7 +299,7 @@ defmodule Raxx do
   """
   def split_path(path_string) do
     path_string
-    |> String.split("/", [trim: true])
+    |> String.split("/", trim: true)
   end
 
   ######## COPIED FROM PLUG ########

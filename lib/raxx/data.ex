@@ -5,6 +5,9 @@ defmodule Raxx.Data do
   *NOTE: There are no guarantees on how a message's body will be divided into data.*
   """
 
+  @typedoc """
+  Container for a section of an HTTP message.
+  """
   @type t :: %__MODULE__{
           data: String.t()
         }

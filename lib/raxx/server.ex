@@ -125,6 +125,11 @@ defmodule Raxx.Server do
   """
 
   @typedoc """
+  alias for Raxx.Request type.
+  """
+  @type request :: Raxx.Request.t()
+
+  @typedoc """
   State of application server.
 
   Original value is the configuration given when starting the raxx application.
@@ -134,12 +139,12 @@ defmodule Raxx.Server do
   @typedoc """
   Set of all components that make up a message to or from server.
   """
-  @type message_part :: Raxx.Request.t() | Raxx.Response.t() | Raxx.Data.t() | Raxx.Tail.t()
+  @type part :: Raxx.Request.t() | Raxx.Response.t() | Raxx.Data.t() | Raxx.Tail.t()
 
   @typedoc """
   Possible return values instructing server to send client data and update state if appropriate.
   """
-  @type return :: {[message_part], state} | Raxx.Response.t()
+  @type next :: {[part], state} | Raxx.Response.t()
 
   @doc """
   Called with a complete request once all the data parts of a body are received.
@@ -149,7 +154,7 @@ defmodule Raxx.Server do
 
   This callback will never be called if handle_head/handle_body/handle_tail are overwritten.
   """
-  @callback handle_request(Raxx.Request.t(), state()) :: return
+  @callback handle_request(request, state()) :: next
 
   @doc """
   Called once when a client starts a stream,
@@ -159,24 +164,24 @@ defmodule Raxx.Server do
 
   This callback can be relied upon to execute before any other callbacks
   """
-  @callback handle_head(Raxx.Request.t(), state()) :: return
+  @callback handle_head(request, state()) :: next
 
   @doc """
   Called every time data from the request body is received
   """
-  @callback handle_data(binary(), state()) :: return
+  @callback handle_data(binary(), state()) :: next
 
   @doc """
   Called once when a request finishes.
 
   This will be called with an empty list of headers is request is completed without trailers.
   """
-  @callback handle_tail([{binary(), binary()}], state()) :: return
+  @callback handle_tail([{binary(), binary()}], state()) :: next
 
   @doc """
   Called for all other messages the server may recieve
   """
-  @callback handle_info(any(), state()) :: return
+  @callback handle_info(any(), state()) :: next
 
   defmacro __using__(_opts) do
     quote do

@@ -10,10 +10,17 @@ defmodule Raxx.Response do
 
   """
 
-  @type header :: {String.t(), String.t()}
+  @typedoc """
+  Integer code for server response type
+  """
+  @type status :: integer
+
+  @typedoc """
+  Elixir representation for an HTTP response.
+  """
   @type t :: %__MODULE__{
-          status: integer,
-          headers: [header],
+          status: status,
+          headers: [Raxx.header()],
           body: boolean | String.t()
         }
 

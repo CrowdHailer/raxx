@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.14.3](https://github.com/CrowdHailer/raxx/tree/0.14.3) - 2017-12-12
+
+## Added
+- Typespecs for all public functions.
+- Dialyzer step added to CI.
+
 ## [0.14.2](https://github.com/CrowdHailer/raxx/tree/0.14.2) - 2017-11-14
 
 ## Fixed

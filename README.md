@@ -10,7 +10,12 @@
 - [Install from hex.pm](https://hex.pm/packages/raxx)
 - [Documentation available on hexdoc](https://hexdocs.pm/raxx)
 - [Discuss on slack](https://elixir-lang.slack.com/messages/C56H3TBH8/)
-- [Extensions](#extensions)
+
+## Extensions
+
+- [Raxx.MethodOverride](https://github.com/CrowdHailer/raxx_method_override)
+- [Raxx.Static](https://github.com/CrowdHailer/raxx_static)
+- [Raxx.ApiBlueprint](https://github.com/CrowdHailer/raxx_api_blueprint)
 
 ## Getting started
 
@@ -188,9 +193,3 @@ defmodule MyApp do
   ]
 end
 ```
-
-## Extensions
-
-- [Raxx.MethodOverride](https://github.com/CrowdHailer/raxx_method_override)
-- [Raxx.Static](https://github.com/CrowdHailer/raxx_static)
-- [Raxx.ApiBlueprint](https://github.com/CrowdHailer/raxx_api_blueprint)

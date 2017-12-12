@@ -6,4 +6,4 @@ elixir:
 otp_release:
   - 19.2
   - 20.0
-script: "MIX_ENV=test mix local.hex --force && MIX_ENV=test mix do deps.get, test && mix dialyzer"
+script: "MIX_ENV=test mix local.hex --force && MIX_ENV=test mix do deps.get, test && mix dialyzer --halt-exit-status"

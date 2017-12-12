@@ -24,6 +24,11 @@ defmodule Raxx do
     :OPTIONS
   ]
 
+  @typedoc """
+  Attribute value pair that can be serialized to an HTTP request or response
+  """
+  @type header :: {String.t(), String.t()}
+
   @doc """
   Construct a `Raxx.Request`.
 
@@ -68,9 +73,10 @@ defmodule Raxx do
       iex> request(:GET, "/").body
       false
   """
+  @spec request(atom, String.t() | URI.t()) :: Raxx.Request.t()
   def request(method, url) when is_binary(url) do
     url = URI.parse(url)
-    
+
     if url.query do
       {:ok, query} = URI2.Query.decode(url.query)
       request(method, %{url | query: query})
@@ -122,6 +128,7 @@ defmodule Raxx do
       iex> response(200).body
       false
   """
+  @spec response(Raxx.Response.status()) :: Raxx.Response.t()
   def response(status_code) when is_integer(status_code) do
     struct(Raxx.Response, status: status_code, headers: [], body: false)
   end
@@ -130,10 +137,13 @@ defmodule Raxx do
   @external_resource filepath
   {:ok, file} = File.read(filepath)
   status_lines = String.split(String.trim(file), ~r/\R/)
-  statuses = status_lines |> Enum.map(fn(status_line) ->
-    {code, " " <> reason_phrase} = Integer.parse(status_line)
-    {code, reason_phrase}
-  end)
+
+  statuses =
+    status_lines
+    |> Enum.map(fn status_line ->
+         {code, " " <> reason_phrase} = Integer.parse(status_line)
+         {code, reason_phrase}
+       end)
 
   for {status_code, reason_phrase} <- statuses do
     reason =
@@ -147,7 +157,6 @@ defmodule Raxx do
     end
   end
 
-
   @doc """
   The RFC7231 specified reason phrase for each known HTTP status code
 
@@ -159,6 +168,7 @@ defmodule Raxx do
       iex> reason_phrase(500)
       "Internal Server Error"
   """
+  @spec reason_phrase(integer) :: String.t()
   for {status_code, reason_phrase} <- statuses do
     def reason_phrase(unquote(status_code)) do
       unquote(reason_phrase)
@@ -176,6 +186,7 @@ defmodule Raxx do
       "Hi"
 
   """
+  @spec data(String.t()) :: Raxx.Data.t()
   def data(data) do
     %Raxx.Data{data: data}
   end
@@ -191,6 +202,7 @@ defmodule Raxx do
       iex> tail().headers
       []
   """
+  @spec tail([{String.t(), String.t()}]) :: Raxx.Tail.t()
   def tail(headers \\ []) do
     %Raxx.Tail{headers: headers}
   end
@@ -214,6 +226,7 @@ defmodule Raxx do
       ...> |> complete?()
       false
   """
+  @spec complete?(Raxx.Request.t() | Raxx.Response.t()) :: boolean
   def complete?(%{body: body}) when is_binary(body) do
     true
   end
@@ -232,16 +245,10 @@ defmodule Raxx do
       ...> |> Map.get(:query)
       %{"value" => "1"}
   """
+  @spec set_query(Raxx.Request.t(), %{binary => binary}) :: Raxx.Request.t()
   def set_query(request = %Raxx.Request{query: nil}, query) do
     %{request | query: query}
   end
-
-  # get_header
-  # def set_header(r, name, value) do
-  #   if has_header?(r, name) do
-  #     raise "set only once"
-  #   end
-  # end
 
   @doc """
   Set the value of a header field.
@@ -254,6 +261,7 @@ defmodule Raxx do
       ...> |> Map.get(:headers)
       [{"referer", "example.com"}, {"accept", "text/html"}]
   """
+  @spec set_header(Raxx.Request.t(), String.t(), String.t()) :: Raxx.Request.t()
   def set_header(message = %{headers: headers}, name, value) do
     if String.downcase(name) != name do
       raise "Header keys must be lowercase"
@@ -291,7 +299,7 @@ defmodule Raxx do
   """
   def split_path(path_string) do
     path_string
-    |> String.split("/", [trim: true])
+    |> String.split("/", trim: true)
   end
 
   ######## COPIED FROM PLUG ########

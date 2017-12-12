@@ -25,15 +25,28 @@ defmodule Raxx.Request do
 
   """
 
-  @type request :: %__MODULE__{
-          scheme: atom,
+  @typedoc """
+  Method to indicate the desired action to be performed on the identified resource.
+  """
+  @type method :: atom
+
+  @typedoc """
+  Scheme describing protocol used.
+  """
+  @type scheme :: :http | :https
+
+  @typedoc """
+  Elixir representation for an HTTP request.
+  """
+  @type t :: %__MODULE__{
+          scheme: scheme,
           authority: binary,
-          method: atom,
+          method: method,
           mount: [binary],
           path: [binary],
-          query: %{binary => binary},
+          query: %{binary => binary} | nil,
           headers: [{binary, binary}],
-          body: binary | boolean
+          body: boolean | String.t()
         }
 
   defstruct scheme: nil,

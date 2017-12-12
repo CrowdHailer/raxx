@@ -10,6 +10,20 @@ defmodule Raxx.Response do
 
   """
 
+  @typedoc """
+  Integer code for server response type
+  """
+  @type status :: integer
+
+  @typedoc """
+  Elixir representation for an HTTP response.
+  """
+  @type t :: %__MODULE__{
+          status: status,
+          headers: [Raxx.header()],
+          body: boolean | String.t()
+        }
+
   @enforce_keys [:status, :headers, :body]
   defstruct @enforce_keys
 

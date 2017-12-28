@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Added
 
-- `Raxx.is_application?` Test to see if an application is compatable to run on Raxx Servers.
+- `Raxx.is_application?/1` Test to see if an application is compatable to run on Raxx Servers.
+- `Raxx.verify_application/1` Same test as `is_application?/1` but returns informativ error.
 - Typespecs for `Raxx.split_path/1` and `Raxx.set_body/2`
 
 ## [0.14.3](https://github.com/CrowdHailer/raxx/tree/0.14.3) - 2017-12-12

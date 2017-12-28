@@ -298,7 +298,7 @@ defmodule Raxx do
       ["foo", "bar"]
 
   """
-  @spec split_path(String.t) :: [String.t]
+  @spec split_path(String.t()) :: [String.t()]
   def split_path(path_string) do
     path_string
     |> String.split("/", trim: true)
@@ -321,6 +321,43 @@ defmodule Raxx do
   @spec is_application?({module(), any()}) :: boolean()
   def is_application?({module, _initial_state}) do
     Raxx.Server.is_implemented?(module)
+  end
+
+  @doc """
+  Verify application can be run by compatable server?
+
+  ## Examples
+
+      iex> verify_application({Raxx.ServerTest.DefaultServer, %{}})
+      {:ok, {Raxx.ServerTest.DefaultServer, %{}}}
+
+      iex> verify_application({GenServer, %{}})
+      {:error, "module `GenServer` does not implement `Raxx.Server` behaviour."}
+
+      iex> verify_application({NotAModule, %{}})
+      {:error, "module `NotAModule` is not available."}
+  """
+  @spec verify_application({module(), any()}) :: {:ok, {module(), any()}} | {:error, String.t()}
+  def verify_application({module, initial_state}) do
+    case Code.ensure_compiled?(module) do
+      true ->
+        module.module_info[:attributes]
+        |> Keyword.get(:behaviour, [])
+        |> Enum.member?(Raxx.Server)
+        |> case do
+             true ->
+               {:ok, {module, initial_state}}
+
+             false ->
+               {
+                 :error,
+                 "module `#{Macro.to_string(module)}` does not implement `Raxx.Server` behaviour."
+               }
+           end
+
+      false ->
+        {:error, "module `#{Macro.to_string(module)}` is not available."}
+    end
   end
 
   ######## COPIED FROM PLUG ########

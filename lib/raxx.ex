@@ -302,6 +302,25 @@ defmodule Raxx do
     |> String.split("/", trim: true)
   end
 
+  @doc """
+  Can application be run by compatable server?
+
+  ## Examples
+
+      iex> is_application?({Raxx.ServerTest.DefaultServer, %{}})
+      true
+
+      iex> is_application?({GenServer, %{}})
+      false
+
+      iex> is_application?({NotAModule, %{}})
+      false
+  """
+  @spec is_application?({module(), any()}) :: boolean()
+  def is_application?({module, _initial_state}) do
+    Raxx.Server.is_implemented?(module)
+  end
+
   ######## COPIED FROM PLUG ########
 
   @doc ~S"""

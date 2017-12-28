@@ -67,8 +67,8 @@ defmodule Raxx.Server do
           |> set_body(true)
         end
 
-        def handle_info({ChatRoom, data}, config) do
-          {[body(data)], config}
+        def handle_info({ChatRoom, data}, state) do
+          {[body(data)], state}
         end
       end
 
@@ -262,6 +262,17 @@ defmodule Raxx.Server do
       end
 
       defoverridable unquote(__MODULE__)
+    end
+  end
+
+  @doc false
+  def is_implemented?(module) when is_atom(module) do
+    if Code.ensure_compiled?(module) do
+      module.module_info[:attributes]
+      |> Keyword.get(:behaviour, [])
+      |> Enum.member?(__MODULE__)
+    else
+      false
     end
   end
 end

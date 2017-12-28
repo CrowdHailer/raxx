@@ -128,16 +128,16 @@ defmodule SubscribeToMessages do
   end
 
   @impl Raxx.Server
-  def handle_info({ChatRoom, data}, config) do
+  def handle_info({ChatRoom, data}, state) do
     outbound = [data(data)]
 
-    {outbound, config}
+    {outbound, state}
   end
 
-  def handle_info({ChatRoom, :closed}, config) do
+  def handle_info({ChatRoom, :closed}, state) do
     outbound = [tail()]
 
-    {outbound, config}
+    {outbound, state}
   end
 end
 ```

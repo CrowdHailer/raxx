@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Added
+
+- `Raxx.is_application?` Test to see if an application is compatable to run on Raxx Servers.
+
 ## [0.14.3](https://github.com/CrowdHailer/raxx/tree/0.14.3) - 2017-12-12
 
 ## Added

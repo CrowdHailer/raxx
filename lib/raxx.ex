@@ -284,7 +284,7 @@ defmodule Raxx do
       ...> |> Map.get(:body)
       "Hello"
   """
-  @spec set_body(Raxx.Request.t(), iolist()) :: Raxx.Request.t()
+  @spec set_body(Raxx.Request.t(), boolean | iolist) :: Raxx.Request.t()
   def set_body(message = %{body: false}, body) do
     %{message | body: body}
   end

@@ -284,6 +284,7 @@ defmodule Raxx do
       ...> |> Map.get(:body)
       "Hello"
   """
+  @spec set_body(Raxx.Request.t(), iolist()) :: Raxx.Request.t()
   def set_body(message = %{body: false}, body) do
     %{message | body: body}
   end
@@ -297,6 +298,7 @@ defmodule Raxx do
       ["foo", "bar"]
 
   """
+  @spec split_path(String.t) :: [String.t]
   def split_path(path_string) do
     path_string
     |> String.split("/", trim: true)

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Fixed
 
 - Typespecs for `Raxx.response/1` accepts atom identifiers for status codes.
+- Typespecs for `Raxx.set_body/2` and `Raxx.set_header/3` fixed to accept both Raxx message types.
 
 ## [0.14.4](https://github.com/CrowdHailer/raxx/tree/0.14.4) - 2017-12-28
 ## Added

@@ -44,6 +44,11 @@ defmodule Raxx do
   """
   @type body :: boolean | String.t()
 
+  @typedoc """
+  Either a `Raxx.Request.t` or a `Raxx.Response.t`
+  """
+  @type message :: Raxx.Request.t() | Raxx.Response.t()
+
   @doc """
   Construct a `Raxx.Request`.
 
@@ -241,7 +246,7 @@ defmodule Raxx do
       ...> |> complete?()
       false
   """
-  @spec complete?(Raxx.Request.t() | Raxx.Response.t()) :: boolean
+  @spec complete?(message()) :: boolean
   def complete?(%{body: body}) when is_binary(body) do
     true
   end
@@ -277,6 +282,7 @@ defmodule Raxx do
       [{"referer", "example.com"}, {"accept", "text/html"}]
   """
   @spec set_header(Raxx.Request.t(), String.t(), String.t()) :: Raxx.Request.t()
+  @spec set_header(Raxx.Response.t(), String.t(), String.t()) :: Raxx.Response.t()
   def set_header(message = %{headers: headers}, name, value) do
     if String.downcase(name) != name do
       raise "Header keys must be lowercase"
@@ -300,6 +306,7 @@ defmodule Raxx do
       "Hello"
   """
   @spec set_body(Raxx.Request.t(), boolean | iolist) :: Raxx.Request.t()
+  @spec set_body(Raxx.Response.t(), boolean | iolist) :: Raxx.Response.t()
   def set_body(message = %{body: false}, body) do
     %{message | body: body}
   end

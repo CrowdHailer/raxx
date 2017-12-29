@@ -278,7 +278,7 @@ defmodule Raxx do
   """
   def set_headers(message = %{headers: _headers}, []),
     do: message
-  def set_headers(message = %{headers: _headers}, [{name, value} | rest] = header_list) when is_list(header_list),
+  def set_headers(message = %{headers: _headers}, [{name, value} | rest] = header_list),
     do: set_headers(set_header(message, name, value), rest)
 
   @doc """

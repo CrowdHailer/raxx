@@ -20,8 +20,8 @@ defmodule Raxx.Response do
   """
   @type t :: %__MODULE__{
           status: status,
-          headers: [Raxx.header()],
-          body: boolean | String.t()
+          headers: Raxx.headers(),
+          body: Raxx.body()
         }
 
   @enforce_keys [:status, :headers, :body]

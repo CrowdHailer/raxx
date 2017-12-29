@@ -45,8 +45,8 @@ defmodule Raxx.Request do
           mount: [binary],
           path: [binary],
           query: %{binary => binary} | nil,
-          headers: [{binary, binary}],
-          body: boolean | String.t()
+          headers: Raxx.headers(),
+          body: Raxx.body()
         }
 
   defstruct scheme: nil,

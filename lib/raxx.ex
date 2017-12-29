@@ -29,6 +29,21 @@ defmodule Raxx do
   """
   @type header :: {String.t(), String.t()}
 
+  @typedoc """
+  List of HTTP headers.
+  """
+  @type headers :: [header()]
+
+  @typedoc """
+  The body of a Raxx message.
+
+  The body can be:
+  - part of the message (`String.t()`).
+  - empty (`false`).
+  - present but unknown (`true`).
+  """
+  @type body :: boolean | String.t()
+
   @doc """
   Construct a `Raxx.Request`.
 

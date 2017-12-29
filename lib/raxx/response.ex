@@ -13,13 +13,13 @@ defmodule Raxx.Response do
   @typedoc """
   Integer code for server response type
   """
-  @type status :: integer
+  @type status_code :: integer
 
   @typedoc """
   Elixir representation for an HTTP response.
   """
   @type t :: %__MODULE__{
-          status: status,
+          status: status_code,
           headers: Raxx.headers(),
           body: Raxx.body()
         }

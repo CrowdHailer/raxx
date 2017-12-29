@@ -88,7 +88,7 @@ defmodule Raxx do
       iex> request(:GET, "/").body
       false
   """
-  @spec request(atom, String.t() | URI.t()) :: Raxx.Request.t()
+  @spec request(Raxx.Request.method(), String.t() | URI.t()) :: Raxx.Request.t()
   def request(method, url) when is_binary(url) do
     url = URI.parse(url)
 
@@ -143,7 +143,7 @@ defmodule Raxx do
       iex> response(200).body
       false
   """
-  @spec response(Raxx.Response.status()) :: Raxx.Response.t()
+  @spec response(Raxx.Response.status_code() | atom) :: Raxx.Response.t()
   def response(status_code) when is_integer(status_code) do
     struct(Raxx.Response, status: status_code, headers: [], body: false)
   end

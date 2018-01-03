@@ -63,7 +63,7 @@ defmodule Raxx.Server do
         def handle_head(_request, _state) do
           {:ok, _} = ChatRoom.join()
           response(:ok)
-          |> set_header("content-type", "text/plain")
+          |> set_header("content-type", "text/event-stream")
           |> set_body(true)
         end
 

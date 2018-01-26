@@ -326,6 +326,19 @@ defmodule Raxx do
     |> String.split("/", trim: true)
   end
 
+  def normalized_path(request) do
+    query_string =
+      case URI.encode_query(request.query || %{}) do
+        "" ->
+          ""
+
+        encoded ->
+          "?" <> encoded
+      end
+
+    "/" <> Enum.join(request.path, "/") <> query_string
+  end
+
   @doc """
   Can application be run by compatable server?
 

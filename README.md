@@ -13,6 +13,9 @@
 
 ## Extensions
 
+This project includes `Raxx.Router` & `Raxx.Logger`.
+Listed are additional utilities that can be used in Raxx applications.
+
 - [Raxx.MethodOverride](https://github.com/CrowdHailer/raxx_method_override)
 - [Raxx.Static](https://github.com/CrowdHailer/raxx_static)
 - [Raxx.ApiBlueprint](https://github.com/CrowdHailer/raxx_api_blueprint)
@@ -176,9 +179,9 @@ end
   `handle_data` will be invoked as each part arrives.
   An application should never assume how a body will be broken into data parts.*
 
-#### Routing
+#### Router
 
-the `Raxx.Router` can be used to match requests to specific server modules.
+The `Raxx.Router` can be used to match requests to specific server modules.
 
 ```elixir
 defmodule MyApp do
@@ -193,3 +196,8 @@ defmodule MyApp do
   ]
 end
 ```
+
+#### Logger
+
+The `Raxx.Logger` can be used in any raxx server module to add basic logs.
+The format of the logs matches the format of the basic Plug logger.

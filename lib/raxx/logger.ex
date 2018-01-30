@@ -38,16 +38,19 @@ defmodule Raxx.Logger do
         |> unquote(__MODULE__).process_response(@raxx_logger_level)
       end
 
+      @impl Raxx.Server
       def handle_data(data, config) do
         super(data, config)
         |> unquote(__MODULE__).process_response(@raxx_logger_level)
       end
 
+      @impl Raxx.Server
       def handle_tail(tail, config) do
         super(tail, config)
         |> unquote(__MODULE__).process_response(@raxx_logger_level)
       end
 
+      @impl Raxx.Server
       def handle_info(message, config) do
         super(message, config)
         |> unquote(__MODULE__).process_response(@raxx_logger_level)

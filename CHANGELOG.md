@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.14.8](https://github.com/CrowdHailer/raxx/tree/0.14.8) - 2018-02-05
+
+## Added
+
+- `:extra_statuses` configuration option added
+
 ## Fixed
 
 - `Raxx.Logger` uses `@impl` for all `Raxx.Server` callbacks

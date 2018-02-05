@@ -183,7 +183,7 @@ defmodule Raxx do
   The RFC7231 specified reason phrase for each known HTTP status code.
   Extra reason phrases can be defined in raxx config under extra_status.
 
-  Default configuration is
+  For example.
 
       config :raxx,
         :extra_statuses, ["422", "Unprocessable Entity"]

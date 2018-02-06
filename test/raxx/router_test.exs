@@ -103,4 +103,12 @@ defmodule Raxx.RouterTest do
     response = MyRouter.handle_head(request, :state)
     assert "Not found" == response.body
   end
+
+  test "adds the action module to logger metadata" do
+    request = Raxx.request(:GET, "/")
+    _ = MyRouter.handle_head(request, :state)
+    metadata = Logger.metadata
+    assert "Raxx.RouterTest.HomePage" = Keyword.get(metadata, :"raxx.action")
+    assert "%{method: :GET, path: []}" = Keyword.get(metadata, :"raxx.route")
+  end
 end

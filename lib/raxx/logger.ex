@@ -32,7 +32,16 @@ defmodule Raxx.Logger do
 
       @impl Raxx.Server
       def handle_head(head, config) do
-
+        # NOTE Raxx servers can be nested, app metadata should not be overwritten.
+        if !Keyword.has_key?(Logger.metadata(), :"raxx.app") do
+          Logger.metadata("raxx.app": __MODULE__)
+        end
+        Logger.metadata("raxx.scheme": head.scheme)
+        Logger.metadata("raxx.authority": head.authority)
+        Logger.metadata("raxx.method": head.method)
+        # NOTE path segments are preserved as a list because formatting as url would assume canonical url
+        Logger.metadata("raxx.path": inspect(head.path))
+        Logger.metadata("raxx.query": inspect(head.query))
         unquote(__MODULE__).process_head(head, @raxx_logger_level)
         super(head, config)
         |> unquote(__MODULE__).process_response(@raxx_logger_level)

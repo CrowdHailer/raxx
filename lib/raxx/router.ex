@@ -51,8 +51,14 @@ defmodule Raxx.Router do
             raise "module #{Macro.to_string(resolved_module)} is not loaded"
         end
 
+        # NOTE use resolved module to include any aliasing
+        controller_string = inspect(resolved_module)
+        match_string = Macro.to_string(match)
+
         quote do
           def handle_head(request = unquote(match), state) do
+            Logger.metadata("raxx.action": unquote(controller_string))
+            Logger.metadata("raxx.route": unquote(match_string))
             case unquote(controller).handle_head(request, state) do
               {outbound, new_state} ->
                 {outbound, {unquote(controller), new_state}}

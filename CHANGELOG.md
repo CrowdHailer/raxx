@@ -6,46 +6,46 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.14.9](https://github.com/CrowdHailer/raxx/tree/0.14.9) - 2018-02-07
 
-## Added
+### Added
 
 - `Raxx.Logger` sets request metadata on the logger.
 
 ## [0.14.8](https://github.com/CrowdHailer/raxx/tree/0.14.8) - 2018-02-05
 
-## Added
+### Added
 
 - `:extra_statuses` configuration option added.
 
-## Fixed
+### Fixed
 
 - `Raxx.Logger` uses `@impl` for all `Raxx.Server` callbacks.
 
 ## [0.14.7](https://github.com/CrowdHailer/raxx/tree/0.14.7) - 2018-01-30
 
-## Added
+### Added
 
 - `Raxx.Logger` middleware for basic request logging.
 
 ## [0.14.6](https://github.com/CrowdHailer/raxx/tree/0.14.6) - 2018-01-03
 
-## Fixed
+### Fixed
 
 - Typespec for `Raxx.set_body/2` reuses body type to fix issue with a binary not being a subtype of `iolist`.
 
 ## [1.0.0-rc.2](https://github.com/CrowdHailer/raxx/tree/1.0.0-rc.2)([0.14.5](https://github.com/CrowdHailer/raxx/tree/0.14.5)) - 2017-12-29
 
-## Added
+### Added
 
 - Types `headers` and `body` added to `Raxx` module.
 
-## Fixed
+### Fixed
 
 - Typespecs for `Raxx.response/1` accepts atom identifiers for status codes.
 - Typespecs for `Raxx.set_body/2` and `Raxx.set_header/3` fixed to accept both Raxx message types.
 
 ## [0.14.4](https://github.com/CrowdHailer/raxx/tree/0.14.4) - 2017-12-28
 
-## Added
+### Added
 
 - `Raxx.is_application?/1` Test to see if an application is compatable to run on Raxx Servers.
 - `Raxx.verify_application/1` Same test as `is_application?/1` but returns informativ error.
@@ -53,47 +53,47 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.14.3](https://github.com/CrowdHailer/raxx/tree/0.14.3) - 2017-12-12
 
-## Added
+### Added
 - Typespecs for all public functions.
 - Dialyzer step added to CI.
 
 ## [0.14.2](https://github.com/CrowdHailer/raxx/tree/0.14.2) - 2017-11-14
 
-## Fixed
+### Fixed
 
 - Correctly split file on new lines when generating status code helpers.
 
 ## [0.14.1](https://github.com/CrowdHailer/raxx/tree/0.14.1) - 2017-11-05
 
-## Added
+### Added
 
 - `Raxx.reason_phrase/1` Get the HTTP/1 reason phrase for each status code.
 
-## Removed
+### Removed
 
 - Dependency on http_status no longer necessary.
 
 ## [1.0.0-rc.1](https://github.com/CrowdHailer/raxx/tree/1.0.0-rc.1)([0.14.0](https://github.com/CrowdHailer/raxx/tree/0.14.0)) - 2017-10-29
 
-## Changed
+### Changed
 
 - `handle_headers` has been renamed to `handle_head`.
   *As previously decribed in README.*
 
-## Fixed
+### Fixed
 
 - Informative error raised for returning incomplete response without new state
 
 ## [1.0.0-rc.0](https://github.com/CrowdHailer/raxx/tree/1.0.0-rc.0)([0.13.0](https://github.com/CrowdHailer/raxx/tree/0.13.0)) - 2017-10-16
 
-## Changed
+### Changed
 
 - `Raxx.Trailer` has been renamed to `Raxx.Tail`.
 - `handle_trailers` has been renamed to `handle_tail`.
 - `Raxx.Fragment` has been replaced by `Raxx.Data`.
 - `handle_fragment` has been replaced by `handle_data`
 
-## Removed
+### Removed
 - Specific header modules that were prevously deprecated.
   - `Raxx.Connection`
   - `Raxx.ContentLength`
@@ -104,18 +104,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.12.3](https://github.com/CrowdHailer/raxx/tree/0.12.3) - 2017-10-14
 
-## Added
+### Added
 - Using `Raxx.Server` imports helper functions from `Raxx`.
 - Using `Raxx.Server` aliases `Raxx.Request`.
 - Using `Raxx.Server` aliases `Raxx.Response`.
 
-## Removed
+### Removed
 - Dependency on `Plug` is not needed.
 - Support for Elixir 1.4, `Raxx.Router` had bugs.
 
 ## [0.12.2](https://github.com/CrowdHailer/raxx/tree/0.12.2) - 2017-10-11
 
-## Added
+### Added
 
 - `Raxx.trailer/0` completes request without any extra metadata.
 - `handle_request/2` added to `Raxx.Server` behaviour.
@@ -124,13 +124,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.12.1](https://github.com/CrowdHailer/raxx/tree/0.12.1) - 2017-09-24
 
-## Fixed
+### Fixed
 - Cannot set HTTP headers with uppercase attribute.
 - Cannot add an HTTP header twice.
 
 ## [0.12.0](https://github.com/CrowdHailer/raxx/tree/0.12.0) - 2017-08-31
 
-## Changed
+### Changed
 - Replace simple interface with a streaming interface through `Raxx.Server`.
   See full [article](https://hexdocs.pm/tokumei/interface-design-for-http-streaming.html#content).
 - Build messages with `Raxx` module instead or `Raxx.Request` and `Raxx.Response`.

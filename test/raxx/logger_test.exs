@@ -14,7 +14,7 @@ defmodule Raxx.LoggerTest do
     end)
 
     assert String.contains?(log, "GET /foo?bar=value")
-    assert String.contains?(log, "Sent 200 in")
+    assert String.contains?(log, "Sent 404 in")
   end
 
   test "Request context is added to logger metadata" do

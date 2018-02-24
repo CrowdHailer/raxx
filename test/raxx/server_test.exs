@@ -13,7 +13,7 @@ defmodule Raxx.ServerTest do
 
     assert String.contains?(response.body, "DefaultServer")
     assert String.contains?(response.body, "@impl Raxx.Server")
-    assert 200 = response.status
+    assert 404 = response.status
   end
 
   test "default response is returned for a streamed request" do
@@ -27,7 +27,7 @@ defmodule Raxx.ServerTest do
 
     assert String.contains?(response.body, "DefaultServer")
     assert String.contains?(response.body, "@impl Raxx.Server")
-    assert 200 = response.status
+    assert 404 = response.status
   end
 
   test "handle_info logs error" do

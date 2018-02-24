@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.14.10](https://github.com/CrowdHailer/raxx/tree/0.14.10) - 2018-02-24
+
+### Fixed
+
+- Default page in `Raxx.Server` returned with status 404.
+
 ## [0.14.9](https://github.com/CrowdHailer/raxx/tree/0.14.9) - 2018-02-07
 
 ### Added

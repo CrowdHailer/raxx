@@ -186,7 +186,7 @@ defmodule Raxx.Server do
   defmacro __using__(_opts) do
     quote do
       @behaviour unquote(__MODULE__)
-      
+
       use Raxx.NotFound
 
       import Raxx

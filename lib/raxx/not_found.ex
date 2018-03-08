@@ -6,6 +6,7 @@ defmodule Raxx.NotFound do
 
   defmacro __using__(_opts) do
     body = not_found_page(__CALLER__.module)
+
     quote do
       @impl Raxx.Server
       def handle_request(_request, _state) do

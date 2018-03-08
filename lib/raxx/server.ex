@@ -197,28 +197,28 @@ defmodule Raxx.Server do
         Raxx.response(:not_found)
         |> Raxx.set_header("content-type", "text/html")
         |> Raxx.set_body("""
-           <h1>Welcome to Raxx</h1>
-           <p>Get started with your web application.</p>
-           <pre>
-           defmodule #{Macro.to_string(__MODULE__)} do
-             use #{Macro.to_string(unquote(__MODULE__))}
+        <h1>Welcome to Raxx</h1>
+        <p>Get started with your web application.</p>
+        <pre>
+        defmodule #{Macro.to_string(__MODULE__)} do
+          use #{Macro.to_string(unquote(__MODULE__))}
 
-             @impl #{Macro.to_string(unquote(__MODULE__))}
-             def handle_request(%{method: :GET, path: []}, _state) do
-               Raxx.response(:ok)
-               |> Raxx.set_header("content-type", "text/html")
-               |> Raxx.set_body("#{home_page}")
-             end
+          @impl #{Macro.to_string(unquote(__MODULE__))}
+          def handle_request(%{method: :GET, path: []}, _state) do
+            Raxx.response(:ok)
+            |> Raxx.set_header("content-type", "text/html")
+            |> Raxx.set_body("#{home_page}")
+          end
 
-             def handle_request(_request, _state) do
-               Raxx.response(:not_found)
-               |> Raxx.set_header("content-type", "text/html")
-               |> Raxx.set_body("#{not_found_page}")
-             end
-           end
-           </pre>
-           <p>See <a href="https://hexdocs.pm/raxx/Raxx.Server.html">documentation</a> for full details.</p>
-           """)
+          def handle_request(_request, _state) do
+            Raxx.response(:not_found)
+            |> Raxx.set_header("content-type", "text/html")
+            |> Raxx.set_body("#{not_found_page}")
+          end
+        end
+        </pre>
+        <p>See <a href="https://hexdocs.pm/raxx/Raxx.Server.html">documentation</a> for full details.</p>
+        """)
       end
 
       @impl unquote(__MODULE__)

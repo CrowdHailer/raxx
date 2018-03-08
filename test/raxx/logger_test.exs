@@ -9,9 +9,11 @@ defmodule Raxx.LoggerTest do
 
   test "Request and response information is logged" do
     request = Raxx.request(:GET, "http://example.com:1234/foo?bar=value")
-    log = capture_log(fn() ->
-      DefaultServer.handle_head(request, :state)
-    end)
+
+    log =
+      capture_log(fn ->
+        DefaultServer.handle_head(request, :state)
+      end)
 
     assert String.contains?(log, "GET /foo?bar=value")
     assert String.contains?(log, "Sent 404 in")
@@ -19,9 +21,11 @@ defmodule Raxx.LoggerTest do
 
   test "Request context is added to logger metadata" do
     request = Raxx.request(:GET, "http://example.com:1234/foo?bar=value")
-    _log = capture_log(fn() ->
-      DefaultServer.handle_head(request, :state)
-    end)
+
+    _log =
+      capture_log(fn ->
+        DefaultServer.handle_head(request, :state)
+      end)
 
     metadata = Logger.metadata()
     assert Raxx.LoggerTest.DefaultServer = Keyword.get(metadata, :"raxx.app")

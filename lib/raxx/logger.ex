@@ -36,13 +36,16 @@ defmodule Raxx.Logger do
         if !Keyword.has_key?(Logger.metadata(), :"raxx.app") do
           Logger.metadata("raxx.app": __MODULE__)
         end
+
         Logger.metadata("raxx.scheme": head.scheme)
         Logger.metadata("raxx.authority": head.authority)
         Logger.metadata("raxx.method": head.method)
+
         # NOTE path segments are preserved as a list because formatting as url would assume canonical url
         Logger.metadata("raxx.path": inspect(head.path))
         Logger.metadata("raxx.query": inspect(head.query))
         unquote(__MODULE__).process_head(head, @raxx_logger_level)
+
         super(head, config)
         |> unquote(__MODULE__).process_response(@raxx_logger_level)
       end
@@ -69,10 +72,10 @@ defmodule Raxx.Logger do
 
   @doc false
   def process_head(head, level) do
-    Logger.log level, fn() ->
+    Logger.log(level, fn ->
       Process.put(unquote(__MODULE__), %{start: System.monotonic_time()})
       [Atom.to_string(head.method), ?\s, Raxx.normalized_path(head)]
-    end
+    end)
   end
 
   @doc false
@@ -80,26 +83,33 @@ defmodule Raxx.Logger do
     log_response(response, level)
     response
   end
+
   def process_response(reaction = {[response = %Raxx.Response{} | _parts], _state}, level) do
     log_response(response, level)
     reaction
   end
+
   def process_response(reaction, _level) do
     reaction
   end
 
   defp log_response(response, level) do
-    Logger.log level, fn() ->
+    Logger.log(level, fn ->
       %{start: start} = Process.get(__MODULE__)
       stop = System.monotonic_time()
       diff = System.convert_time_unit(stop - start, :native, :microsecond)
 
-      [response_type(response), ?\s, Integer.to_string(response.status),
-      " in ", formatted_diff(diff)]
-    end
+      [
+        response_type(response),
+        ?\s,
+        Integer.to_string(response.status),
+        " in ",
+        formatted_diff(diff)
+      ]
+    end)
   end
 
-  defp formatted_diff(diff) when diff > 1000, do: [diff |> div(1000) |> Integer.to_string, "ms"]
+  defp formatted_diff(diff) when diff > 1000, do: [diff |> div(1000) |> Integer.to_string(), "ms"]
   defp formatted_diff(diff), do: [Integer.to_string(diff), "µs"]
 
   defp response_type(%{body: true}), do: "Chunked"

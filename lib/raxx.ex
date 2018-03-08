@@ -161,9 +161,9 @@ defmodule Raxx do
   statuses =
     status_lines
     |> Enum.map(fn status_line ->
-         {code, " " <> reason_phrase} = Integer.parse(status_line)
-         {code, reason_phrase}
-       end)
+      {code, " " <> reason_phrase} = Integer.parse(status_line)
+      {code, reason_phrase}
+    end)
 
   statuses = statuses ++ Application.get_env(:raxx, :extra_statuses, [])
 
@@ -391,15 +391,15 @@ defmodule Raxx do
         |> Keyword.get(:behaviour, [])
         |> Enum.member?(Raxx.Server)
         |> case do
-             true ->
-               {:ok, {module, initial_state}}
+          true ->
+            {:ok, {module, initial_state}}
 
-             false ->
-               {
-                 :error,
-                 "module `#{Macro.to_string(module)}` does not implement `Raxx.Server` behaviour."
-               }
-           end
+          false ->
+            {
+              :error,
+              "module `#{Macro.to_string(module)}` does not implement `Raxx.Server` behaviour."
+            }
+        end
 
       false ->
         {:error, "module `#{Macro.to_string(module)}` is not available."}

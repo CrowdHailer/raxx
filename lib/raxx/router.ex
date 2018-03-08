@@ -59,6 +59,7 @@ defmodule Raxx.Router do
           def handle_head(request = unquote(match), state) do
             Logger.metadata("raxx.action": unquote(controller_string))
             Logger.metadata("raxx.route": unquote(match_string))
+
             case unquote(controller).handle_head(request, state) do
               {outbound, new_state} ->
                 {outbound, {unquote(controller), new_state}}

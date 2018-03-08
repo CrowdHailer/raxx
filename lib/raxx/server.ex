@@ -185,83 +185,12 @@ defmodule Raxx.Server do
 
   defmacro __using__(_opts) do
     quote do
-      import Raxx
-      alias Raxx.{Request, Response}
       @behaviour unquote(__MODULE__)
 
-      @impl unquote(__MODULE__)
-      def handle_request(_request, _state) do
-        home_page = Raxx.html_escape("<h1>Home Page</h1>")
-        not_found_page = Raxx.html_escape("<h1>Ooops! Page not found.</h1>")
+      use Raxx.NotFound
 
-        Raxx.response(:not_found)
-        |> Raxx.set_header("content-type", "text/html")
-        |> Raxx.set_body("""
-           <h1>Welcome to Raxx</h1>
-           <p>Get started with your web application.</p>
-           <pre>
-           defmodule #{Macro.to_string(__MODULE__)} do
-             use #{Macro.to_string(unquote(__MODULE__))}
-
-             @impl #{Macro.to_string(unquote(__MODULE__))}
-             def handle_request(%{method: :GET, path: []}, _state) do
-               Raxx.response(:ok)
-               |> Raxx.set_header("content-type", "text/html")
-               |> Raxx.set_body("#{home_page}")
-             end
-
-             def handle_request(_request, _state) do
-               Raxx.response(:not_found)
-               |> Raxx.set_header("content-type", "text/html")
-               |> Raxx.set_body("#{not_found_page}")
-             end
-           end
-           </pre>
-           <p>See <a href="https://hexdocs.pm/raxx/Raxx.Server.html">documentation</a> for full details.</p>
-           """)
-      end
-
-      @impl unquote(__MODULE__)
-      def handle_head(request = %{body: false}, state) do
-        response = handle_request(%{request | body: ""}, state)
-
-        case response do
-          %{body: true} -> raise "Incomplete response"
-          _ -> response
-        end
-      end
-
-      def handle_head(request = %{body: true}, state) do
-        {[], {request, "", state}}
-      end
-
-      @impl unquote(__MODULE__)
-      def handle_data(data, {request, buffer, state}) do
-        {[], {request, buffer <> data, state}}
-      end
-
-      @impl unquote(__MODULE__)
-      def handle_tail([], {request, body, state}) do
-        response = handle_request(%{request | body: body}, state)
-
-        case response do
-          %{body: true} -> raise "Incomplete response"
-          _ -> response
-        end
-      end
-
-      @impl unquote(__MODULE__)
-      def handle_info(message, state) do
-        require Logger
-
-        Logger.warn(
-          "#{inspect(self())} received unexpected message in handle_info/2: #{inspect(message)}"
-        )
-
-        {[], state}
-      end
-
-      defoverridable unquote(__MODULE__)
+      import Raxx
+      alias Raxx.{Request, Response}
     end
   end
 

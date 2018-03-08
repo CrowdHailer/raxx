@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.14.11](https://github.com/CrowdHailer/raxx/tree/0.14.11) - 2018-03-08
+
+### Added
+- The source code is now formatted,
+  ensuring code is properly formatted is part of CI and a requirement for contributions.
+
 ## [0.14.10](https://github.com/CrowdHailer/raxx/tree/0.14.10) - 2018-02-24
 
 ### Fixed

@@ -4,9 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## master
+
+### Added
+
+- `Raxx.get_header/2` for fetching a single header value from a request/response.
+
 ## [0.14.11](https://github.com/CrowdHailer/raxx/tree/0.14.11) - 2018-03-08
 
 ### Added
+
 - The source code is now formatted,
   ensuring code is properly formatted is part of CI and a requirement for contributions.
 

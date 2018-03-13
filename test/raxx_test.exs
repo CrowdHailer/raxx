@@ -17,4 +17,11 @@ defmodule RaxxTest do
       |> Raxx.set_header("x-foo", "two")
     end
   end
+
+  test "cannot get an uppercase header" do
+    assert_raise RuntimeError, "Header keys must be lowercase", fn ->
+      Raxx.response(:ok)
+      |> Raxx.get_header("Foo")
+    end
+  end
 end

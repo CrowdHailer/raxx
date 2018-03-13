@@ -307,6 +307,40 @@ defmodule Raxx do
   end
 
   @doc """
+  Get the value of a header field.
+
+  ## Examples
+
+      iex> response(:ok)
+      ...> |> set_header("content-type", "text/html")
+      ...> |> get_header("content-type")
+      "text/html"
+
+      iex> response(:ok)
+      ...> |> set_header("content-type", "text/html")
+      ...> |> get_header("location")
+      nil
+  """
+  @spec get_header(Raxx.Request.t(), String.t()) :: String.t() | nil
+  @spec get_header(Raxx.Response.t(), String.t()) :: String.t() | nil
+  def get_header(%{headers: headers}, name) do
+    if String.downcase(name) != name do
+      raise "Header keys must be lowercase"
+    end
+
+    case :proplists.get_all_values(name, headers) do
+      [] ->
+        nil
+
+      [value] ->
+        value
+
+      _ ->
+        raise "More than one header found for `#{name}`"
+    end
+  end
+
+  @doc """
   Add a complete body to a message.
 
   ## Examples

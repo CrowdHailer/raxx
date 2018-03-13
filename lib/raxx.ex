@@ -307,6 +307,14 @@ defmodule Raxx do
       raise "Headers should not be duplicated"
     end
 
+    case :binary.match(value, ["\n", "\r"]) do
+      {_, _} ->
+        raise "Header values must not contain control feed (\\r) or newline (\\n)"
+
+      :nomatch ->
+        value
+    end
+
     %{message | headers: headers ++ [{name, value}]}
   end
 

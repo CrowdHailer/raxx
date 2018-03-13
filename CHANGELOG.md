@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `Raxx.get_header/2` for fetching a single header value from a request/response.
 - `Raxx.redirect/2` will generate a redirect response directing browser to another url.
+- Header values checked for forbidden charachters using `Raxx.set_header/3`.
 
 ## [0.14.11](https://github.com/CrowdHailer/raxx/tree/0.14.11) - 2018-03-08
 

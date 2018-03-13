@@ -360,6 +360,59 @@ defmodule Raxx do
     %{message | body: body}
   end
 
+  # Link to sinatra cases add my own list of unknowns
+  @doc """
+  Create a response to redirect client to the given url.
+
+  Response status can be set using the `:status` option.
+
+  ## Examples
+    iex> redirect("/foo")
+    ...> |> get_header("location")
+    "/foo"
+
+    iex> redirect("/foo")
+    ...> |> get_header("content-type")
+    "text/html"
+
+    iex> redirect("/foo")
+    ...> |> Map.get(:body)
+    ~s(<html><body>This resource has moved <a href="/foo">here</a>.</body></html>)
+
+    iex> redirect("/foo")
+    ...> |> Map.get(:status)
+    303
+
+    iex> redirect("/foo", status: 301)
+    ...> |> Map.get(:status)
+    301
+
+    iex> redirect("/foo", status: :moved_permanently)
+    ...> |> Map.get(:status)
+    301
+
+  ## Notes
+
+  This implementation was lifted from the [sugar framework](https://github.com/sugar-framework/sugar/blob/405256747ce8c446c504e4dc533b24c76d864a5a/lib/sugar/controller/helpers.ex#L253-L259) and is sufficient for many usecases.
+
+  I would like to implement a `back` function.
+  Complication with such functionality are discussed here - https://github.com/phoenixframework/phoenix/pull/1402
+  Sinatra has a very complete test suite including a back implementation - https://github.com/sinatra/sinatra/blob/9bd0d40229f76ff60d81c01ad2f4b1a8e6f31e05/test/helpers_test.rb#L183
+  """
+  def redirect(url, opts \\ []) do
+    status = Keyword.get(opts, :status, :see_other)
+
+    response(status)
+    |> set_header("location", url)
+    |> set_header("content-type", "text/html")
+    |> set_body(redirect_page(url))
+  end
+
+  defp redirect_page(url) do
+    html = html_escape(url)
+    "<html><body>This resource has moved <a href=\"#{html}\">here</a>.</body></html>"
+  end
+
   @doc """
   Split a path on forward slashes.
 

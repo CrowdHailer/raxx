@@ -153,6 +153,10 @@ defmodule Raxx do
     struct(Raxx.Response, status: status_code, headers: [], body: false)
   end
 
+  def response(status) when is_atom(status) do
+    response(status_code(status))
+  end
+
   filepath = Path.join(__DIR__, "status.rfc7231")
   @external_resource filepath
   {:ok, file} = File.read(filepath)
@@ -174,8 +178,8 @@ defmodule Raxx do
       |> String.replace(" ", "_")
       |> String.to_atom()
 
-    def response(unquote(reason)) do
-      response(unquote(status_code))
+    defp status_code(unquote(reason)) do
+      unquote(status_code)
     end
   end
 

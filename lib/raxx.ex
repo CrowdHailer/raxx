@@ -332,17 +332,27 @@ defmodule Raxx do
       ...> |> set_header("content-type", "text/html")
       ...> |> get_header("location")
       nil
+
+      iex> response(:ok)
+      ...> |> set_header("content-type", "text/html")
+      ...> |> get_header("content-type", "text/plain")
+      "text/html"
+
+      iex> response(:ok)
+      ...> |> set_header("content-type", "text/html")
+      ...> |> get_header("location", "/")
+      "/"
   """
-  @spec get_header(Raxx.Request.t(), String.t()) :: String.t() | nil
-  @spec get_header(Raxx.Response.t(), String.t()) :: String.t() | nil
-  def get_header(%{headers: headers}, name) do
+  @spec get_header(Raxx.Request.t(), String.t(), String.t() | nil) :: String.t() | nil
+  @spec get_header(Raxx.Response.t(), String.t(), String.t() | nil) :: String.t() | nil
+  def get_header(%{headers: headers}, name, fallback \\ nil) do
     if String.downcase(name) != name do
       raise "Header keys must be lowercase"
     end
 
     case :proplists.get_all_values(name, headers) do
       [] ->
-        nil
+        fallback
 
       [value] ->
         value
@@ -368,7 +378,6 @@ defmodule Raxx do
     %{message | body: body}
   end
 
-  # Link to sinatra cases add my own list of unknowns
   @doc """
   Create a response to redirect client to the given url.
 

@@ -153,6 +153,10 @@ defmodule Raxx do
     struct(Raxx.Response, status: status_code, headers: [], body: false)
   end
 
+  def response(status) when is_atom(status) do
+    response(status_code(status))
+  end
+
   filepath = Path.join(__DIR__, "status.rfc7231")
   @external_resource filepath
   {:ok, file} = File.read(filepath)
@@ -174,8 +178,8 @@ defmodule Raxx do
       |> String.replace(" ", "_")
       |> String.to_atom()
 
-    def response(unquote(reason)) do
-      response(unquote(status_code))
+    defp status_code(unquote(reason)) do
+      unquote(status_code)
     end
   end
 
@@ -303,7 +307,59 @@ defmodule Raxx do
       raise "Headers should not be duplicated"
     end
 
+    case :binary.match(value, ["\n", "\r"]) do
+      {_, _} ->
+        raise "Header values must not contain control feed (\\r) or newline (\\n)"
+
+      :nomatch ->
+        value
+    end
+
     %{message | headers: headers ++ [{name, value}]}
+  end
+
+  @doc """
+  Get the value of a header field.
+
+  ## Examples
+
+      iex> response(:ok)
+      ...> |> set_header("content-type", "text/html")
+      ...> |> get_header("content-type")
+      "text/html"
+
+      iex> response(:ok)
+      ...> |> set_header("content-type", "text/html")
+      ...> |> get_header("location")
+      nil
+
+      iex> response(:ok)
+      ...> |> set_header("content-type", "text/html")
+      ...> |> get_header("content-type", "text/plain")
+      "text/html"
+
+      iex> response(:ok)
+      ...> |> set_header("content-type", "text/html")
+      ...> |> get_header("location", "/")
+      "/"
+  """
+  @spec get_header(Raxx.Request.t(), String.t(), String.t() | nil) :: String.t() | nil
+  @spec get_header(Raxx.Response.t(), String.t(), String.t() | nil) :: String.t() | nil
+  def get_header(%{headers: headers}, name, fallback \\ nil) do
+    if String.downcase(name) != name do
+      raise "Header keys must be lowercase"
+    end
+
+    case :proplists.get_all_values(name, headers) do
+      [] ->
+        fallback
+
+      [value] ->
+        value
+
+      _ ->
+        raise "More than one header found for `#{name}`"
+    end
   end
 
   @doc """
@@ -320,6 +376,58 @@ defmodule Raxx do
   @spec set_body(Raxx.Response.t(), body) :: Raxx.Response.t()
   def set_body(message = %{body: false}, body) do
     %{message | body: body}
+  end
+
+  @doc """
+  Create a response to redirect client to the given url.
+
+  Response status can be set using the `:status` option.
+
+  ## Examples
+    iex> redirect("/foo")
+    ...> |> get_header("location")
+    "/foo"
+
+    iex> redirect("/foo")
+    ...> |> get_header("content-type")
+    "text/html"
+
+    iex> redirect("/foo")
+    ...> |> Map.get(:body)
+    ~s(<html><body>This resource has moved <a href="/foo">here</a>.</body></html>)
+
+    iex> redirect("/foo")
+    ...> |> Map.get(:status)
+    303
+
+    iex> redirect("/foo", status: 301)
+    ...> |> Map.get(:status)
+    301
+
+    iex> redirect("/foo", status: :moved_permanently)
+    ...> |> Map.get(:status)
+    301
+
+  ## Notes
+
+  This implementation was lifted from the [sugar framework](https://github.com/sugar-framework/sugar/blob/405256747ce8c446c504e4dc533b24c76d864a5a/lib/sugar/controller/helpers.ex#L253-L259) and is sufficient for many usecases.
+
+  I would like to implement a `back` function.
+  Complication with such functionality are discussed here - https://github.com/phoenixframework/phoenix/pull/1402
+  Sinatra has a very complete test suite including a back implementation - https://github.com/sinatra/sinatra/blob/9bd0d40229f76ff60d81c01ad2f4b1a8e6f31e05/test/helpers_test.rb#L183
+  """
+  def redirect(url, opts \\ []) do
+    status = Keyword.get(opts, :status, :see_other)
+
+    response(status)
+    |> set_header("location", url)
+    |> set_header("content-type", "text/html")
+    |> set_body(redirect_page(url))
+  end
+
+  defp redirect_page(url) do
+    html = html_escape(url)
+    "<html><body>This resource has moved <a href=\"#{html}\">here</a>.</body></html>"
   end
 
   @doc """

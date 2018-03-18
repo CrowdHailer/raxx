@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## master
+
+### Added
+- Secure sessions in signed cookies by using `Raxx.Session.SignedCookie`.
+
 ## [0.14.12](https://github.com/CrowdHailer/raxx/tree/0.14.12) - 2018-03-14
 
 ### Added

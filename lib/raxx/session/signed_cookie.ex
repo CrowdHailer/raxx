@@ -95,6 +95,9 @@ defmodule Raxx.Session.SignedCookie do
     }
   end
 
+  @doc """
+  Overwrite a clients session with a new value.
+  """
   def embed(response, session, session_config = %__MODULE__{}) do
     payload = safe_encode(session)
     digest = safe_digest(payload, session_config.secret)
@@ -108,6 +111,9 @@ defmodule Raxx.Session.SignedCookie do
     )
   end
 
+  @doc """
+  Extract and verify the session sent from a client.
+  """
   def extract(request, session_config = %__MODULE__{}) do
     case Raxx.get_header(request, "cookie") do
       nil ->
@@ -135,6 +141,9 @@ defmodule Raxx.Session.SignedCookie do
     end
   end
 
+  @doc """
+  Sent a response to client informing it to clear a session.
+  """
   def expire(response, session_config = %__MODULE__{}) do
     response
     |> Raxx.set_header("set-cookie", SetCookie.expire(session_config.cookie_name))

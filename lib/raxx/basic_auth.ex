@@ -2,38 +2,62 @@ defmodule Raxx.BasicAuth do
   @moduledoc """
   Add protection to a Raxx application using Basic Authentication.
 
-  Basic Authentication is specified in RFC 7617 (which obsoletes RFC 2617).
+  *Basic Authentication is specified in RFC 7617 (which obsoletes RFC 2617).*
 
-  ## Fixed credentials
+  This module provides helpers for submitting and verifying credentials.
+
+  ### Submitting credentials
+
+  A client (or test case) can add user credentials to a request with `set_credentials/3`
 
       iex> request(:GET, "/")
       ...> |> set_credentials("Aladdin", "open sesame")
+      ...> |> get_header("authorization")
+      "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="
+
+  ### Verifying fixed credentials
+
+  A server can authenticate a request against a fixed set of credentials using `authenticate/3`
+
+      iex> request(:GET, "/")
+      ...> |> set_header("authorization", "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==")
       ...> |> authenticate("Aladdin", "open sesame")
       {:ok, "Aladdin"}
 
       iex> request(:GET, "/")
-      ...> |> set_credentials("Aladdin", "open sesame")
-      ...> |> authenticate("Jafar", "open sesame")
-      {:error, :invalid_access_credentials}
+      ...> |> set_header("authorization", "Basic SmFmYXI6bXkgbGFtcA==")
+      ...> |> authenticate("Aladdin", "open sesame")
+      {:error, :invalid_credentials}
 
-      # with {:ok, {user_id, password}} <- Raxx.BasicAuth.get_credentials(request) do
-      #   # check a users credentials
-      #   {:ok, user}
-      # end
+  ### Verifying multiple credentials
 
-  ## Examples
+  To authenticate a request when credentials are not fixed, define an application authenticate function.
+  This function can authenticate a user in any way it wants. e.g. by fetching the user from the database.
+  Extracting credentials from a received request can be done using `get_credentials/1`.
 
-      iex> request(:GET, "/")
-      ...> |> set_credentials("Aladdin", "open sesame")
-      ...> |> get_credentials()
-      {:ok, {"Aladdin", "open sesame"}}
+      defmodule MyApp.Admin do
+        def authenticate(request) do
+          with {:ok, {user_id, password}} <- get_credentials(request) do
+            # Find user and verify credentials
+            {:ok, user}
+          end
+        end
+      end
+
+
+  NOTE: when comparing saved passwords with submitted passwords use `secure_compare/2` to protect against timing attacks.
+
+  ### Challenging unauthorized requests
+
+  If a request is submitted with absent or invalid credentials a server should inform the client that it is accessing a resource protected with basic authentication.
+  Use `unauthorized/1` to create such a response.
 
   ## NOTE
 
-  The Basic authentication scheme is not a secure method of user authentication
+  - The Basic authentication scheme is not a secure method of user authentication
   https://tools.ietf.org/html/rfc7617#section-4
 
-  This module will be extracted to a separate project before the release of raxx 1.0
+  - This module will be extracted to a separate project before the release of raxx 1.0
   """
 
   import Raxx
@@ -49,12 +73,6 @@ defmodule Raxx.BasicAuth do
   1. The user-id and password MUST NOT contain any control characters
   2. The user-id must not contain a `:`
 
-  ## Examples
-
-      iex> request(:GET, "/")
-      ...> |> set_credentials("Aladdin", "open sesame")
-      ...> |> get_header("authorization")
-      "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="
   """
   def set_credentials(request, user_id, password) do
     request
@@ -106,7 +124,7 @@ defmodule Raxx.BasicAuth do
       if secure_compare(user_id, access_user_id) && secure_compare(password, access_password) do
         {:ok, access_user_id}
       else
-        {:error, :invalid_access_credentials}
+        {:error, :invalid_credentials}
       end
     end
   end
@@ -114,9 +132,20 @@ defmodule Raxx.BasicAuth do
   @doc """
   Generate a response to a request that failed to authenticate.
 
+  The response will contain a challenge for the client in the `www-authenticate` header.
+  Use an unauthorized response to prompt a client into providing basic authentication credentials.
+
   ## Options
 
-  - **realm:**
+  - **realm:** describe the protected area. default `"Site"`
+  - **charset:** default `"UTF-8"`
+
+  ### Notes
+
+  - The only valid charset is `UTF-8`; https://tools.ietf.org/html/rfc7617#section-2.1.
+    A `nil` can be provided to this function to omit the parameter.
+
+  - Validation should be added for the parameter values to ensure they only accept valid values.
   """
   def unauthorized(options) do
     realm = Keyword.get(options, :realm, @default_realm)
@@ -131,25 +160,11 @@ defmodule Raxx.BasicAuth do
     "Basic " <> Base.encode64(user_pass(user_id, password))
   end
 
-  @doc """
-  Generate the challenge header sent by a server.
-
-  This challenge is sent to a client in the `www-authenticate` header.
-  Use this challenge to prompt a client into providing basic authentication credentials.
-
-  ### Notes
-
-  - The only valid charset is `UTF-8`; https://tools.ietf.org/html/rfc7617#section-2.1.
-    A `nil` can be provided to this function to omit the parameter.
-
-  - Validation should be added for the parameter values to ensure they only accept valid values.
-
-  """
-  def challenge_header(realm, nil) do
+  defp challenge_header(realm, nil) do
     "Basic realm=\"#{realm}\""
   end
 
-  def challenge_header(realm, charset) do
+  defp challenge_header(realm, charset) do
     "Basic realm=\"#{realm}\", charset=\"#{charset}\""
   end
 
@@ -178,13 +193,13 @@ defmodule Raxx.BasicAuth do
     end
   end
 
-  def secure_compare(<<x, left::binary>>, <<y, right::binary>>, acc) do
+  defp secure_compare(<<x, left::binary>>, <<y, right::binary>>, acc) do
     import Bitwise
     xorred = x ^^^ y
     secure_compare(left, right, acc ||| xorred)
   end
 
-  def secure_compare(<<>>, <<>>, acc) do
+  defp secure_compare(<<>>, <<>>, acc) do
     acc
   end
 end

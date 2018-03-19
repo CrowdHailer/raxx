@@ -13,8 +13,14 @@
 
 ## Extensions
 
-This project includes `Raxx.Router` & `Raxx.Logger`.
-Listed are additional utilities that can be used in Raxx applications.
+This project includes:
+
+- `Raxx.Router`
+- `Raxx.Logger`
+- `Raxx.BasicAuth`
+- `Raxx.Session.SignedCookie`
+
+Additional utilities that can be used in Raxx applications.
 
 - [Raxx.MethodOverride](https://github.com/CrowdHailer/raxx_method_override)
 - [Raxx.Static](https://github.com/CrowdHailer/raxx_static)

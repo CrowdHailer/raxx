@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## master
 
 ### Added
-
+- Secure sessions in signed cookies by using `Raxx.Session.SignedCookie`.
 - `Raxx.BasicAuth` for setting and verifying credentials using the Basic authentication scheme. 
 
 ## [0.14.12](https://github.com/CrowdHailer/raxx/tree/0.14.12) - 2018-03-14

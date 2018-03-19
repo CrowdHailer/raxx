@@ -425,6 +425,60 @@ defmodule Raxx do
     |> set_body(redirect_page(url))
   end
 
+  @doc """
+  Put headers that improve browser security.
+
+  The following headers are set:
+
+  - x-frame-options - set to SAMEORIGIN to avoid clickjacking
+    through iframes unless in the same origin
+  - x-content-type-options - set to nosniff. This requires
+    script and style tags to be sent with proper content type
+  - x-xss-protection - set to "1; mode=block" to improve XSS
+    protection on both Chrome and IE
+  - x-download-options - set to noopen to instruct the browser
+    not to open a download directly in the browser, to avoid
+    HTML files rendering inline and accessing the security
+    context of the application (like critical domain cookies)
+  - x-permitted-cross-domain-policies - set to none to restrict
+    Adobe Flash Player’s access to data
+
+  ## Examples
+
+      iex> response(:ok)
+      ...> |> set_secure_browser_headers()
+      ...> |> get_header("x-frame-options")
+      "SAMEORIGIN"
+
+      iex> response(:ok)
+      ...> |> set_secure_browser_headers()
+      ...> |> get_header("x-xss-protection")
+      "1; mode=block"
+
+      iex> response(:ok)
+      ...> |> set_secure_browser_headers()
+      ...> |> get_header("x-content-type-options")
+      "nosniff"
+
+      iex> response(:ok)
+      ...> |> set_secure_browser_headers()
+      ...> |> get_header("x-download-options")
+      "noopen"
+
+      iex> response(:ok)
+      ...> |> set_secure_browser_headers()
+      ...> |> get_header("x-permitted-cross-domain-policies")
+      "none"
+  """
+  def set_secure_browser_headers(response = %Raxx.Response{}) do
+    response
+    |> set_header("x-frame-options", "SAMEORIGIN")
+    |> set_header("x-xss-protection", "1; mode=block")
+    |> set_header("x-content-type-options", "nosniff")
+    |> set_header("x-download-options", "noopen")
+    |> set_header("x-permitted-cross-domain-policies", "none")
+  end
+
   defp redirect_page(url) do
     html = html_escape(url)
     "<html><body>This resource has moved <a href=\"#{html}\">here</a>.</body></html>"

@@ -126,14 +126,18 @@ defmodule Raxx.Session.SignedCookie do
               {:ok, session_cookie} ->
                 case String.split(session_cookie, "--", parts: 2) do
                   [payload, digest] ->
-                    if verify_signature(payload, digest, [session_config.secret | session_config.previous_secrets]) do
+                    if verify_signature(payload, digest, [
+                         session_config.secret | session_config.previous_secrets
+                       ]) do
                       safe_decode(payload)
                     else
                       {:error, :could_not_verify_signature}
                     end
+
                   _ ->
                     {:error, :invalid_session_cookie}
                 end
+
               :error ->
                 {:error, :no_session_cookie}
             end
@@ -181,7 +185,7 @@ defmodule Raxx.Session.SignedCookie do
   end
 
   defp verify_signature(payload, digest, secrets) do
-    Enum.any?(secrets, fn(secret) ->
+    Enum.any?(secrets, fn secret ->
       secure_compare(digest, safe_digest(payload, secret))
     end)
   end

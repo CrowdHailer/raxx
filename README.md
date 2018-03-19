@@ -19,6 +19,7 @@ This project includes:
 - `Raxx.Logger`
 - `Raxx.BasicAuth`
 - `Raxx.Session.SignedCookie`
+- `Raxx.RequestID`
 
 Additional utilities that can be used in Raxx applications.
 

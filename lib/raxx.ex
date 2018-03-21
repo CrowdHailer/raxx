@@ -363,6 +363,16 @@ defmodule Raxx do
   end
 
   @doc """
+  Delete a header, if present from a request or response.
+  """
+  @spec delete_header(Raxx.Request.t(), String.t()) :: Raxx.Request.t()
+  @spec delete_header(Raxx.Response.t(), String.t()) :: Raxx.Response.t()
+  def delete_header(message = %{headers: headers}, header) do
+    headers = :proplists.delete(header, headers)
+    %{message | headers: headers}
+  end
+
+  @doc """
   Add a complete body to a message.
 
   ## Examples

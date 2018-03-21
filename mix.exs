@@ -26,6 +26,8 @@ defmodule Raxx.Mixfile do
     [
       # TODO remove once sessions are in separate repo.
       {:cookie, "~> 0.1.0"},
+      # TODO remove once Raxx.RequestID is in a separate repo.
+      {:uuid, "~> 1.1"},
       {:dialyxir, "~> 0.5", only: :dev, runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]

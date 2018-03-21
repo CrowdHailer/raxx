@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - `Raxx.set_secure_browser_headers/1` Adds a collection of useful headers when responding to a browser.
+- `Raxx.delete_header/2` delete a header from request or response.
+- `Raxx.RequestID` assign a request id to every request handled by an application
 
 ## [0.14.13](https://github.com/CrowdHailer/raxx/tree/0.14.13) - 2018-03-19
 

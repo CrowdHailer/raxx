@@ -4,17 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## string-queries
+## [0.15.0](https://github.com/CrowdHailer/raxx/tree/0.15.0) - 2018-04-18
 
 ### Added
 
-- `Raxx.fetch_query/1` fetch the decoded query from a request. 
+- `Raxx.fetch_query/1` fetch the decoded query from a request.
 
 ### Changed
 
-- The query field on the `Raxx.Request` struct is not a binary and not a parsed query.
+- The query field on the `Raxx.Request` struct is now a binary and not a parsed query.
   This is changed because there is no formal specification for query string structure.
   https://stackoverflow.com/questions/24059773/correct-way-to-pass-multiple-values-for-same-parameter-name-in-get-request
+
+### Removed
+
+- `URI2` is no longer part of this project, user will need to provide their own implementations to decode nested queries.
 
 ## [0.14.14](https://github.com/CrowdHailer/raxx/tree/0.14.14) - 2018-03-21
 

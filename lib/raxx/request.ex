@@ -43,7 +43,7 @@ defmodule Raxx.Request do
           authority: binary,
           method: method,
           mount: [binary],
-          path: [binary],
+          path: binary | [binary],
           query: binary | nil,
           headers: Raxx.headers(),
           body: Raxx.body()

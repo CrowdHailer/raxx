@@ -70,10 +70,10 @@ defmodule Raxx do
       :HEAD
 
       iex> request(:GET, "/").path
-      []
+      "/"
 
       iex> request(:GET, "/foo/bar").path
-      ["foo", "bar"]
+      "/foo/bar"
 
       iex> request(:GET, "https:///").scheme
       :https
@@ -119,14 +119,13 @@ defmodule Raxx do
 
     # DEBT in case of path '//' then parsing returns path of nil.
     # e.g. localhost:8080//
-    segments = split_path(url.path || "/")
 
     struct(
       Raxx.Request,
       scheme: scheme,
       authority: url.authority,
       method: method,
-      path: segments,
+      path: url.path,
       query: url.query,
       headers: [],
       body: false
@@ -530,22 +529,9 @@ defmodule Raxx do
     "<html><body>This resource has moved <a href=\"#{html}\">here</a>.</body></html>"
   end
 
-  @doc """
-  Split a path on forward slashes.
-
-  ## Examples
-
-      iex> split_path("/foo/bar")
-      ["foo", "bar"]
-
-  """
-  @spec split_path(String.t()) :: [String.t()]
-  def split_path(path_string) do
-    path_string
-    |> String.split("/", trim: true)
-  end
-
   def normalized_path(request) do
+    request = Raxx.ParsePath.split_path(request)
+
     query_string =
       case request.query do
         nil ->

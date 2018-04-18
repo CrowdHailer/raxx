@@ -187,6 +187,7 @@ defmodule Raxx.Server do
     quote do
       @behaviour unquote(__MODULE__)
 
+      use Raxx.ParsePath
       use Raxx.NotFound
 
       import Raxx

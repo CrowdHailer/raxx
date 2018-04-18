@@ -100,6 +100,7 @@ defmodule Raxx do
   def request(method, raw_url) when is_binary(raw_url) do
     url = URI.parse(raw_url)
 
+    # DEBT: remove this query fix in 1.7 https://github.com/elixir-lang/elixir/pull/7565
     url =
       if is_nil(url.query) && String.contains?(raw_url, "?") do
         %{url | query: ""}

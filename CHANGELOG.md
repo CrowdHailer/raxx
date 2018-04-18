@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- `Raxx.fetch_query/1` fetch the decoded query from a request. 
+
 ### Changed
 
 - The query field on the `Raxx.Request` struct is not a binary and not a parsed query.

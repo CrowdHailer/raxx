@@ -291,6 +291,34 @@ defmodule Raxx do
   end
 
   @doc """
+  Fetch the decoded query from a request
+
+  A map is always returned, even in the case of a request without a query string.
+
+  ## Examples
+
+      iex> request(:GET, "/")
+      ...> |> fetch_query()
+      {:ok, %{}}
+
+      iex> request(:GET, "/?")
+      ...> |> fetch_query()
+      {:ok, %{}}
+
+      iex> request(:GET, "/?foo=bar")
+      ...> |> fetch_query()
+      {:ok, %{"foo" => "bar"}}
+  """
+  @spec fetch_query(Raxx.Request.t()) :: {:ok, %{binary => binary}}
+  def fetch_query(%Raxx.Request{query: nil}) do
+    {:ok, %{}}
+  end
+
+  def fetch_query(%Raxx.Request{query: query_string}) do
+    {:ok, URI.decode_query(query_string)}
+  end
+
+  @doc """
   Set the value of a header field.
 
   ## Examples

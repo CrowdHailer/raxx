@@ -116,6 +116,8 @@ defmodule Raxx do
         url.scheme |> String.to_existing_atom()
       end
 
+    # DEBT in case of path '//' then parsing returns path of nil.
+    # e.g. localhost:8080//
     segments = split_path(url.path || "/")
 
     struct(

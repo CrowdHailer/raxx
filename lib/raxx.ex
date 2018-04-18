@@ -81,11 +81,14 @@ defmodule Raxx do
       iex> request(:GET, "https://example.com").authority
       "example.com"
 
-      iex> request(:GET, "/?foo=bar").query
-      %{"foo" => "bar"}
+      iex> request(:GET, "/").query
+      nil
 
-      iex> request(:GET, "/?foo[bob]=bar").query
-      %{"foo" => %{"bob" => "bar"}}
+      iex> request(:GET, "/?").query
+      ""
+
+      iex> request(:GET, "/?foo=bar").query
+      "foo=bar"
 
       iex> request(:GET, "/").headers
       []
@@ -94,15 +97,17 @@ defmodule Raxx do
       false
   """
   @spec request(Raxx.Request.method(), String.t() | URI.t()) :: Raxx.Request.t()
-  def request(method, url) when is_binary(url) do
-    url = URI.parse(url)
+  def request(method, raw_url) when is_binary(raw_url) do
+    url = URI.parse(raw_url)
 
-    if url.query do
-      {:ok, query} = URI2.Query.decode(url.query)
-      request(method, %{url | query: query})
-    else
-      request(method, url)
-    end
+    url =
+      if is_nil(url.query) && String.contains?(raw_url, "?") do
+        %{url | query: ""}
+      else
+        url
+      end
+
+    request(method, url)
   end
 
   def request(method, url) when method in @http_methods do
@@ -276,13 +281,13 @@ defmodule Raxx do
   ## Examples
 
       iex> request(:GET, "/")
-      ...> |> set_query(%{"value" => "1"})
+      ...> |> set_query(%{"foo" => "bar"})
       ...> |> Map.get(:query)
-      %{"value" => "1"}
+      "foo=bar"
   """
   @spec set_query(Raxx.Request.t(), %{binary => binary}) :: Raxx.Request.t()
   def set_query(request = %Raxx.Request{query: nil}, query) do
-    %{request | query: query}
+    %{request | query: URI.encode_query(query)}
   end
 
   @doc """
@@ -511,12 +516,12 @@ defmodule Raxx do
 
   def normalized_path(request) do
     query_string =
-      case URI.encode_query(request.query || %{}) do
-        "" ->
+      case request.query do
+        nil ->
           ""
 
-        encoded ->
-          "?" <> encoded
+        query ->
+          "?" <> query
       end
 
     "/" <> Enum.join(request.path, "/") <> query_string

@@ -32,7 +32,7 @@ defmodule Raxx.LoggerTest do
     assert :http = Keyword.get(metadata, :"raxx.scheme")
     assert "example.com:1234" = Keyword.get(metadata, :"raxx.authority")
     assert :GET = Keyword.get(metadata, :"raxx.method")
-    assert "[\"foo\"]" = Keyword.get(metadata, :"raxx.path")
+    assert "\"/foo\"" = Keyword.get(metadata, :"raxx.path")
     assert "\"bar=value\"" = Keyword.get(metadata, :"raxx.query")
   end
 end

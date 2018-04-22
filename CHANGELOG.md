@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## ongoing - 2018-04-18
+
+### Added
+
+- `Raxx.Request` struct now has a `raw_path` field to hold the unparsed path of the URL.
+
 ## [0.15.0](https://github.com/CrowdHailer/raxx/tree/0.15.0) - 2018-04-18
 
 ### Added

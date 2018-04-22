@@ -127,6 +127,7 @@ defmodule Raxx do
       authority: url.authority,
       method: method,
       path: segments,
+      raw_path: url.path,
       query: url.query,
       headers: [],
       body: false

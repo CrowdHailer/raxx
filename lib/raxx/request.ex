@@ -19,6 +19,7 @@ defmodule Raxx.Request do
   | **method** | The HTTP request method, such as “GET” or “POST”, as a binary. This cannot ever be an empty string, and is always uppercase. |
   | **mount** | The segments of the request URL's “path”, that have already been matched. Same as rack path_info. This may be an empty array, if the requested URL targets the application root. |
   | **path** | The remainder of the request URL's “path”, split into segments. It designates the virtual “location” of the request's target within the application. This may be an empty array, if the requested URL targets the application root. |
+  | **raw_path** | The request URL's "path" |
   | **query** | the URL query string. |
   | **headers** | The headers from the HTTP request as a map of strings. Note all headers will be downcased, e.g. `%{"content-type" => "text/plain"}` |
   | **body** | The body content sent with the request |
@@ -44,6 +45,7 @@ defmodule Raxx.Request do
           method: method,
           mount: [binary],
           path: [binary],
+          raw_path: binary,
           query: binary | nil,
           headers: Raxx.headers(),
           body: Raxx.body()
@@ -54,6 +56,7 @@ defmodule Raxx.Request do
             method: nil,
             mount: [],
             path: [],
+            raw_path: "",
             query: nil,
             headers: [],
             body: nil

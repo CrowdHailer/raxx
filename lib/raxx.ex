@@ -38,11 +38,11 @@ defmodule Raxx do
   The body of a Raxx message.
 
   The body can be:
-  - part of the message (`String.t()`).
+  - part of the message (`binary`).
   - empty (`false`).
   - present but unknown (`true`).
   """
-  @type body :: boolean | String.t()
+  @type body :: boolean | binary
 
   @typedoc """
   Either a `Raxx.Request.t` or a `Raxx.Response.t`
@@ -230,7 +230,7 @@ defmodule Raxx do
       "Hi"
 
   """
-  @spec data(String.t()) :: Raxx.Data.t()
+  @spec data(binary) :: Raxx.Data.t()
   def data(data) do
     %Raxx.Data{data: data}
   end

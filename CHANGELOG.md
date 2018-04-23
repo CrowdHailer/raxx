@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `Raxx.Request` struct now has a `raw_path` field to hold the unparsed path of the URL.
 
+### Changed
+
+- The type of `Raxx.body` and `Raxx.Data.data` is now `binary` instead of `String.t()` to indicate it may not be
+  an actual string.
+
 ## [0.15.0](https://github.com/CrowdHailer/raxx/tree/0.15.0) - 2018-04-18
 
 ### Added

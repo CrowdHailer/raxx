@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - The type of `Raxx.body` and `Raxx.Data.data` is now `binary` instead of `String.t()` to indicate it may not be
   an actual string.
+- Generate request_id without using external `uuid` dependency.
 
 ## [0.15.1](https://github.com/CrowdHailer/raxx/tree/0.15.1) - 2018-04-22
 

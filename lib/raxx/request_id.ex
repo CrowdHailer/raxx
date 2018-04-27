@@ -48,12 +48,12 @@ defmodule Raxx.RequestID do
   def ensure_request_id(head) do
     case Raxx.get_header(head, @header_name) do
       nil ->
-        id = UUID.uuid4()
+        id = generate_request_id()
         head = Raxx.set_header(head, @header_name, id)
         {id, head}
 
       invalid_id when byte_size(invalid_id) < 20 or byte_size(invalid_id) > 200 ->
-        id = UUID.uuid4()
+        id = generate_request_id()
 
         head =
           head
@@ -65,5 +65,15 @@ defmodule Raxx.RequestID do
       id ->
         {id, head}
     end
+  end
+
+  defp generate_request_id do
+    binary = <<
+      System.system_time(:nanoseconds)::64,
+      :erlang.phash2({node(), self()}, 16_777_216)::24,
+      :erlang.unique_integer()::32
+    >>
+
+    Base.hex_encode32(binary, case: :lower)
   end
 end

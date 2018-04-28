@@ -130,11 +130,6 @@ defmodule Raxx.Server do
   @type t :: {module, state}
 
   @typedoc """
-  alias for Raxx.Request type.
-  """
-  @type request :: Raxx.Request.t()
-
-  @typedoc """
   State of application server.
 
   Original value is the configuration given when starting the raxx application.
@@ -142,14 +137,9 @@ defmodule Raxx.Server do
   @type state :: any()
 
   @typedoc """
-  Set of all components that make up a message to or from server.
-  """
-  @type part :: Raxx.Request.t() | Raxx.Response.t() | Raxx.Data.t() | Raxx.Tail.t()
-
-  @typedoc """
   Possible return values instructing server to send client data and update state if appropriate.
   """
-  @type next :: {[part], state} | Raxx.Response.t()
+  @type next :: {[Raxx.part()], state} | Raxx.Response.t()
 
   @doc """
   Called with a complete request once all the data parts of a body are received.
@@ -159,7 +149,7 @@ defmodule Raxx.Server do
 
   This callback will never be called if handle_head/handle_body/handle_tail are overwritten.
   """
-  @callback handle_request(request, state()) :: next
+  @callback handle_request(Raxx.Request.t(), state()) :: next
 
   @doc """
   Called once when a client starts a stream,
@@ -169,7 +159,7 @@ defmodule Raxx.Server do
 
   This callback can be relied upon to execute before any other callbacks
   """
-  @callback handle_head(request, state()) :: next
+  @callback handle_head(Raxx.Request.t(), state()) :: next
 
   @doc """
   Called every time data from the request body is received
@@ -199,7 +189,10 @@ defmodule Raxx.Server do
     end
   end
 
-  @spec handle(t, term) :: {[part], t}
+  @doc """
+  Execute a server module and current state in response to a new message
+  """
+  @spec handle(t, term) :: {[Raxx.part()], t}
   def handle({module, state}, request = %Raxx.Request{}) do
     normalize_reaction(module.handle_request(request, state), state)
   end

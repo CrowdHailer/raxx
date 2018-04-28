@@ -49,6 +49,11 @@ defmodule Raxx do
   """
   @type message :: Raxx.Request.t() | Raxx.Response.t()
 
+  @typedoc """
+  Set of all components that make up a message to or from server.
+  """
+  @type part :: Raxx.Request.t() | Raxx.Response.t() | Raxx.Data.t() | Raxx.Tail.t()
+
   @doc """
   Construct a `Raxx.Request`.
 

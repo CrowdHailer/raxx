@@ -125,6 +125,11 @@ defmodule Raxx.Server do
   """
 
   @typedoc """
+  The behaviour and state of a raxx server
+  """
+  @type t :: {module, state}
+
+  @typedoc """
   alias for Raxx.Request type.
   """
   @type request :: Raxx.Request.t()
@@ -192,6 +197,27 @@ defmodule Raxx.Server do
       import Raxx
       alias Raxx.{Request, Response}
     end
+  end
+
+  @spec handle(t, term) :: {[part], t}
+  def handle({module, state}, request = %Raxx.Request{}) do
+    normalize_reaction(module.handle_request(request, state), state)
+  end
+
+  defp normalize_reaction(response = %Raxx.Response{body: true}, _initial_state) do
+    raise %ReturnError{return: response}
+  end
+
+  defp normalize_reaction(response = %Raxx.Response{}, initial_state) do
+    {[response], initial_state}
+  end
+
+  defp normalize_reaction({parts, new_state}, _initial_state) when is_list(parts) do
+    {parts, new_state}
+  end
+
+  defp normalize_reaction(other, _initial_state) do
+    raise %ReturnError{return: other}
   end
 
   @doc false

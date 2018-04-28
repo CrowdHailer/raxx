@@ -125,9 +125,9 @@ defmodule Raxx.Server do
   """
 
   @typedoc """
-  alias for Raxx.Request type.
+  The behaviour and state of a raxx server
   """
-  @type request :: Raxx.Request.t()
+  @type t :: {module, state}
 
   @typedoc """
   State of application server.
@@ -137,14 +137,9 @@ defmodule Raxx.Server do
   @type state :: any()
 
   @typedoc """
-  Set of all components that make up a message to or from server.
-  """
-  @type part :: Raxx.Request.t() | Raxx.Response.t() | Raxx.Data.t() | Raxx.Tail.t()
-
-  @typedoc """
   Possible return values instructing server to send client data and update state if appropriate.
   """
-  @type next :: {[part], state} | Raxx.Response.t()
+  @type next :: {[Raxx.part()], state} | Raxx.Response.t()
 
   @doc """
   Called with a complete request once all the data parts of a body are received.
@@ -154,7 +149,7 @@ defmodule Raxx.Server do
 
   This callback will never be called if handle_head/handle_body/handle_tail are overwritten.
   """
-  @callback handle_request(request, state()) :: next
+  @callback handle_request(Raxx.Request.t(), state()) :: next
 
   @doc """
   Called once when a client starts a stream,
@@ -164,7 +159,7 @@ defmodule Raxx.Server do
 
   This callback can be relied upon to execute before any other callbacks
   """
-  @callback handle_head(request, state()) :: next
+  @callback handle_head(Raxx.Request.t(), state()) :: next
 
   @doc """
   Called every time data from the request body is received
@@ -192,6 +187,42 @@ defmodule Raxx.Server do
       import Raxx
       alias Raxx.{Request, Response}
     end
+  end
+
+  @doc """
+  Execute a server module and current state in response to a new message
+  """
+  @spec handle(t, term) :: {[Raxx.part()], t}
+  def handle({module, state}, request = %Raxx.Request{}) do
+    normalize_reaction(module.handle_head(request, state), state)
+  end
+
+  def handle({module, state}, %Raxx.Data{data: data}) do
+    normalize_reaction(module.handle_data(data, state), state)
+  end
+
+  def handle({module, state}, %Raxx.Tail{headers: headers}) do
+    normalize_reaction(module.handle_tail(headers, state), state)
+  end
+
+  def handle({module, state}, other) do
+    normalize_reaction(module.handle_info(other, state), state)
+  end
+
+  defp normalize_reaction(response = %Raxx.Response{body: true}, _initial_state) do
+    raise %ReturnError{return: response}
+  end
+
+  defp normalize_reaction(response = %Raxx.Response{}, initial_state) do
+    {[response], initial_state}
+  end
+
+  defp normalize_reaction({parts, new_state}, _initial_state) when is_list(parts) do
+    {parts, new_state}
+  end
+
+  defp normalize_reaction(other, _initial_state) do
+    raise %ReturnError{return: other}
   end
 
   @doc false

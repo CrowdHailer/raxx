@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## master
 
+### Added
+
+- `Raxx.Server.handle/2` to be used by server implemenations when executing a `Raxx.Server` module.
+  Add better error messages in cases of bad responses.
+
 ### Changed
 
 - The type of `Raxx.body` and `Raxx.Data.data` is now `binary` instead of `String.t()` to indicate it may not be

@@ -194,15 +194,15 @@ defmodule Raxx.Server do
   """
   @spec handle(t, term) :: {[Raxx.part()], t}
   def handle({module, state}, request = %Raxx.Request{}) do
-    normalize_reaction(module.handle_request(request, state), state)
+    normalize_reaction(module.handle_head(request, state), state)
   end
 
-  def handle({module, state}, data = %Raxx.Data{}) do
+  def handle({module, state}, %Raxx.Data{data: data}) do
     normalize_reaction(module.handle_data(data, state), state)
   end
 
-  def handle({module, state}, tail = %Raxx.Tail{}) do
-    normalize_reaction(module.handle_tail(tail, state), state)
+  def handle({module, state}, %Raxx.Tail{headers: headers}) do
+    normalize_reaction(module.handle_tail(headers, state), state)
   end
 
   def handle({module, state}, other) do

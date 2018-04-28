@@ -197,6 +197,18 @@ defmodule Raxx.Server do
     normalize_reaction(module.handle_request(request, state), state)
   end
 
+  def handle({module, state}, data = %Raxx.Data{}) do
+    normalize_reaction(module.handle_data(data, state), state)
+  end
+
+  def handle({module, state}, tail = %Raxx.Tail{}) do
+    normalize_reaction(module.handle_tail(tail, state), state)
+  end
+
+  def handle({module, state}, other) do
+    normalize_reaction(module.handle_info(other, state), state)
+  end
+
   defp normalize_reaction(response = %Raxx.Response{body: true}, _initial_state) do
     raise %ReturnError{return: response}
   end

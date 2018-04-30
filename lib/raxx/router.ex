@@ -60,13 +60,8 @@ defmodule Raxx.Router do
             Logger.metadata("raxx.action": unquote(controller_string))
             Logger.metadata("raxx.route": unquote(match_string))
 
-            case unquote(controller).handle_head(request, state) do
-              {outbound, new_state} ->
-                {outbound, {unquote(controller), new_state}}
-
-              response = %{status: _status} ->
-                response
-            end
+            {outbound, new_state} = Raxx.Server.handle({unquote(controller), state}, request)
+            {outbound, {unquote(controller), new_state}}
           end
         end
       end
@@ -82,35 +77,20 @@ defmodule Raxx.Router do
 
       @impl Raxx.Server
       def handle_data(data, {controller, state}) do
-        case controller.handle_data(data, state) do
-          {outbound, new_state} ->
-            {outbound, {controller, new_state}}
-
-          response = %{status: _status} ->
-            response
-        end
+        {outbound, new_state} = Raxx.Server.handle({controller, state}, Raxx.data(data))
+        {outbound, {controller, new_state}}
       end
 
       @impl Raxx.Server
       def handle_tail(trailers, {controller, state}) do
-        case controller.handle_tail(trailers, state) do
-          {outbound, new_state} ->
-            {outbound, {controller, new_state}}
-
-          response = %{status: _status} ->
-            response
-        end
+        {outbound, new_state} = Raxx.Server.handle({controller, state}, Raxx.tail(trailers))
+        {outbound, {controller, new_state}}
       end
 
       @impl Raxx.Server
       def handle_info(message, {controller, state}) do
-        case controller.handle_info(message, state) do
-          {outbound, new_state} ->
-            {outbound, {controller, new_state}}
-
-          response = %{status: _status} ->
-            response
-        end
+        {outbound, new_state} = Raxx.Server.handle({controller, state}, message)
+        {outbound, {controller, new_state}}
       end
     end
   end

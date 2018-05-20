@@ -1,13 +1,3 @@
-defmodule :raxx do
-  @moduledoc false
-  # A module that is clean to call in erlang code with the same functionality as `Raxx`.
-
-  for {name, arity} <- Raxx.__info__(:functions) do
-    args = for i <- 0..arity, i > 0, do: Macro.var(:"#{i}", nil)
-    defdelegate unquote(name)(unquote_splicing(args)), to: Raxx
-  end
-end
-
 defmodule Raxx do
   @moduledoc """
   Tooling to work with HTTP.
@@ -706,5 +696,15 @@ defmodule Raxx do
 
   defp to_iodata(<<>>, skip, original, acc, len) do
     [acc | binary_part(original, skip, len)]
+  end
+end
+
+defmodule :raxx do
+  @moduledoc false
+  # A module that is clean to call in erlang code with the same functionality as `Raxx`.
+
+  for {name, arity} <- Raxx.__info__(:functions) do
+    args = for i <- 0..arity, i > 0, do: Macro.var(:"#{i}", nil)
+    defdelegate unquote(name)(unquote_splicing(args)), to: Raxx
   end
 end

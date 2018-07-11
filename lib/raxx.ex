@@ -345,10 +345,6 @@ defmodule Raxx do
       raise "Header keys must be lowercase"
     end
 
-    if :proplists.is_defined(name, headers) do
-      raise "Headers should not be duplicated"
-    end
-
     case :binary.match(value, ["\n", "\r"]) do
       {_, _} ->
         raise "Header values must not contain control feed (\\r) or newline (\\n)"

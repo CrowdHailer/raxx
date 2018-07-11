@@ -10,7 +10,7 @@ defmodule RaxxTest do
     end
   end
 
-  test "header values cannot contain control feed charachter" do
+  test "header values cannot contain control feed character" do
     assert_raise RuntimeError,
                  "Header values must not contain control feed (\\r) or newline (\\n)",
                  fn ->
@@ -19,7 +19,7 @@ defmodule RaxxTest do
                  end
   end
 
-  test "header values cannot contain newline charachter" do
+  test "header values cannot contain newline character" do
     assert_raise RuntimeError,
                  "Header values must not contain control feed (\\r) or newline (\\n)",
                  fn ->
@@ -28,12 +28,14 @@ defmodule RaxxTest do
                  end
   end
 
-  test "cannot set a header twice" do
-    assert_raise RuntimeError, "Headers should not be duplicated", fn ->
+  test "duplicate headers are allowed" do
+    response =
       Raxx.response(:ok)
       |> Raxx.set_header("x-foo", "one")
       |> Raxx.set_header("x-foo", "two")
-    end
+
+    assert Enum.sort(response.headers) == [{"x-foo", "one"}, {"x-foo", "two"}],
+           "Duplicate headers are allowed"
   end
 
   test "cannot get an uppercase header" do

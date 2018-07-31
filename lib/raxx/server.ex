@@ -44,7 +44,7 @@ defmodule Raxx.Server do
           {[], {:file, device}}
         end
 
-        def handle_body(body, state = {:file, device}) do
+        def handle_data(body, state = {:file, device}) do
           IO.write(device, body)
           {[], state}
         end
@@ -147,7 +147,7 @@ defmodule Raxx.Server do
   Passed a `Raxx.Request` and server configuration.
   Note the value of the request body will be a string.
 
-  This callback will never be called if handle_head/handle_body/handle_tail are overwritten.
+  This callback will never be called if handle_head/handle_data/handle_tail are overwritten.
   """
   @callback handle_request(Raxx.Request.t(), state()) :: next
 

@@ -2,6 +2,13 @@ language: elixir
 elixir:
   - 1.7.1
 otp_release:
-  - 20.0
-  - 20.1
-script: "MIX_ENV=test mix local.hex --force && MIX_ENV=test mix do deps.get, test && mix format --check-formatted && mix dialyzer --halt-exit-status"
+  - 20.3
+  - 21.0
+env:
+  - MIX_ENV=test
+before_script:
+  - mix local.hex --force && mix deps.get
+script:
+  - mix test
+  - mix format --check-formatted
+  - mix dialyzer --halt-exit-status

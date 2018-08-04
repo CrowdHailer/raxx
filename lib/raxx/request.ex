@@ -60,4 +60,24 @@ defmodule Raxx.Request do
             query: nil,
             headers: [],
             body: nil
+
+  @default_ports %{
+    http: 80,
+    https: 443
+  }
+
+  def host(%__MODULE__{authority: authority}) do
+    hd(String.split(authority, ":"))
+  end
+
+  def port(%__MODULE__{scheme: scheme, authority: authority}, default_ports \\ @default_ports) do
+    case String.split(authority, ":") do
+      [_host] ->
+        Map.get(default_ports, scheme)
+
+      [_host, port_string] ->
+        {port, _} = Integer.parse(port_string)
+        port
+    end
+  end
 end

@@ -285,6 +285,40 @@ defmodule Raxx do
   end
 
   @doc """
+  Return the host, without port, for a request.
+
+  ## Examples
+
+      iex> request(:GET, "http://www.example.com/hello")
+      ...> |> request_host()
+      "www.example.com"
+
+      iex> request(:GET, "http://www.example.com:1234/hello")
+      ...> |> request_host()
+      "www.example.com"
+  """
+  defdelegate request_host(request), to: Raxx.Request, as: :host
+
+  @doc """
+  Return the host, without port, for a request.
+
+  ## Examples
+
+      iex> request(:GET, "http://www.example.com:1234/hello")
+      ...> |> request_port()
+      1234
+
+      iex> request(:GET, "http://www.example.com/hello")
+      ...> |> request_port()
+      80
+
+      iex> request(:GET, "https://www.example.com/hello")
+      ...> |> request_port()
+      443
+  """
+  defdelegate request_port(request), to: Raxx.Request, as: :port
+
+  @doc """
   Add a query value to a request
 
   ## Examples

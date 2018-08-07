@@ -13,6 +13,8 @@ defmodule Raxx.HTTP1 do
   @crlf "\r\n"
 
   @doc """
+  # NOTE set_body should add content-length otherwise we don't know if to delete it to match on other end, when serializing
+
   ## Examples
       iex> request = Raxx.request(:GET, "http://example.com/path?qs")
       ...> |> Raxx.set_header("accept", "text/plain")
@@ -39,6 +41,104 @@ defmodule Raxx.HTTP1 do
     headers = [{"host", request.authority}] ++ payload_headers ++ request.headers
     head = [start_line(request), header_lines(headers), @crlf]
     {head, body}
+  end
+
+  @doc """
+  ## Examples
+
+      iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request()
+      {:ok,
+       %Raxx.Request{
+         authority: "example.com",
+         body: false,
+         headers: [{"accept", "text/plain"}],
+         method: :GET,
+         mount: [],
+         path: ["path"],
+         query: "qs",
+         raw_path: "/path",
+         scheme: :http
+       }, {:complete, ""}, ""}
+
+      iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request()
+      {:ok,
+       %Raxx.Request{
+         authority: "example.com",
+         body: true,
+         headers: [{"content-type", "text/plain"}],
+         method: :POST,
+         mount: [],
+         path: ["path"],
+         query: nil,
+         raw_path: "/path",
+         scheme: :http
+       }, :chunked, ""}
+
+      iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ncontent-length: 13\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request()
+      {:ok,
+       %Raxx.Request{
+         authority: "example.com",
+         body: true,
+         headers: [{"content-length", "13"}],
+         method: :POST,
+         mount: [],
+         path: ["path"],
+         query: nil,
+         raw_path: "/path",
+         scheme: :http
+       }, {:bytes, 13}, ""}
+
+      iex> "GET /path?qs HT"
+      ...> |> Raxx.HTTP1.parse_request()
+      {:more, "GET /path?qs HT"}
+
+      iex> "GET /path?qs HTTP/1.1\\r\\nhost: exa"
+      ...> |> Raxx.HTTP1.parse_request()
+      {:more, "GET /path?qs HTTP/1.1\\r\\nhost: exa"}
+
+  """
+  def parse_request(buffer, scheme \\ :http) do
+    case :erlang.decode_packet(:http_bin, buffer, []) do
+      {:ok, {:http_request, method, {:abs_path, path_and_query}, _version}, rest} ->
+        case parse_headers(rest) do
+          {:ok, headers, rest2} ->
+            case Enum.split_with(headers, fn {key, _value} -> key == "host" end) do
+              {[{"host", host}], headers} ->
+                {headers, body, state} = decode_payload(headers)
+
+                request =
+                  Raxx.request(method, path_and_query)
+                  |> Map.put(:scheme, scheme)
+                  |> Map.put(:authority, host)
+                  |> Map.put(:headers, headers)
+                  |> Map.put(:body, body)
+
+                {:ok, request, state, rest2}
+            end
+
+          {:more, :undefined} ->
+            {:more, buffer}
+        end
+
+      {:more, :undefined} ->
+        {:more, buffer}
+    end
+  end
+
+  defp parse_headers(buffer, headers \\ []) do
+    case :erlang.decode_packet(:httph_bin, buffer, []) do
+      {:ok, :http_eoh, rest} ->
+        {:ok, Enum.reverse(headers), rest}
+
+      {:ok, {:http_header, _, key, _, value}, rest} ->
+        parse_headers(rest, [{String.downcase("#{key}"), value} | headers])
+
+      {:more, :undefined} ->
+        {:more, :undefined}
+    end
   end
 
   @doc """
@@ -90,6 +190,24 @@ defmodule Raxx.HTTP1 do
       ...> body
       {:bytes, 13}
 
+      iex> response = Raxx.response(200)
+      ...> |> Raxx.set_header("content-type", "text/plain")
+      ...> |> Raxx.set_body(true)
+      ...> {head, _body} =  Raxx.HTTP1.serialize_response(response)
+      ...> :erlang.iolist_to_binary(head)
+      "HTTP/1.1 200 OK\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
+      # ...> body
+      # :chunked
+
+      iex> response = Raxx.response(200)
+      ...> |> Raxx.set_header("content-type", "text/plain")
+      ...> |> Raxx.set_body(true)
+      ...> {_head, body} =  Raxx.HTTP1.serialize_response(response)
+      # ...> :erlang.iolist_to_binary(head)
+      # "HTTP/1.1 200 OK\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
+      ...> body
+      :chunked
+
       > A server MUST NOT send a Content-Length header field in any response
       > with a status code of 1xx (Informational) or 204 (No Content).  A
       > server MUST NOT send a Content-Length header field in any 2xx
@@ -112,12 +230,71 @@ defmodule Raxx.HTTP1 do
     {head, body}
   end
 
-  # @spec parse_request() :: {:}
-  def parse do
+  @doc """
+  ## Examples
+
+      iex> "HTTP/1.1 204 No Content\\r\\nfoo: bar\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:ok, %Raxx.Response{
+        status: 204,
+        headers: [{"foo", "bar"}],
+        body: false
+      }, {:complete, ""}, ""}
+
+      iex> "HTTP/1.1 200 OK\\r\\ncontent-length: 13\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:ok, %Raxx.Response{
+        status: 200,
+        headers: [{"content-length", "13"}, {"content-type", "text/plain"}],
+        body: true
+      }, {:bytes, 13}, ""}
+  """
+  def parse_response(buffer) do
+    case :erlang.decode_packet(:http_bin, buffer, []) do
+      {:ok, {:http_response, {1, 1}, status, _reason_phrase}, rest} ->
+        case parse_headers(rest) do
+          {:ok, headers, rest2} ->
+            {headers, body, state} = decode_payload(headers)
+            {:ok, %Raxx.Response{status: status, headers: headers, body: body}, state, rest2}
+        end
+    end
+  end
+
+  defp decode_payload(headers) do
+    case Enum.split_with(headers, fn {key, _value} -> key == "transfer-encoding" end) do
+      {[{"transfer-encoding", "chunked"}], headers} ->
+        {headers, true, :chunked}
+
+      {[], headers} ->
+        case content_length(headers) do
+          nuffink when nuffink in [nil, 0] ->
+            {headers, false, {:complete, ""}}
+
+          bytes ->
+            {headers, true, {:bytes, bytes}}
+        end
+    end
   end
 
   @doc """
-  TODO needs error case
+  Serialize io_data as a single chunk to be streamed.
+
+  ## Example
+
+      iex> Raxx.HTTP1.serialize_chunk("hello")
+      ...> |> to_string()
+      "5\\r\\nhello\\r\\n"
+
+      iex> Raxx.HTTP1.serialize_chunk("")
+      ...> |> to_string()
+      "0\\r\\n\\r\\n"
+  """
+  def serialize_chunk(data) do
+    size = :erlang.iolist_size(data)
+    [:erlang.integer_to_list(size, 16), "\r\n", data, "\r\n"]
+  end
+
+  @doc """
   """
   def parse_chunk(buffer) do
     case String.split(buffer, "\r\n", parts: 2) do
@@ -129,14 +306,14 @@ defmodule Raxx.HTTP1 do
 
         case rest do
           <<chunk::binary-size(size), "\r\n", rest::binary>> ->
-            {chunk, rest}
+            {:ok, {chunk, rest}}
 
           _incomplete_chunk ->
-            {nil, buffer}
+            {:ok, {nil, buffer}}
         end
 
       [rest] ->
-        {nil, rest}
+        {:ok, {nil, rest}}
     end
   end
 

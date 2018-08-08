@@ -144,12 +144,6 @@ defmodule Raxx.HTTP1 do
   @doc """
   Serialize a request or response an iolist
 
-  serialize_request(%{}) -> {iolist, :complete}
-  # Need to consider if parsing a request with not all body.
-  parse_request(iolist) -> {:ok, {request, :complete, iolist}}
-  # should this return request or [request, body, end]
-  parse_request(iolist) -> {:ok, {request, {:bytes, 50}, iolist}}
-
   Because of HEAD requests we should keep body separate
   ## Examples
 
@@ -248,6 +242,14 @@ defmodule Raxx.HTTP1 do
         headers: [{"content-length", "13"}, {"content-type", "text/plain"}],
         body: true
       }, {:bytes, 13}, ""}
+
+      iex> "HTTP/1.1 204 No Con"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:more, :undefined}
+
+      iex> "HTTP/1.1 204 No Content\\r\\nfo"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:more, :undefined}
   """
   def parse_response(buffer) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
@@ -256,7 +258,13 @@ defmodule Raxx.HTTP1 do
           {:ok, headers, rest2} ->
             {headers, body, state} = decode_payload(headers)
             {:ok, %Raxx.Response{status: status, headers: headers, body: body}, state, rest2}
+
+          {:more, :undefined} ->
+            {:more, :undefined}
         end
+
+      {:more, :undefined} ->
+        {:more, :undefined}
     end
   end
 
@@ -317,6 +325,7 @@ defmodule Raxx.HTTP1 do
     end
   end
 
+  # TODO handle path nil
   defp start_line(%Raxx.Request{method: method, raw_path: path, query: query}) do
     query_string = if query, do: ["?", query], else: ""
     [Atom.to_string(method), " ", path, query_string, " HTTP/1.1", @crlf]

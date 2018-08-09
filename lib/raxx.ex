@@ -80,6 +80,9 @@ defmodule Raxx do
       iex> request(:GET, "/foo/bar").path
       ["foo", "bar"]
 
+      iex> request(:GET, "/foo/bar").raw_path
+      "/foo/bar"
+
       iex> request(:GET, "https:///").scheme
       :https
 
@@ -100,6 +103,25 @@ defmodule Raxx do
 
       iex> request(:GET, "/").body
       false
+
+  The path component of a request must contain at least `/`
+
+  ### *https://tools.ietf.org/html/rfc7230#section-5.3.1*
+
+  > If the target URI's path component is
+  > empty, the client MUST send "/" as the path within the origin-form of
+  > request-target.
+
+  ### *https://tools.ietf.org/html/rfc7540#section-8.1.2.3*
+
+  > "http" or "https" URIs that do not contain a path component
+  > MUST include a value of '/'
+
+      iex> request(:GET, "").raw_path
+      "/"
+
+      iex> request(:GET, "http://example.com").raw_path
+      "/"
   """
   @spec request(Raxx.Request.method(), String.t() | URI.t()) :: Raxx.Request.t()
   def request(method, raw_url) when is_binary(raw_url) do
@@ -124,7 +146,8 @@ defmodule Raxx do
 
     # DEBT in case of path '//' then parsing returns path of nil.
     # e.g. localhost:8080//
-    segments = split_path(url.path || "/")
+    raw_path = url.path || "/"
+    segments = split_path(raw_path)
 
     struct(
       Raxx.Request,
@@ -132,7 +155,7 @@ defmodule Raxx do
       authority: url.authority,
       method: method,
       path: segments,
-      raw_path: url.path,
+      raw_path: raw_path,
       query: url.query,
       headers: [],
       body: false

@@ -14,6 +14,9 @@ defmodule Raxx.HTTP1 do
   - Propery of any number of splits in the binary should not change the output
   """
 
+  @type connection_status :: nil | :close | :keepalive
+  @type body_read_state :: {:complete, binary} | {:bytes, non_neg_integer} | :chunked
+
   @crlf "\r\n"
 
   @doc """
@@ -66,6 +69,8 @@ defmodule Raxx.HTTP1 do
       ...> :erlang.iolist_to_binary(head)
       "GET / HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: keep-alive\\r\\naccept: text/plain\\r\\n\\r\\n"
   """
+  @spec serialize_request(Raxx.Request.t(), [{:connection, connection_status}]) ::
+          {iodata, body_read_state}
   def serialize_request(request = %Raxx.Request{}, options \\ []) do
     {payload_headers, body} = payload(request)
     connection_headers = connection_headers(Keyword.get(options, :connection))
@@ -199,6 +204,8 @@ defmodule Raxx.HTTP1 do
           scheme: :http
         }, :keepalive, {:complete, ""}, ""}}
   """
+  @spec parse_request(binary, atom) ::
+          {:ok, {Raxx.Request.t(), connection_status, body_read_state, binary}}
   def parse_request(buffer, scheme) when is_atom(scheme) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
       {:ok, {:http_request, method, {:abs_path, path_and_query}, _version}, rest} ->
@@ -348,8 +355,8 @@ defmodule Raxx.HTTP1 do
       ...> |> :erlang.iolist_to_binary()
       "HTTP/1.1 204 No Content\\r\\nconnection: keep-alive\\r\\nfoo: bar\\r\\n\\r\\n"
   """
-  @spec serialize_response(Raxx.Response.t(), [{:connection, :close | :keepalive}]) ::
-          {iolist, {:complete, iodata} | {:bytes, non_neg_integer() | :chunked}}
+  @spec serialize_response(Raxx.Response.t(), [{:connection, connection_status}]) ::
+          {iolist, body_read_state}
   def serialize_response(response = %Raxx.Response{}, options \\ []) do
     {payload_headers, body} = payload(response)
     connection_headers = connection_headers(Keyword.get(options, :connection))
@@ -413,6 +420,8 @@ defmodule Raxx.HTTP1 do
         body: false
       }, :keepalive, {:complete, ""}, ""}}
   """
+  @spec parse_response(binary) ::
+          {:ok, {Raxx.Response.t(), connection_status, body_read_state, binary}}
   def parse_response(buffer) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
       {:ok, {:http_response, {1, 1}, status, _reason_phrase}, rest} ->
@@ -483,13 +492,16 @@ defmodule Raxx.HTTP1 do
       ...> |> to_string()
       "0\\r\\n\\r\\n"
   """
+  @spec serialize_chunk(iodata) :: iodata
   def serialize_chunk(data) do
     size = :erlang.iolist_size(data)
     [:erlang.integer_to_list(size, 16), "\r\n", data, "\r\n"]
   end
 
   @doc """
+  Extract the content from a buffer with transfer encoding chunked
   """
+  @spec parse_chunk(binary) :: {:ok, {binary | nil, binary}}
   def parse_chunk(buffer) do
     case String.split(buffer, "\r\n", parts: 2) do
       [base_16_size, rest] ->

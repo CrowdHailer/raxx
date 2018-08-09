@@ -78,10 +78,15 @@ defmodule Raxx.HTTP1 do
   end
 
   @doc """
+  Parse the head part of a request from a buffer.
+
+  The scheme is not part of a HTTP/1.1 request, yet it is part of a HTTP/2 request.
+  When parsing a request the scheme the buffer was received by has to be given.
+
   ## Examples
 
       iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request()
+      ...> |> Raxx.HTTP1.parse_request(:http)
       {:ok,
        %Raxx.Request{
          authority: "example.com",
@@ -95,8 +100,23 @@ defmodule Raxx.HTTP1 do
          scheme: :http
        }, {:complete, ""}, ""}
 
+      iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(:https)
+      {:ok,
+       %Raxx.Request{
+         authority: "example.com",
+         body: false,
+         headers: [{"accept", "text/plain"}],
+         method: :GET,
+         mount: [],
+         path: ["path"],
+         query: "qs",
+         raw_path: "/path",
+         scheme: :https
+       }, {:complete, ""}, ""}
+
       iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request()
+      ...> |> Raxx.HTTP1.parse_request(:http)
       {:ok,
        %Raxx.Request{
          authority: "example.com",
@@ -111,7 +131,7 @@ defmodule Raxx.HTTP1 do
        }, :chunked, ""}
 
       iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ncontent-length: 13\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request()
+      ...> |> Raxx.HTTP1.parse_request(:http)
       {:ok,
        %Raxx.Request{
          authority: "example.com",
@@ -126,15 +146,15 @@ defmodule Raxx.HTTP1 do
        }, {:bytes, 13}, ""}
 
       iex> "GET /path?qs HT"
-      ...> |> Raxx.HTTP1.parse_request()
+      ...> |> Raxx.HTTP1.parse_request(:http)
       {:more, "GET /path?qs HT"}
 
       iex> "GET /path?qs HTTP/1.1\\r\\nhost: exa"
-      ...> |> Raxx.HTTP1.parse_request()
+      ...> |> Raxx.HTTP1.parse_request(:http)
       {:more, "GET /path?qs HTTP/1.1\\r\\nhost: exa"}
 
   """
-  def parse_request(buffer, scheme \\ :http) do
+  def parse_request(buffer, scheme) when is_atom(scheme) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
       {:ok, {:http_request, method, {:abs_path, path_and_query}, _version}, rest} ->
         case parse_headers(rest) do
@@ -280,6 +300,10 @@ defmodule Raxx.HTTP1 do
   end
 
   @doc """
+  Parse the head of a response.
+
+  A scheme option is not given to this parser because the scheme not a requirement in HTTP/1 or HTTP/2
+
   ## Examples
 
       iex> "HTTP/1.1 204 No Content\\r\\nfoo: bar\\r\\n\\r\\n"
@@ -380,7 +404,6 @@ defmodule Raxx.HTTP1 do
     end
   end
 
-  # TODO handle path nil
   defp start_line(%Raxx.Request{method: method, raw_path: path, query: query}) do
     query_string = if query, do: ["?", query], else: ""
     [Atom.to_string(method), " ", path, query_string, " HTTP/1.1", @crlf]

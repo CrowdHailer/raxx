@@ -88,7 +88,7 @@ defmodule Raxx.HTTP1 do
       iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
       ...> |> Raxx.HTTP1.parse_request(:http)
       {:ok,
-       %Raxx.Request{
+       {%Raxx.Request{
          authority: "example.com",
          body: false,
          headers: [{"accept", "text/plain"}],
@@ -98,12 +98,12 @@ defmodule Raxx.HTTP1 do
          query: "qs",
          raw_path: "/path",
          scheme: :http
-       }, {:complete, ""}, ""}
+       }, nil, {:complete, ""}, ""}}
 
       iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
       ...> |> Raxx.HTTP1.parse_request(:https)
       {:ok,
-       %Raxx.Request{
+       {%Raxx.Request{
          authority: "example.com",
          body: false,
          headers: [{"accept", "text/plain"}],
@@ -113,12 +113,12 @@ defmodule Raxx.HTTP1 do
          query: "qs",
          raw_path: "/path",
          scheme: :https
-       }, {:complete, ""}, ""}
+       }, nil, {:complete, ""}, ""}}
 
       iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
       ...> |> Raxx.HTTP1.parse_request(:http)
       {:ok,
-       %Raxx.Request{
+       {%Raxx.Request{
          authority: "example.com",
          body: true,
          headers: [{"content-type", "text/plain"}],
@@ -128,12 +128,12 @@ defmodule Raxx.HTTP1 do
          query: nil,
          raw_path: "/path",
          scheme: :http
-       }, :chunked, ""}
+       }, nil, :chunked, ""}}
 
       iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ncontent-length: 13\\r\\n\\r\\n"
       ...> |> Raxx.HTTP1.parse_request(:http)
       {:ok,
-       %Raxx.Request{
+       {%Raxx.Request{
          authority: "example.com",
          body: true,
          headers: [{"content-length", "13"}],
@@ -143,7 +143,7 @@ defmodule Raxx.HTTP1 do
          query: nil,
          raw_path: "/path",
          scheme: :http
-       }, {:bytes, 13}, ""}
+       }, nil, {:bytes, 13}, ""}}
 
       iex> "GET /path?qs HT"
       ...> |> Raxx.HTTP1.parse_request(:http)
@@ -168,6 +168,36 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.HTTP1.parse_request(:http)
       {:error, {:invalid_line, "!!!BAD_HEADER\\r\\n"}}
 
+      iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: close\\r\\naccept: text/plain\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(:http)
+      {:ok,
+       {%Raxx.Request{
+         authority: "example.com",
+         body: false,
+         headers: [{"accept", "text/plain"}],
+         method: :GET,
+         mount: [],
+         path: ["path"],
+         query: "qs",
+         raw_path: "/path",
+         scheme: :http
+       }, :close, {:complete, ""}, ""}}
+
+
+       iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: keep-alive\\r\\naccept: text/plain\\r\\n\\r\\n"
+       ...> |> Raxx.HTTP1.parse_request(:http)
+       {:ok,
+        {%Raxx.Request{
+          authority: "example.com",
+          body: false,
+          headers: [{"accept", "text/plain"}],
+          method: :GET,
+          mount: [],
+          path: ["path"],
+          query: "qs",
+          raw_path: "/path",
+          scheme: :http
+        }, :keepalive, {:complete, ""}, ""}}
   """
   def parse_request(buffer, scheme) when is_atom(scheme) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
@@ -176,16 +206,18 @@ defmodule Raxx.HTTP1 do
           {:ok, headers, rest2} ->
             case Enum.split_with(headers, fn {key, _value} -> key == "host" end) do
               {[{"host", host}], headers} ->
-                {headers, body, state} = decode_payload(headers)
+                {headers, body_present, body_read_state} = decode_payload(headers)
+
+                {connection_status, headers} = decode_connection_status(headers)
 
                 request =
                   Raxx.request(method, path_and_query)
                   |> Map.put(:scheme, scheme)
                   |> Map.put(:authority, host)
                   |> Map.put(:headers, headers)
-                  |> Map.put(:body, body)
+                  |> Map.put(:body, body_present)
 
-                {:ok, request, state, rest2}
+                {:ok, {request, connection_status, body_read_state, rest2}}
 
               {[], _headers} ->
                 {:error, :no_host_header}
@@ -335,19 +367,19 @@ defmodule Raxx.HTTP1 do
 
       iex> "HTTP/1.1 204 No Content\\r\\nfoo: bar\\r\\n\\r\\n"
       ...> |> Raxx.HTTP1.parse_response()
-      {:ok, %Raxx.Response{
+      {:ok, {%Raxx.Response{
         status: 204,
         headers: [{"foo", "bar"}],
         body: false
-      }, {:complete, ""}, ""}
+      }, nil, {:complete, ""}, ""}}
 
       iex> "HTTP/1.1 200 OK\\r\\ncontent-length: 13\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
       ...> |> Raxx.HTTP1.parse_response()
-      {:ok, %Raxx.Response{
+      {:ok, {%Raxx.Response{
         status: 200,
         headers: [{"content-length", "13"}, {"content-type", "text/plain"}],
         body: true
-      }, {:bytes, 13}, ""}
+      }, nil, {:bytes, 13}, ""}}
 
       iex> "HTTP/1.1 204 No Con"
       ...> |> Raxx.HTTP1.parse_response()
@@ -364,14 +396,35 @@ defmodule Raxx.HTTP1 do
       iex> "HTTP/1.1 204 No Content\\r\\n!!!BAD_HEADER\\r\\n\\r\\n"
       ...> |> Raxx.HTTP1.parse_response()
       {:error, {:invalid_line, "!!!BAD_HEADER\\r\\n"}}
+
+      iex> "HTTP/1.1 204 No Content\\r\\nconnection: close\\r\\nfoo: bar\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:ok, {%Raxx.Response{
+        status: 204,
+        headers: [{"foo", "bar"}],
+        body: false
+      }, :close, {:complete, ""}, ""}}
+
+      iex> "HTTP/1.1 204 No Content\\r\\nconnection: keep-alive\\r\\nfoo: bar\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:ok, {%Raxx.Response{
+        status: 204,
+        headers: [{"foo", "bar"}],
+        body: false
+      }, :keepalive, {:complete, ""}, ""}}
   """
   def parse_response(buffer) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
       {:ok, {:http_response, {1, 1}, status, _reason_phrase}, rest} ->
         case parse_headers(rest) do
           {:ok, headers, rest2} ->
-            {headers, body, state} = decode_payload(headers)
-            {:ok, %Raxx.Response{status: status, headers: headers, body: body}, state, rest2}
+            {headers, body_present, body_read_state} = decode_payload(headers)
+
+            {connection_status, headers} = decode_connection_status(headers)
+
+            {:ok,
+             {%Raxx.Response{status: status, headers: headers, body: body_present},
+              connection_status, body_read_state, rest2}}
 
           {:error, reason} ->
             {:error, reason}
@@ -401,6 +454,19 @@ defmodule Raxx.HTTP1 do
           bytes ->
             {headers, true, {:bytes, bytes}}
         end
+    end
+  end
+
+  defp decode_connection_status(headers) do
+    case Enum.split_with(headers, fn {key, _value} -> key == "connection" end) do
+      {[{"connection", "close"}], headers} ->
+        {:close, headers}
+
+      {[{"connection", "keep-alive"}], headers} ->
+        {:keepalive, headers}
+
+      {[], headers} ->
+        {nil, headers}
     end
   end
 

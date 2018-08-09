@@ -206,6 +206,8 @@ defmodule Raxx.HTTP1 do
   """
   @spec parse_request(binary, atom) ::
           {:ok, {Raxx.Request.t(), connection_status, body_read_state, binary}}
+          | {:error, term}
+          | {:more, :undefined}
   def parse_request(buffer, scheme) when is_atom(scheme) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
       {:ok, {:http_request, method, {:abs_path, path_and_query}, _version}, rest} ->
@@ -422,6 +424,8 @@ defmodule Raxx.HTTP1 do
   """
   @spec parse_response(binary) ::
           {:ok, {Raxx.Response.t(), connection_status, body_read_state, binary}}
+          | {:error, term}
+          | {:more, :undefined}
   def parse_response(buffer) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
       {:ok, {:http_response, {1, 1}, status, _reason_phrase}, rest} ->

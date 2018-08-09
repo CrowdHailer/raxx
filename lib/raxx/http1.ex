@@ -1,5 +1,9 @@
 defmodule Raxx.HTTP1 do
   @moduledoc """
+  Toolkit for parsing and serializing requests to HTTP/1.1 format.
+
+  The majority of functions return iolists and not compacted binaries.
+  To efficiently turn a list into a binart use `:erlang.iolist_to_binary/1`
 
   ## Property testing
 
@@ -13,32 +17,62 @@ defmodule Raxx.HTTP1 do
   @crlf "\r\n"
 
   @doc """
+  Serialize a request to wire format
+
   # NOTE set_body should add content-length otherwise we don't know if to delete it to match on other end, when serializing
 
+  ### *https://tools.ietf.org/html/rfc7230#section-5.4*
+
+  > Since the Host field-value is critical information for handling a
+  > request, a user agent SHOULD generate Host as the first header field
+  > following the request-line.
+
   ## Examples
+
       iex> request = Raxx.request(:GET, "http://example.com/path?qs")
       ...> |> Raxx.set_header("accept", "text/plain")
       ...> {head, _body} =  Raxx.HTTP1.serialize_request(request)
       ...> :erlang.iolist_to_binary(head)
       "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
 
-      iex> request = Raxx.request(:POST, "https://example.com/path")
+      iex> request = Raxx.request(:POST, "https://example.com")
       ...> |> Raxx.set_header("content-type", "text/plain")
       ...> |> Raxx.set_body(true)
       ...> {head, _body} =  Raxx.HTTP1.serialize_request(request)
       ...> :erlang.iolist_to_binary(head)
-      "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
+      "POST / HTTP/1.1\\r\\nhost: example.com\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
 
-      iex> request = Raxx.request(:POST, "https://example.com/path")
+      iex> request = Raxx.request(:POST, "https://example.com")
       ...> |> Raxx.set_header("content-length", "13")
       ...> |> Raxx.set_body(true)
       ...> {head, _body} =  Raxx.HTTP1.serialize_request(request)
       ...> :erlang.iolist_to_binary(head)
-      "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ncontent-length: 13\\r\\n\\r\\n"
+      "POST / HTTP/1.1\\r\\nhost: example.com\\r\\ncontent-length: 13\\r\\n\\r\\n"
+
+  ### *https://tools.ietf.org/html/rfc7230#section-6.1*
+
+  > A client that does not support persistent connections MUST send the
+  > "close" connection option in every request message.
+
+      iex> request = Raxx.request(:GET, "http://example.com/")
+      ...> |> Raxx.set_header("accept", "text/plain")
+      ...> {head, _body} =  Raxx.HTTP1.serialize_request(request, connection: :close)
+      ...> :erlang.iolist_to_binary(head)
+      "GET / HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: close\\r\\naccept: text/plain\\r\\n\\r\\n"
+
+      iex> request = Raxx.request(:GET, "http://example.com/")
+      ...> |> Raxx.set_header("accept", "text/plain")
+      ...> {head, _body} =  Raxx.HTTP1.serialize_request(request, connection: :keepalive)
+      ...> :erlang.iolist_to_binary(head)
+      "GET / HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: keep-alive\\r\\naccept: text/plain\\r\\n\\r\\n"
   """
-  def serialize_request(request = %Raxx.Request{}) do
+  def serialize_request(request = %Raxx.Request{}, options \\ []) do
     {payload_headers, body} = payload(request)
-    headers = [{"host", request.authority}] ++ payload_headers ++ request.headers
+    connection_headers = connection_headers(Keyword.get(options, :connection))
+
+    headers =
+      [{"host", request.authority}] ++ connection_headers ++ payload_headers ++ request.headers
+
     head = [start_line(request), header_lines(headers), @crlf]
     {head, body}
   end
@@ -142,7 +176,7 @@ defmodule Raxx.HTTP1 do
   end
 
   @doc """
-  Serialize a request or response an iolist
+  Serialize a response to an iolist
 
   Because of HEAD requests we should keep body separate
   ## Examples
@@ -214,12 +248,33 @@ defmodule Raxx.HTTP1 do
       ...> |> elem(0)
       ...> |> :erlang.iolist_to_binary()
       "HTTP/1.1 204 No Content\\r\\nfoo: bar\\r\\n\\r\\n"
+
+  ### *https://tools.ietf.org/html/rfc7230#section-6.1*
+
+  > A server that does not support persistent connections MUST send the
+  > "close" connection option in every response message that does not
+  > have a 1xx (Informational) status code.
+
+      iex> Raxx.response(204)
+      ...> |> Raxx.set_header("foo", "bar")
+      ...> |> Raxx.HTTP1.serialize_response(connection: :close)
+      ...> |> elem(0)
+      ...> |> :erlang.iolist_to_binary()
+      "HTTP/1.1 204 No Content\\r\\nconnection: close\\r\\nfoo: bar\\r\\n\\r\\n"
+
+      iex> Raxx.response(204)
+      ...> |> Raxx.set_header("foo", "bar")
+      ...> |> Raxx.HTTP1.serialize_response(connection: :keepalive)
+      ...> |> elem(0)
+      ...> |> :erlang.iolist_to_binary()
+      "HTTP/1.1 204 No Content\\r\\nconnection: keep-alive\\r\\nfoo: bar\\r\\n\\r\\n"
   """
-  @spec serialize_response(Raxx.Response.t()) ::
+  @spec serialize_response(Raxx.Response.t(), [{:connection, :close | :keepalive}]) ::
           {iolist, {:complete, iodata} | {:bytes, non_neg_integer() | :chunked}}
-  def serialize_response(response = %Raxx.Response{}) do
+  def serialize_response(response = %Raxx.Response{}, options \\ []) do
     {payload_headers, body} = payload(response)
-    headers = payload_headers ++ response.headers
+    connection_headers = connection_headers(Keyword.get(options, :connection))
+    headers = connection_headers ++ payload_headers ++ response.headers
     head = [response_line(response), header_lines(headers), @crlf]
     {head, body}
   end
@@ -343,6 +398,18 @@ defmodule Raxx.HTTP1 do
 
   defp header_lines(headers) do
     Enum.map(headers, fn {key, value} -> [key, ": ", value, @crlf] end)
+  end
+
+  defp connection_headers(nil) do
+    []
+  end
+
+  defp connection_headers(:close) do
+    [{"connection", "close"}]
+  end
+
+  defp connection_headers(:keepalive) do
+    [{"connection", "keep-alive"}]
   end
 
   defp payload(%{headers: headers, body: true}) do

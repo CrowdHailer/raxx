@@ -73,7 +73,7 @@ defmodule Raxx.HTTP1 do
     headers =
       [{"host", request.authority}] ++ connection_headers ++ payload_headers ++ request.headers
 
-    head = [start_line(request), header_lines(headers), @crlf]
+    head = [request_line(request), header_lines(headers), @crlf]
     {head, body}
   end
 
@@ -153,6 +153,21 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.HTTP1.parse_request(:http)
       {:more, "GET /path?qs HTTP/1.1\\r\\nhost: exa"}
 
+      # Missing host header
+      iex> "GET /path?qs HTTP/1.1\\r\\naccept: text/plain\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(:http)
+      {:error, :no_host_header}
+
+      # Invalid start line
+      iex> "!!!BAD_REQUEST_LINE\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(:http)
+      {:error, {:invalid_line, "!!!BAD_REQUEST_LINE\\r\\n"}}
+
+      # Invalid header line
+      iex> "GET / HTTP/1.1\\r\\n!!!BAD_HEADER\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(:http)
+      {:error, {:invalid_line, "!!!BAD_HEADER\\r\\n"}}
+
   """
   def parse_request(buffer, scheme) when is_atom(scheme) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
@@ -171,11 +186,20 @@ defmodule Raxx.HTTP1 do
                   |> Map.put(:body, body)
 
                 {:ok, request, state, rest2}
+
+              {[], _headers} ->
+                {:error, :no_host_header}
             end
+
+          {:error, reason} ->
+            {:error, reason}
 
           {:more, :undefined} ->
             {:more, buffer}
         end
+
+      {:ok, {:http_error, invalid_line}, _rest} ->
+        {:error, {:invalid_line, invalid_line}}
 
       {:more, :undefined} ->
         {:more, buffer}
@@ -189,6 +213,9 @@ defmodule Raxx.HTTP1 do
 
       {:ok, {:http_header, _, key, _, value}, rest} ->
         parse_headers(rest, [{String.downcase("#{key}"), value} | headers])
+
+      {:ok, {:http_error, invalid_line}, _rest} ->
+        {:error, {:invalid_line, invalid_line}}
 
       {:more, :undefined} ->
         {:more, :undefined}
@@ -295,7 +322,7 @@ defmodule Raxx.HTTP1 do
     {payload_headers, body} = payload(response)
     connection_headers = connection_headers(Keyword.get(options, :connection))
     headers = connection_headers ++ payload_headers ++ response.headers
-    head = [response_line(response), header_lines(headers), @crlf]
+    head = [status_line(response), header_lines(headers), @crlf]
     {head, body}
   end
 
@@ -329,6 +356,14 @@ defmodule Raxx.HTTP1 do
       iex> "HTTP/1.1 204 No Content\\r\\nfo"
       ...> |> Raxx.HTTP1.parse_response()
       {:more, :undefined}
+
+      iex> "!!!BAD_STATUS_LINE\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:error, {:invalid_line, "!!!BAD_STATUS_LINE\\r\\n"}}
+
+      iex> "HTTP/1.1 204 No Content\\r\\n!!!BAD_HEADER\\r\\n\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:error, {:invalid_line, "!!!BAD_HEADER\\r\\n"}}
   """
   def parse_response(buffer) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
@@ -338,9 +373,15 @@ defmodule Raxx.HTTP1 do
             {headers, body, state} = decode_payload(headers)
             {:ok, %Raxx.Response{status: status, headers: headers, body: body}, state, rest2}
 
+          {:error, reason} ->
+            {:error, reason}
+
           {:more, :undefined} ->
             {:more, :undefined}
         end
+
+      {:ok, {:http_error, invalid_line}, _rest} ->
+        {:error, {:invalid_line, invalid_line}}
 
       {:more, :undefined} ->
         {:more, :undefined}
@@ -404,12 +445,12 @@ defmodule Raxx.HTTP1 do
     end
   end
 
-  defp start_line(%Raxx.Request{method: method, raw_path: path, query: query}) do
+  defp request_line(%Raxx.Request{method: method, raw_path: path, query: query}) do
     query_string = if query, do: ["?", query], else: ""
     [Atom.to_string(method), " ", path, query_string, " HTTP/1.1", @crlf]
   end
 
-  defp response_line(%Raxx.Response{status: status}) do
+  defp status_line(%Raxx.Response{status: status}) do
     [
       "HTTP/1.1 ",
       Integer.to_string(status),

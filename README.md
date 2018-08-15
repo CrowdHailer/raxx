@@ -77,7 +77,7 @@ Visit [http://localhost:8080](http://localhost:8080).
 #### Stateful server
 
 The `LongPoll` server is stateful.
-After receving a complete request this server has to wait for extra input before sending a response to the client.
+After receiving a complete request this server has to wait for extra input before sending a response to the client.
 
 ```elixir
 defmodule LongPoll do

@@ -29,7 +29,7 @@ Additional utilities that can be used in Raxx applications.
 
 ## Getting started
 
-HTTP is an exchange where a client send a request to a server and expects a response.
+HTTP is an exchange where a client sends a request to a server and expects a response.
 At its simplest this can be viewed as follows
 
 ```txt

@@ -130,24 +130,24 @@ defmodule SubscribeToMessages do
   @impl Raxx.Server
   def handle_head(%{method: :GET, path: ["messages"]}, state) do
     {:ok, _} = ChatRoom.join()
-    outbound = [response(:ok)
+    outbound = response(:ok)
     |> set_header("content-type", "text/plain")
-    |> set_body(true)]
+    |> set_body(true)
 
-    {outbound, state}
+    {[outbound], state}
   end
 
   @impl Raxx.Server
   def handle_info({ChatRoom, data}, state) do
-    outbound = [data(data)]
+    outbound = data(data)
 
-    {outbound, state}
+    {[outbound], state}
   end
 
   def handle_info({ChatRoom, :closed}, state) do
-    outbound = [tail()]
+    outbound = tail()
 
-    {outbound, state}
+    {[outbound], state}
   end
 end
 ```

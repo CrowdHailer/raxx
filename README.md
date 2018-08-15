@@ -118,7 +118,7 @@ Client ============================================ Server
 
 #### Server streaming
 
-The `SubscribeToMessages` server streams its response,
+The `SubscribeToMessages` server streams its response.
 The server will send the head of the response upon receiving the request.
 Data is sent to the client, as part of the body, when it becomes available.
 The response is completed when the chatroom sends a `:closed` message.

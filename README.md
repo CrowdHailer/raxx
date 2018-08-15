@@ -98,7 +98,7 @@ defmodule LongPoll do
   end
 end
 ```
-- *A long lived server needs to return two things; the message parts to send in, this case nothing `[]`;
+- *A long lived server needs to return two things; the message parts to send, in this case nothing `[]`;
   and the new state of the server, in this case no change `state`.*
 - *The `initial_state` is configured when the server is started.*
 

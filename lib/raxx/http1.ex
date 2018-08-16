@@ -19,7 +19,7 @@ defmodule Raxx.HTTP1 do
 
   @crlf "\r\n"
 
-  @line_length_limit 1_000
+  @maximum_line_length 1_000
 
   @doc """
   Serialize a request to wire format
@@ -221,7 +221,7 @@ defmodule Raxx.HTTP1 do
 
       iex> path = "/" <> String.duplicate("a", 1984)
       ...> {:more, _} = "GET \#{path} HTTP/1.1\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(scheme: :http, line_length_limit: 2000)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http, maximum_line_length: 2000)
       ...> :ok
       :ok
 
@@ -235,7 +235,7 @@ defmodule Raxx.HTTP1 do
       :ok
 
       iex> {:more, _} = "GET / HTTP/1.1\\r\\nhost: \#{String.duplicate("a", 1992)}\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(scheme: :http, line_length_limit: 2000)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http, maximum_line_length: 2000)
       ...> :ok
       :ok
   """
@@ -243,14 +243,14 @@ defmodule Raxx.HTTP1 do
           {:ok, {Raxx.Request.t(), connection_status, body_read_state, binary}}
           | {:error, term}
           | {:more, :undefined}
-        when option: {:scheme, atom} | {:line_length_limit, integer}
+        when option: {:scheme, atom} | {:maximum_line_length, integer}
   def parse_request(buffer, options) do
     scheme = Keyword.get(options, :scheme)
-    line_length_limit = Keyword.get(options, :line_length_limit, @line_length_limit)
+    maximum_line_length = Keyword.get(options, :maximum_line_length, @maximum_line_length)
 
-    case :erlang.decode_packet(:http_bin, buffer, line_length: line_length_limit) do
+    case :erlang.decode_packet(:http_bin, buffer, line_length: maximum_line_length) do
       {:ok, {:http_request, method, {:abs_path, path_and_query}, _version}, rest} ->
-        case parse_headers(rest, line_length_limit: line_length_limit) do
+        case parse_headers(rest, maximum_line_length: maximum_line_length) do
           {:ok, headers, rest2} ->
             case Enum.split_with(headers, fn {key, _value} -> key == "host" end) do
               {[{"host", host}], headers} ->
@@ -290,9 +290,9 @@ defmodule Raxx.HTTP1 do
   end
 
   defp parse_headers(buffer, options, headers \\ []) do
-    {:ok, line_length_limit} = Keyword.fetch(options, :line_length_limit)
+    {:ok, maximum_line_length} = Keyword.fetch(options, :maximum_line_length)
 
-    case :erlang.decode_packet(:httph_bin, buffer, line_length: line_length_limit) do
+    case :erlang.decode_packet(:httph_bin, buffer, line_length: maximum_line_length) do
       {:ok, :http_eoh, rest} ->
         {:ok, Enum.reverse(headers), rest}
 
@@ -484,7 +484,7 @@ defmodule Raxx.HTTP1 do
 
       iex> reason_phrase = String.duplicate("A", 1985)
       ...> {:more, _} = "HTTP/1.1 204 \#{reason_phrase}\\r\\n"
-      ...> |> Raxx.HTTP1.parse_response(line_length_limit: 2000)
+      ...> |> Raxx.HTTP1.parse_response(maximum_line_length: 2000)
       ...> :ok
       :ok
 
@@ -498,21 +498,23 @@ defmodule Raxx.HTTP1 do
       :ok
 
       iex> {:more, _} = "HTTP/1.1 204 No Content\\r\\nfoo: \#{String.duplicate("a", 1993)}\\r\\n"
-      ...> |> Raxx.HTTP1.parse_response(line_length_limit: 2000)
+      ...> |> Raxx.HTTP1.parse_response(maximum_line_length: 2000)
       ...> :ok
       :ok
+
+      # Test maximum number of headers is limited
   """
   @spec parse_response(binary, [option]) ::
           {:ok, {Raxx.Response.t(), connection_status, body_read_state, binary}}
           | {:error, term}
           | {:more, :undefined}
-        when option: {:line_length_limit, integer}
+        when option: {:maximum_line_length, integer}
   def parse_response(buffer, options \\ []) do
-    line_length_limit = Keyword.get(options, :line_length_limit, @line_length_limit)
+    maximum_line_length = Keyword.get(options, :maximum_line_length, @maximum_line_length)
 
-    case :erlang.decode_packet(:http_bin, buffer, line_length: line_length_limit) do
+    case :erlang.decode_packet(:http_bin, buffer, line_length: maximum_line_length) do
       {:ok, {:http_response, {1, 1}, status, _reason_phrase}, rest} ->
-        case parse_headers(rest, line_length_limit: line_length_limit) do
+        case parse_headers(rest, maximum_line_length: maximum_line_length) do
           {:ok, headers, rest2} ->
             {headers, body_present, body_read_state} = decode_payload(headers)
 

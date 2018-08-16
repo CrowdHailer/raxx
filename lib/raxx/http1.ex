@@ -91,6 +91,18 @@ defmodule Raxx.HTTP1 do
   The scheme is not part of a HTTP/1.1 request, yet it is part of a HTTP/2 request.
   When parsing a request the scheme the buffer was received by has to be given.
 
+  ## Options
+
+  - **scheme** (required)
+    Set the scheme of the `Raxx.Request` struct.
+    This information is not contained in the data of a HTTP/1 request.
+
+  - **maximum_headers_count**
+    Maximum number of headers allowed in the request.
+
+  - **maximum_line_length**
+    Maximum length (in bytes) of request line or any header line.
+
   ## Examples
 
       iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
@@ -428,6 +440,14 @@ defmodule Raxx.HTTP1 do
   Parse the head of a response.
 
   A scheme option is not given to this parser because the scheme not a requirement in HTTP/1 or HTTP/2
+
+  ## Options
+
+  - **maximum_headers_count**
+    Maximum number of headers allowed in the request.
+
+  - **maximum_line_length**
+    Maximum length (in bytes) of request line or any header line.
 
   ## Examples
 

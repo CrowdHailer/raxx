@@ -20,6 +20,7 @@ defmodule Raxx.HTTP1 do
   @crlf "\r\n"
 
   @maximum_line_length 1_000
+  @maximum_headers_count 100
 
   @doc """
   Serialize a request to wire format
@@ -247,10 +248,14 @@ defmodule Raxx.HTTP1 do
   def parse_request(buffer, options) do
     scheme = Keyword.get(options, :scheme)
     maximum_line_length = Keyword.get(options, :maximum_line_length, @maximum_line_length)
+    maximum_headers_count = Keyword.get(options, :maximum_headers_count, @maximum_headers_count)
 
     case :erlang.decode_packet(:http_bin, buffer, line_length: maximum_line_length) do
       {:ok, {:http_request, method, {:abs_path, path_and_query}, _version}, rest} ->
-        case parse_headers(rest, maximum_line_length: maximum_line_length) do
+        case parse_headers(rest,
+               maximum_line_length: maximum_line_length,
+               maximum_headers_count: maximum_headers_count
+             ) do
           {:ok, headers, rest2} ->
             case Enum.split_with(headers, fn {key, _value} -> key == "host" end) do
               {[{"host", host}], headers} ->
@@ -291,22 +296,27 @@ defmodule Raxx.HTTP1 do
 
   defp parse_headers(buffer, options, headers \\ []) do
     {:ok, maximum_line_length} = Keyword.fetch(options, :maximum_line_length)
+    {:ok, maximum_headers_count} = Keyword.fetch(options, :maximum_headers_count)
 
-    case :erlang.decode_packet(:httph_bin, buffer, line_length: maximum_line_length) do
-      {:ok, :http_eoh, rest} ->
-        {:ok, Enum.reverse(headers), rest}
+    if length(headers) >= maximum_headers_count do
+      {:error, :header_count_exceeded}
+    else
+      case :erlang.decode_packet(:httph_bin, buffer, line_length: maximum_line_length) do
+        {:ok, :http_eoh, rest} ->
+          {:ok, Enum.reverse(headers), rest}
 
-      {:ok, {:http_header, _, key, _, value}, rest} ->
-        parse_headers(rest, options, [{String.downcase("#{key}"), value} | headers])
+        {:ok, {:http_header, _, key, _, value}, rest} ->
+          parse_headers(rest, options, [{String.downcase("#{key}"), value} | headers])
 
-      {:ok, {:http_error, invalid_line}, _rest} ->
-        {:error, {:invalid_line, invalid_line}}
+        {:ok, {:http_error, invalid_line}, _rest} ->
+          {:error, {:invalid_line, invalid_line}}
 
-      {:error, :invalid} ->
-        {:error, {:line_length_limit_exceeded, :header_line}}
+        {:error, :invalid} ->
+          {:error, {:line_length_limit_exceeded, :header_line}}
 
-      {:more, :undefined} ->
-        {:more, :undefined}
+        {:more, :undefined} ->
+          {:more, :undefined}
+      end
     end
   end
 
@@ -503,6 +513,14 @@ defmodule Raxx.HTTP1 do
       :ok
 
       # Test maximum number of headers is limited
+      iex> "HTTP/1.1 204 No Content\\r\\n\#{String.duplicate("foo: bar\\r\\n", 101)}"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:error, :header_count_exceeded}
+
+      # Test maximum number of headers is limited
+      iex> "HTTP/1.1 204 No Content\\r\\n\#{String.duplicate("foo: bar\\r\\n", 2)}"
+      ...> |> Raxx.HTTP1.parse_response(maximum_headers_count: 1)
+      {:error, :header_count_exceeded}
   """
   @spec parse_response(binary, [option]) ::
           {:ok, {Raxx.Response.t(), connection_status, body_read_state, binary}}
@@ -511,10 +529,14 @@ defmodule Raxx.HTTP1 do
         when option: {:maximum_line_length, integer}
   def parse_response(buffer, options \\ []) do
     maximum_line_length = Keyword.get(options, :maximum_line_length, @maximum_line_length)
+    maximum_headers_count = Keyword.get(options, :maximum_headers_count, @maximum_headers_count)
 
     case :erlang.decode_packet(:http_bin, buffer, line_length: maximum_line_length) do
       {:ok, {:http_response, {1, 1}, status, _reason_phrase}, rest} ->
-        case parse_headers(rest, maximum_line_length: maximum_line_length) do
+        case parse_headers(rest,
+               maximum_line_length: maximum_line_length,
+               maximum_headers_count: maximum_headers_count
+             ) do
           {:ok, headers, rest2} ->
             {headers, body_present, body_read_state} = decode_payload(headers)
 

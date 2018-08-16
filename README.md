@@ -29,7 +29,7 @@ Additional utilities that can be used in Raxx applications.
 
 ## Getting started
 
-HTTP is an exchange where a client send a request to a server and expects a response.
+HTTP is an exchange where a client sends a request to a server and expects a response.
 At its simplest this can be viewed as follows
 
 ```txt
@@ -77,7 +77,7 @@ Visit [http://localhost:8080](http://localhost:8080).
 #### Stateful server
 
 The `LongPoll` server is stateful.
-After receving a complete request this server has to wait for extra input before sending a response to the client.
+After receiving a complete request this server has to wait for extra input before sending a response to the client.
 
 ```elixir
 defmodule LongPoll do
@@ -98,7 +98,7 @@ defmodule LongPoll do
   end
 end
 ```
-- *A long lived server needs to return two things; the message parts to send in, this case nothing `[]`;
+- *A long lived server needs to return two things; the message parts to send, in this case nothing `[]`;
   and the new state of the server, in this case no change `state`.*
 - *The `initial_state` is configured when the server is started.*
 
@@ -118,7 +118,7 @@ Client ============================================ Server
 
 #### Server streaming
 
-The `SubscribeToMessages` server streams its response,
+The `SubscribeToMessages` server streams its response.
 The server will send the head of the response upon receiving the request.
 Data is sent to the client, as part of the body, when it becomes available.
 The response is completed when the chatroom sends a `:closed` message.
@@ -130,24 +130,24 @@ defmodule SubscribeToMessages do
   @impl Raxx.Server
   def handle_head(%{method: :GET, path: ["messages"]}, state) do
     {:ok, _} = ChatRoom.join()
-    outbound = [response(:ok)
+    outbound = response(:ok)
     |> set_header("content-type", "text/plain")
-    |> set_body(true)]
+    |> set_body(true)
 
-    {outbound, state}
+    {[outbound], state}
   end
 
   @impl Raxx.Server
   def handle_info({ChatRoom, data}, state) do
-    outbound = [data(data)]
+    outbound = data(data)
 
-    {outbound, state}
+    {[outbound], state}
   end
 
   def handle_info({ChatRoom, :closed}, state) do
-    outbound = [tail()]
+    outbound = tail()
 
-    {outbound, state}
+    {[outbound], state}
   end
 end
 ```

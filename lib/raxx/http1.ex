@@ -91,7 +91,7 @@ defmodule Raxx.HTTP1 do
   ## Examples
 
       iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(:http)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:ok,
        {%Raxx.Request{
          authority: "example.com",
@@ -106,7 +106,7 @@ defmodule Raxx.HTTP1 do
        }, nil, {:complete, ""}, ""}}
 
       iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(:https)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :https)
       {:ok,
        {%Raxx.Request{
          authority: "example.com",
@@ -121,7 +121,7 @@ defmodule Raxx.HTTP1 do
        }, nil, {:complete, ""}, ""}}
 
       iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(:http)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:ok,
        {%Raxx.Request{
          authority: "example.com",
@@ -136,7 +136,7 @@ defmodule Raxx.HTTP1 do
        }, nil, :chunked, ""}}
 
       iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ncontent-length: 13\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(:http)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:ok,
        {%Raxx.Request{
          authority: "example.com",
@@ -151,30 +151,31 @@ defmodule Raxx.HTTP1 do
        }, nil, {:bytes, 13}, ""}}
 
       iex> "GET /path?qs HT"
-      ...> |> Raxx.HTTP1.parse_request(:http)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:more, "GET /path?qs HT"}
 
       iex> "GET /path?qs HTTP/1.1\\r\\nhost: exa"
-      ...> |> Raxx.HTTP1.parse_request(:http)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:more, "GET /path?qs HTTP/1.1\\r\\nhost: exa"}
 
       # Missing host header
       iex> "GET /path?qs HTTP/1.1\\r\\naccept: text/plain\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(:http)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:error, :no_host_header}
 
       # Invalid start line
       iex> "!!!BAD_REQUEST_LINE\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(:http)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:error, {:invalid_line, "!!!BAD_REQUEST_LINE\\r\\n"}}
 
       # Invalid header line
       iex> "GET / HTTP/1.1\\r\\n!!!BAD_HEADER\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(:http)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:error, {:invalid_line, "!!!BAD_HEADER\\r\\n"}}
 
+      # Test connection status is extracted
       iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: close\\r\\naccept: text/plain\\r\\n\\r\\n"
-      ...> |> Raxx.HTTP1.parse_request(:http)
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:ok,
        {%Raxx.Request{
          authority: "example.com",
@@ -188,9 +189,8 @@ defmodule Raxx.HTTP1 do
          scheme: :http
        }, :close, {:complete, ""}, ""}}
 
-
        iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: keep-alive\\r\\naccept: text/plain\\r\\n\\r\\n"
-       ...> |> Raxx.HTTP1.parse_request(:http)
+       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
        {:ok,
         {%Raxx.Request{
           authority: "example.com",
@@ -203,15 +203,52 @@ defmodule Raxx.HTTP1 do
           raw_path: "/path",
           scheme: :http
         }, :keepalive, {:complete, ""}, ""}}
+
+      # Test line_length is limited
+      # "GET /" +  "HTTP/1.1\\r\\n" = 15
+      iex> path = "/" <> String.duplicate("a", 985)
+      ...> "GET \#{path} HTTP/1.1\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
+      {:error, {:line_length_limit_exceeded, :request_line}}
+
+      iex> path = "/" <> String.duplicate("a", 984)
+      ...> {:more, _} = "GET \#{path} HTTP/1.1\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
+      ...> :ok
+      :ok
+
+      iex> path = "/" <> String.duplicate("a", 1984)
+      ...> {:more, _} = "GET \#{path} HTTP/1.1\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http, line_length_limit: 2000)
+      ...> :ok
+      :ok
+
+      iex> "GET / HTTP/1.1\\r\\nhost: \#{String.duplicate("a", 993)}\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
+      {:error, {:line_length_limit_exceeded, :header_line}}
+
+      iex> {:more, _} = "GET / HTTP/1.1\\r\\nhost: \#{String.duplicate("a", 992)}\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
+      ...> :ok
+      :ok
+
+      iex> {:more, _} = "GET / HTTP/1.1\\r\\nhost: \#{String.duplicate("a", 1992)}\\r\\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http, line_length_limit: 2000)
+      ...> :ok
+      :ok
   """
-  @spec parse_request(binary, atom) ::
+  @spec parse_request(binary, [option]) ::
           {:ok, {Raxx.Request.t(), connection_status, body_read_state, binary}}
           | {:error, term}
           | {:more, :undefined}
-  def parse_request(buffer, scheme) when is_atom(scheme) do
-    case :erlang.decode_packet(:http_bin, buffer, []) do
+        when option: {:scheme, atom} | {:line_length_limit, integer}
+  def parse_request(buffer, options) do
+    scheme = Keyword.get(options, :scheme)
+    line_length_limit = Keyword.get(options, :line_length_limit, 1_000)
+
+    case :erlang.decode_packet(:http_bin, buffer, line_length: line_length_limit) do
       {:ok, {:http_request, method, {:abs_path, path_and_query}, _version}, rest} ->
-        case parse_headers(rest) do
+        case parse_headers(rest, line_length_limit: line_length_limit) do
           {:ok, headers, rest2} ->
             case Enum.split_with(headers, fn {key, _value} -> key == "host" end) do
               {[{"host", host}], headers} ->
@@ -242,21 +279,29 @@ defmodule Raxx.HTTP1 do
       {:ok, {:http_error, invalid_line}, _rest} ->
         {:error, {:invalid_line, invalid_line}}
 
+      {:error, :invalid} ->
+        {:error, {:line_length_limit_exceeded, :request_line}}
+
       {:more, :undefined} ->
         {:more, buffer}
     end
   end
 
-  defp parse_headers(buffer, headers \\ []) do
-    case :erlang.decode_packet(:httph_bin, buffer, []) do
+  defp parse_headers(buffer, options, headers \\ []) do
+    {:ok, line_length_limit} = Keyword.fetch(options, :line_length_limit)
+
+    case :erlang.decode_packet(:httph_bin, buffer, line_length: line_length_limit) do
       {:ok, :http_eoh, rest} ->
         {:ok, Enum.reverse(headers), rest}
 
       {:ok, {:http_header, _, key, _, value}, rest} ->
-        parse_headers(rest, [{String.downcase("#{key}"), value} | headers])
+        parse_headers(rest, options, [{String.downcase("#{key}"), value} | headers])
 
       {:ok, {:http_error, invalid_line}, _rest} ->
         {:error, {:invalid_line, invalid_line}}
+
+      {:error, :invalid} ->
+        {:error, {:line_length_limit_exceeded, :header_line}}
 
       {:more, :undefined} ->
         {:more, :undefined}
@@ -429,7 +474,7 @@ defmodule Raxx.HTTP1 do
   def parse_response(buffer) do
     case :erlang.decode_packet(:http_bin, buffer, []) do
       {:ok, {:http_response, {1, 1}, status, _reason_phrase}, rest} ->
-        case parse_headers(rest) do
+        case parse_headers(rest, line_length_limit: 1_000_000) do
           {:ok, headers, rest2} ->
             {headers, body_present, body_read_state} = decode_payload(headers)
 

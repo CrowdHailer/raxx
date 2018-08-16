@@ -19,6 +19,8 @@ defmodule Raxx.HTTP1 do
 
   @crlf "\r\n"
 
+  @line_length_limit 1_000
+
   @doc """
   Serialize a request to wire format
 
@@ -244,7 +246,7 @@ defmodule Raxx.HTTP1 do
         when option: {:scheme, atom} | {:line_length_limit, integer}
   def parse_request(buffer, options) do
     scheme = Keyword.get(options, :scheme)
-    line_length_limit = Keyword.get(options, :line_length_limit, 1_000)
+    line_length_limit = Keyword.get(options, :line_length_limit, @line_length_limit)
 
     case :erlang.decode_packet(:http_bin, buffer, line_length: line_length_limit) do
       {:ok, {:http_request, method, {:abs_path, path_and_query}, _version}, rest} ->
@@ -466,15 +468,51 @@ defmodule Raxx.HTTP1 do
         headers: [{"foo", "bar"}],
         body: false
       }, :keepalive, {:complete, ""}, ""}}
+
+      # Test line_length is limited
+      # "HTTP/1.1 204 " + newlines = 15
+      iex> reason_phrase = String.duplicate("A", 986)
+      ...> "HTTP/1.1 204 \#{reason_phrase}\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:error, {:line_length_limit_exceeded, :status_line}}
+
+      iex> reason_phrase = String.duplicate("A", 985)
+      ...> {:more, _} = "HTTP/1.1 204 \#{reason_phrase}\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      ...> :ok
+      :ok
+
+      iex> reason_phrase = String.duplicate("A", 1985)
+      ...> {:more, _} = "HTTP/1.1 204 \#{reason_phrase}\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response(line_length_limit: 2000)
+      ...> :ok
+      :ok
+
+      iex> "HTTP/1.1 204 No Content\\r\\nfoo: \#{String.duplicate("a", 994)}\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:error, {:line_length_limit_exceeded, :header_line}}
+
+      iex> {:more, _} = "HTTP/1.1 204 No Content\\r\\nfoo: \#{String.duplicate("a", 993)}\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      ...> :ok
+      :ok
+
+      iex> {:more, _} = "HTTP/1.1 204 No Content\\r\\nfoo: \#{String.duplicate("a", 1993)}\\r\\n"
+      ...> |> Raxx.HTTP1.parse_response(line_length_limit: 2000)
+      ...> :ok
+      :ok
   """
-  @spec parse_response(binary) ::
+  @spec parse_response(binary, [option]) ::
           {:ok, {Raxx.Response.t(), connection_status, body_read_state, binary}}
           | {:error, term}
           | {:more, :undefined}
-  def parse_response(buffer) do
-    case :erlang.decode_packet(:http_bin, buffer, []) do
+        when option: {:line_length_limit, integer}
+  def parse_response(buffer, options \\ []) do
+    line_length_limit = Keyword.get(options, :line_length_limit, @line_length_limit)
+
+    case :erlang.decode_packet(:http_bin, buffer, line_length: line_length_limit) do
       {:ok, {:http_response, {1, 1}, status, _reason_phrase}, rest} ->
-        case parse_headers(rest, line_length_limit: 1_000_000) do
+        case parse_headers(rest, line_length_limit: line_length_limit) do
           {:ok, headers, rest2} ->
             {headers, body_present, body_read_state} = decode_payload(headers)
 
@@ -493,6 +531,9 @@ defmodule Raxx.HTTP1 do
 
       {:ok, {:http_error, invalid_line}, _rest} ->
         {:error, {:invalid_line, invalid_line}}
+
+      {:error, :invalid} ->
+        {:error, {:line_length_limit_exceeded, :status_line}}
 
       {:more, :undefined} ->
         {:more, :undefined}

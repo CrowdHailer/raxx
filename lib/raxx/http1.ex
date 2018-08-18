@@ -36,7 +36,7 @@ defmodule Raxx.HTTP1 do
   @maximum_line_length 1_000
   @maximum_headers_count 100
 
-  @doc """
+  @doc ~S"""
   Serialize a request to wire format
 
   # NOTE set_body should add content-length otherwise we don't know if to delete it to match on other end, when serializing
@@ -51,23 +51,29 @@ defmodule Raxx.HTTP1 do
 
       iex> request = Raxx.request(:GET, "http://example.com/path?qs")
       ...> |> Raxx.set_header("accept", "text/plain")
-      ...> {head, _body} =  Raxx.HTTP1.serialize_request(request)
+      ...> {head, body} =  Raxx.HTTP1.serialize_request(request)
       ...> :erlang.iolist_to_binary(head)
-      "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
+      "GET /path?qs HTTP/1.1\r\nhost: example.com\r\naccept: text/plain\r\n\r\n"
+      iex> body
+      {:complete, ""}
 
       iex> request = Raxx.request(:POST, "https://example.com")
       ...> |> Raxx.set_header("content-type", "text/plain")
       ...> |> Raxx.set_body(true)
-      ...> {head, _body} =  Raxx.HTTP1.serialize_request(request)
+      ...> {head, body} =  Raxx.HTTP1.serialize_request(request)
       ...> :erlang.iolist_to_binary(head)
-      "POST / HTTP/1.1\\r\\nhost: example.com\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
+      "POST / HTTP/1.1\r\nhost: example.com\r\ntransfer-encoding: chunked\r\ncontent-type: text/plain\r\n\r\n"
+      iex> body
+      :chunked
 
       iex> request = Raxx.request(:POST, "https://example.com")
       ...> |> Raxx.set_header("content-length", "13")
       ...> |> Raxx.set_body(true)
-      ...> {head, _body} =  Raxx.HTTP1.serialize_request(request)
+      ...> {head, body} =  Raxx.HTTP1.serialize_request(request)
       ...> :erlang.iolist_to_binary(head)
-      "POST / HTTP/1.1\\r\\nhost: example.com\\r\\ncontent-length: 13\\r\\n\\r\\n"
+      "POST / HTTP/1.1\r\nhost: example.com\r\ncontent-length: 13\r\n\r\n"
+      iex> body
+      {:bytes, 13}
 
   ### *https://tools.ietf.org/html/rfc7230#section-6.1*
 
@@ -78,13 +84,13 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.set_header("accept", "text/plain")
       ...> {head, _body} =  Raxx.HTTP1.serialize_request(request, connection: :close)
       ...> :erlang.iolist_to_binary(head)
-      "GET / HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: close\\r\\naccept: text/plain\\r\\n\\r\\n"
+      "GET / HTTP/1.1\r\nhost: example.com\r\nconnection: close\r\naccept: text/plain\r\n\r\n"
 
       iex> request = Raxx.request(:GET, "http://example.com/")
       ...> |> Raxx.set_header("accept", "text/plain")
       ...> {head, _body} =  Raxx.HTTP1.serialize_request(request, connection: :keepalive)
       ...> :erlang.iolist_to_binary(head)
-      "GET / HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: keep-alive\\r\\naccept: text/plain\\r\\n\\r\\n"
+      "GET / HTTP/1.1\r\nhost: example.com\r\nconnection: keep-alive\r\naccept: text/plain\r\n\r\n"
   """
   @spec serialize_request(Raxx.Request.t(), [{:connection, connection_status}]) ::
           {iodata, body_read_state}
@@ -99,7 +105,7 @@ defmodule Raxx.HTTP1 do
     {head, body}
   end
 
-  @doc """
+  @doc ~S"""
   Parse the head part of a request from a buffer.
 
   The scheme is not part of a HTTP/1.1 request, yet it is part of a HTTP/2 request.
@@ -119,7 +125,7 @@ defmodule Raxx.HTTP1 do
 
   ## Examples
 
-      iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
+      iex> "GET /path?qs HTTP/1.1\r\nhost: example.com\r\naccept: text/plain\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:ok,
        {%Raxx.Request{
@@ -134,7 +140,7 @@ defmodule Raxx.HTTP1 do
          scheme: :http
        }, nil, {:complete, ""}, ""}}
 
-      iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\naccept: text/plain\\r\\n\\r\\n"
+      iex> "GET /path?qs HTTP/1.1\r\nhost: example.com\r\naccept: text/plain\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :https)
       {:ok,
        {%Raxx.Request{
@@ -149,7 +155,7 @@ defmodule Raxx.HTTP1 do
          scheme: :https
        }, nil, {:complete, ""}, ""}}
 
-      iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
+      iex> "POST /path HTTP/1.1\r\nhost: example.com\r\ntransfer-encoding: chunked\r\ncontent-type: text/plain\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:ok,
        {%Raxx.Request{
@@ -164,7 +170,7 @@ defmodule Raxx.HTTP1 do
          scheme: :http
        }, nil, :chunked, ""}}
 
-      iex> "POST /path HTTP/1.1\\r\\nhost: example.com\\r\\ncontent-length: 13\\r\\n\\r\\n"
+      iex> "POST /path HTTP/1.1\r\nhost: example.com\r\ncontent-length: 13\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:ok,
        {%Raxx.Request{
@@ -183,27 +189,27 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:more, "GET /path?qs HT"}
 
-      iex> "GET /path?qs HTTP/1.1\\r\\nhost: exa"
+      iex> "GET /path?qs HTTP/1.1\r\nhost: exa"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
-      {:more, "GET /path?qs HTTP/1.1\\r\\nhost: exa"}
+      {:more, "GET /path?qs HTTP/1.1\r\nhost: exa"}
 
       # Missing host header
-      iex> "GET /path?qs HTTP/1.1\\r\\naccept: text/plain\\r\\n\\r\\n"
+      iex> "GET /path?qs HTTP/1.1\r\naccept: text/plain\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:error, :no_host_header}
 
       # Invalid start line
-      iex> "!!!BAD_REQUEST_LINE\\r\\n"
+      iex> "!!!BAD_REQUEST_LINE\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
-      {:error, {:invalid_line, "!!!BAD_REQUEST_LINE\\r\\n"}}
+      {:error, {:invalid_line, "!!!BAD_REQUEST_LINE\r\n"}}
 
       # Invalid header line
-      iex> "GET / HTTP/1.1\\r\\n!!!BAD_HEADER\\r\\n\\r\\n"
+      iex> "GET / HTTP/1.1\r\n!!!BAD_HEADER\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
-      {:error, {:invalid_line, "!!!BAD_HEADER\\r\\n"}}
+      {:error, {:invalid_line, "!!!BAD_HEADER\r\n"}}
 
       # Test connection status is extracted
-      iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: close\\r\\naccept: text/plain\\r\\n\\r\\n"
+      iex> "GET /path?qs HTTP/1.1\r\nhost: example.com\r\nconnection: close\r\naccept: text/plain\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:ok,
        {%Raxx.Request{
@@ -218,7 +224,7 @@ defmodule Raxx.HTTP1 do
          scheme: :http
        }, :close, {:complete, ""}, ""}}
 
-       iex> "GET /path?qs HTTP/1.1\\r\\nhost: example.com\\r\\nconnection: keep-alive\\r\\naccept: text/plain\\r\\n\\r\\n"
+       iex> "GET /path?qs HTTP/1.1\r\nhost: example.com\r\nconnection: keep-alive\r\naccept: text/plain\r\n\r\n"
        ...> |> Raxx.HTTP1.parse_request(scheme: :http)
        {:ok,
         {%Raxx.Request{
@@ -234,34 +240,34 @@ defmodule Raxx.HTTP1 do
         }, :keepalive, {:complete, ""}, ""}}
 
       # Test line_length is limited
-      # "GET /" +  "HTTP/1.1\\r\\n" = 15
+      # "GET /" +  "HTTP/1.1\r\n" = 15
       iex> path = "/" <> String.duplicate("a", 985)
-      ...> "GET \#{path} HTTP/1.1\\r\\n"
+      ...> "GET #{path} HTTP/1.1\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:error, {:line_length_limit_exceeded, :request_line}}
 
       iex> path = "/" <> String.duplicate("a", 984)
-      ...> {:more, _} = "GET \#{path} HTTP/1.1\\r\\n"
+      ...> {:more, _} = "GET #{path} HTTP/1.1\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       ...> :ok
       :ok
 
       iex> path = "/" <> String.duplicate("a", 1984)
-      ...> {:more, _} = "GET \#{path} HTTP/1.1\\r\\n"
+      ...> {:more, _} = "GET #{path} HTTP/1.1\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http, maximum_line_length: 2000)
       ...> :ok
       :ok
 
-      iex> "GET / HTTP/1.1\\r\\nhost: \#{String.duplicate("a", 993)}\\r\\n"
+      iex> "GET / HTTP/1.1\r\nhost: #{String.duplicate("a", 993)}\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:error, {:line_length_limit_exceeded, :header_line}}
 
-      iex> {:more, _} = "GET / HTTP/1.1\\r\\nhost: \#{String.duplicate("a", 992)}\\r\\n"
+      iex> {:more, _} = "GET / HTTP/1.1\r\nhost: #{String.duplicate("a", 992)}\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       ...> :ok
       :ok
 
-      iex> {:more, _} = "GET / HTTP/1.1\\r\\nhost: \#{String.duplicate("a", 1992)}\\r\\n"
+      iex> {:more, _} = "GET / HTTP/1.1\r\nhost: #{String.duplicate("a", 1992)}\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http, maximum_line_length: 2000)
       ...> :ok
       :ok
@@ -346,7 +352,7 @@ defmodule Raxx.HTTP1 do
     end
   end
 
-  @doc """
+  @doc ~S"""
   Serialize a response to an iolist
 
   Because of HEAD requests we should keep body separate
@@ -355,56 +361,29 @@ defmodule Raxx.HTTP1 do
       iex> response = Raxx.response(200)
       ...> |> Raxx.set_header("content-type", "text/plain")
       ...> |> Raxx.set_body("Hello, World!")
-      ...> {head, _body} =  Raxx.HTTP1.serialize_response(response)
+      ...> {head, body} =  Raxx.HTTP1.serialize_response(response)
       ...> :erlang.iolist_to_binary(head)
-      "HTTP/1.1 200 OK\\r\\ncontent-length: 13\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
-      # ...> body
-      # "Hello, World!"
-
-      iex> response = Raxx.response(200)
-      ...> |> Raxx.set_header("content-type", "text/plain")
-      ...> |> Raxx.set_body("Hello, World!")
-      ...> {_head, body} =  Raxx.HTTP1.serialize_response(response)
-      # ...> :erlang.iolist_to_binary(head)
-      # "HTTP/1.1 200 OK\\r\\ncontent-length: 13\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
-      ...> body
+      "HTTP/1.1 200 OK\r\ncontent-length: 13\r\ncontent-type: text/plain\r\n\r\n"
+      iex> body
       {:complete, "Hello, World!"}
 
       iex> response = Raxx.response(200)
       ...> |> Raxx.set_header("content-length", "13")
       ...> |> Raxx.set_header("content-type", "text/plain")
-      ...> {head, _body} =  Raxx.HTTP1.serialize_response(response)
-      ...> :erlang.iolist_to_binary(head)
-      "HTTP/1.1 200 OK\\r\\ncontent-length: 13\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
-      # ...> body
-      # "Hello, World!"
-
-      iex> response = Raxx.response(200)
-      ...> |> Raxx.set_header("content-length", "13")
-      ...> |> Raxx.set_header("content-type", "text/plain")
       ...> |> Raxx.set_body(true)
-      ...> {_head, body} =  Raxx.HTTP1.serialize_response(response)
-      # ...> :erlang.iolist_to_binary(head)
-      # "HTTP/1.1 200 OK\\r\\ncontent-length: 13\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
-      ...> body
+      ...> {head, body} =  Raxx.HTTP1.serialize_response(response)
+      ...> :erlang.iolist_to_binary(head)
+      "HTTP/1.1 200 OK\r\ncontent-length: 13\r\ncontent-type: text/plain\r\n\r\n"
+      iex> body
       {:bytes, 13}
 
       iex> response = Raxx.response(200)
       ...> |> Raxx.set_header("content-type", "text/plain")
       ...> |> Raxx.set_body(true)
-      ...> {head, _body} =  Raxx.HTTP1.serialize_response(response)
+      ...> {head, body} =  Raxx.HTTP1.serialize_response(response)
       ...> :erlang.iolist_to_binary(head)
-      "HTTP/1.1 200 OK\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
-      # ...> body
-      # :chunked
-
-      iex> response = Raxx.response(200)
-      ...> |> Raxx.set_header("content-type", "text/plain")
-      ...> |> Raxx.set_body(true)
-      ...> {_head, body} =  Raxx.HTTP1.serialize_response(response)
-      # ...> :erlang.iolist_to_binary(head)
-      # "HTTP/1.1 200 OK\\r\\ntransfer-encoding: chunked\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
-      ...> body
+      "HTTP/1.1 200 OK\r\ntransfer-encoding: chunked\r\ncontent-type: text/plain\r\n\r\n"
+      iex> body
       :chunked
 
       > A server MUST NOT send a Content-Length header field in any response
@@ -418,7 +397,7 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.HTTP1.serialize_response()
       ...> |> elem(0)
       ...> |> :erlang.iolist_to_binary()
-      "HTTP/1.1 204 No Content\\r\\nfoo: bar\\r\\n\\r\\n"
+      "HTTP/1.1 204 No Content\r\nfoo: bar\r\n\r\n"
 
   ### *https://tools.ietf.org/html/rfc7230#section-6.1*
 
@@ -431,14 +410,14 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.HTTP1.serialize_response(connection: :close)
       ...> |> elem(0)
       ...> |> :erlang.iolist_to_binary()
-      "HTTP/1.1 204 No Content\\r\\nconnection: close\\r\\nfoo: bar\\r\\n\\r\\n"
+      "HTTP/1.1 204 No Content\r\nconnection: close\r\nfoo: bar\r\n\r\n"
 
       iex> Raxx.response(204)
       ...> |> Raxx.set_header("foo", "bar")
       ...> |> Raxx.HTTP1.serialize_response(connection: :keepalive)
       ...> |> elem(0)
       ...> |> :erlang.iolist_to_binary()
-      "HTTP/1.1 204 No Content\\r\\nconnection: keep-alive\\r\\nfoo: bar\\r\\n\\r\\n"
+      "HTTP/1.1 204 No Content\r\nconnection: keep-alive\r\nfoo: bar\r\n\r\n"
   """
   @spec serialize_response(Raxx.Response.t(), [{:connection, connection_status}]) ::
           {iolist, body_read_state}
@@ -450,7 +429,7 @@ defmodule Raxx.HTTP1 do
     {head, body}
   end
 
-  @doc """
+  @doc ~S"""
   Parse the head of a response.
 
   A scheme option is not given to this parser because the scheme not a requirement in HTTP/1 or HTTP/2
@@ -465,7 +444,7 @@ defmodule Raxx.HTTP1 do
 
   ## Examples
 
-      iex> "HTTP/1.1 204 No Content\\r\\nfoo: bar\\r\\n\\r\\n"
+      iex> "HTTP/1.1 204 No Content\r\nfoo: bar\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       {:ok, {%Raxx.Response{
         status: 204,
@@ -473,7 +452,7 @@ defmodule Raxx.HTTP1 do
         body: false
       }, nil, {:complete, ""}, ""}}
 
-      iex> "HTTP/1.1 200 OK\\r\\ncontent-length: 13\\r\\ncontent-type: text/plain\\r\\n\\r\\n"
+      iex> "HTTP/1.1 200 OK\r\ncontent-length: 13\r\ncontent-type: text/plain\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       {:ok, {%Raxx.Response{
         status: 200,
@@ -485,19 +464,19 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.HTTP1.parse_response()
       {:more, :undefined}
 
-      iex> "HTTP/1.1 204 No Content\\r\\nfo"
+      iex> "HTTP/1.1 204 No Content\r\nfo"
       ...> |> Raxx.HTTP1.parse_response()
       {:more, :undefined}
 
-      iex> "!!!BAD_STATUS_LINE\\r\\n"
+      iex> "!!!BAD_STATUS_LINE\r\n"
       ...> |> Raxx.HTTP1.parse_response()
-      {:error, {:invalid_line, "!!!BAD_STATUS_LINE\\r\\n"}}
+      {:error, {:invalid_line, "!!!BAD_STATUS_LINE\r\n"}}
 
-      iex> "HTTP/1.1 204 No Content\\r\\n!!!BAD_HEADER\\r\\n\\r\\n"
+      iex> "HTTP/1.1 204 No Content\r\n!!!BAD_HEADER\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_response()
-      {:error, {:invalid_line, "!!!BAD_HEADER\\r\\n"}}
+      {:error, {:invalid_line, "!!!BAD_HEADER\r\n"}}
 
-      iex> "HTTP/1.1 204 No Content\\r\\nconnection: close\\r\\nfoo: bar\\r\\n\\r\\n"
+      iex> "HTTP/1.1 204 No Content\r\nconnection: close\r\nfoo: bar\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       {:ok, {%Raxx.Response{
         status: 204,
@@ -505,7 +484,7 @@ defmodule Raxx.HTTP1 do
         body: false
       }, :close, {:complete, ""}, ""}}
 
-      iex> "HTTP/1.1 204 No Content\\r\\nconnection: keep-alive\\r\\nfoo: bar\\r\\n\\r\\n"
+      iex> "HTTP/1.1 204 No Content\r\nconnection: keep-alive\r\nfoo: bar\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       {:ok, {%Raxx.Response{
         status: 204,
@@ -516,43 +495,43 @@ defmodule Raxx.HTTP1 do
       # Test line_length is limited
       # "HTTP/1.1 204 " + newlines = 15
       iex> reason_phrase = String.duplicate("A", 986)
-      ...> "HTTP/1.1 204 \#{reason_phrase}\\r\\n"
+      ...> "HTTP/1.1 204 #{reason_phrase}\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       {:error, {:line_length_limit_exceeded, :status_line}}
 
       iex> reason_phrase = String.duplicate("A", 985)
-      ...> {:more, _} = "HTTP/1.1 204 \#{reason_phrase}\\r\\n"
+      ...> {:more, _} = "HTTP/1.1 204 #{reason_phrase}\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       ...> :ok
       :ok
 
       iex> reason_phrase = String.duplicate("A", 1985)
-      ...> {:more, _} = "HTTP/1.1 204 \#{reason_phrase}\\r\\n"
+      ...> {:more, _} = "HTTP/1.1 204 #{reason_phrase}\r\n"
       ...> |> Raxx.HTTP1.parse_response(maximum_line_length: 2000)
       ...> :ok
       :ok
 
-      iex> "HTTP/1.1 204 No Content\\r\\nfoo: \#{String.duplicate("a", 994)}\\r\\n"
+      iex> "HTTP/1.1 204 No Content\r\nfoo: #{String.duplicate("a", 994)}\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       {:error, {:line_length_limit_exceeded, :header_line}}
 
-      iex> {:more, _} = "HTTP/1.1 204 No Content\\r\\nfoo: \#{String.duplicate("a", 993)}\\r\\n"
+      iex> {:more, _} = "HTTP/1.1 204 No Content\r\nfoo: #{String.duplicate("a", 993)}\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       ...> :ok
       :ok
 
-      iex> {:more, _} = "HTTP/1.1 204 No Content\\r\\nfoo: \#{String.duplicate("a", 1993)}\\r\\n"
+      iex> {:more, _} = "HTTP/1.1 204 No Content\r\nfoo: #{String.duplicate("a", 1993)}\r\n"
       ...> |> Raxx.HTTP1.parse_response(maximum_line_length: 2000)
       ...> :ok
       :ok
 
       # Test maximum number of headers is limited
-      iex> "HTTP/1.1 204 No Content\\r\\n\#{String.duplicate("foo: bar\\r\\n", 101)}"
+      iex> "HTTP/1.1 204 No Content\r\n#{String.duplicate("foo: bar\r\n", 101)}"
       ...> |> Raxx.HTTP1.parse_response()
       {:error, :header_count_exceeded}
 
       # Test maximum number of headers is limited
-      iex> "HTTP/1.1 204 No Content\\r\\n\#{String.duplicate("foo: bar\\r\\n", 2)}"
+      iex> "HTTP/1.1 204 No Content\r\n#{String.duplicate("foo: bar\r\n", 2)}"
       ...> |> Raxx.HTTP1.parse_response(maximum_headers_count: 1)
       {:error, :header_count_exceeded}
   """
@@ -627,18 +606,18 @@ defmodule Raxx.HTTP1 do
     end
   end
 
-  @doc """
+  @doc ~S"""
   Serialize io_data as a single chunk to be streamed.
 
   ## Example
 
       iex> Raxx.HTTP1.serialize_chunk("hello")
       ...> |> to_string()
-      "5\\r\\nhello\\r\\n"
+      "5\r\nhello\r\n"
 
       iex> Raxx.HTTP1.serialize_chunk("")
       ...> |> to_string()
-      "0\\r\\n\\r\\n"
+      "0\r\n\r\n"
   """
   @spec serialize_chunk(iodata) :: iodata
   def serialize_chunk(data) do

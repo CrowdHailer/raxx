@@ -5,6 +5,20 @@ defmodule Raxx.HTTP1 do
   The majority of functions return iolists and not compacted binaries.
   To efficiently turn a list into a binart use `:erlang.iolist_to_binary/1`
 
+  ## Notes
+
+  ### content-length
+
+  The serializer does not add the content-length header for empty bodies.
+  The rfc7230 says it SHOULD, but there are may cases where it must not be sent.
+  This simplifies the serialization code.
+
+  It is probable that in the future `Raxx.set_content_length/2` will be added.
+  And that it will be used by `Raxx.set_body/2`
+
+  This is because when parsing a message the content-length headers is kept.
+  Adding it to the `Raxx.Request` struct will increase the cases when serialization and deserialization result in the exact same struct.
+
   ## Property testing
 
   Functionality in this module might be a good opportunity for property based testing.

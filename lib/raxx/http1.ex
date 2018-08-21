@@ -666,7 +666,11 @@ defmodule Raxx.HTTP1 do
   end
 
   defp header_lines(headers) do
-    Enum.map(headers, fn {key, value} -> [key, ": ", value, @crlf] end)
+    Enum.map(headers, &header_to_iolist/1)
+  end
+
+  defp header_to_iolist({key, value}) when is_binary(key) and is_binary(value) do
+    [key, ": ", value, @crlf]
   end
 
   defp connection_headers(nil) do

@@ -35,14 +35,6 @@ defmodule Raxx.NaiveClientTest do
              first_request
   end
 
-  test "Request with content length and body raises an exception" do
-    #
-  end
-
-  test "Request with chunked body raises an exception" do
-    #
-  end
-
   test "Response with no body is forwarded to client" do
     {port, listen_socket} = listen()
 
@@ -92,6 +84,8 @@ defmodule Raxx.NaiveClientTest do
     assert response.status == 200
     assert response.body == "Hello, Raxx!!"
   end
+
+  # TODO needs test for maximum length of body
 
   test "Response can be built from multiple packets" do
     packets = String.codepoints("HTTP/1.1 200 OK\r\ncontent-length: 13\r\n\r\nHello, Raxx!!")
@@ -176,6 +170,49 @@ defmodule Raxx.NaiveClientTest do
 
     {:error, {:invalid_line, "!\r\n"}} = Client.yield(exchange, 1000)
     assert_receive {:DOWN, ^monitor, :process, _pid, :normal}
+  end
+
+  test "Shutting down an exchange returns response when available" do
+    {port, listen_socket} = listen()
+
+    request = Raxx.request(:GET, "http://localhost:#{port}/")
+
+    {:ok, exchange} = Client.async(request)
+    {:ok, socket} = accept(listen_socket)
+    {:ok, _first_request} = receive_packet(socket)
+
+    :ok = :gen_tcp.send(socket, "HTTP/1.1 200 OK\r\nfoo: bar\r\n\r\n")
+    Process.sleep(100)
+    {:ok, response} = Client.shutdown(exchange, 1000)
+    assert response.status == 200
+    assert response.headers == [{"foo", "bar"}]
+    assert response.body == ""
+    assert {:error, :closed} = :gen_tcp.recv(socket, 0)
+  end
+
+  test "Shutting down an exchange returns ok when no response" do
+    {port, listen_socket} = listen()
+
+    request = Raxx.request(:GET, "http://localhost:#{port}/")
+
+    {:ok, exchange} = Client.async(request)
+    {:ok, socket} = accept(listen_socket)
+    {:ok, _first_request} = receive_packet(socket)
+
+    Process.sleep(100)
+    {:ok, nil} = Client.shutdown(exchange, 1000)
+    assert {:error, :closed} = :gen_tcp.recv(socket, 0)
+  end
+
+  test "Shutting down an exchange returns an error when the proccess does not exit" do
+    {port, _listen_socket} = listen()
+
+    request = Raxx.request(:GET, "http://localhost:#{port}/")
+
+    {:ok, exchange} = Client.async(request)
+    exchange = %{exchange | client: spawn_link(fn -> Process.sleep(:infinity) end)}
+    {:error, pid} = Client.shutdown(exchange, 1000)
+    assert pid == exchange.client
   end
 
   defp listen(port \\ 0, transport \\ :tcp)

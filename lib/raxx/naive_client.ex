@@ -97,7 +97,30 @@ defmodule Raxx.NaiveClient do
   @doc """
   return {:ok, nil or response}, or exit pid
   """
-  def shutdown(_task) do
+  # TODO raise error if not caller
+  def shutdown(%Exchange{reference: reference, client: client}, timeout) do
+    monitor = Process.monitor(client)
+    :ok = GenServer.cast(client, :shutdown)
+
+    response =
+      receive do
+        {^reference, {:ok, response}} ->
+          response
+
+        {^reference, _} ->
+          nil
+      after
+        0 ->
+          nil
+      end
+
+    receive do
+      {:DOWN, ^monitor, _, _, _reason} ->
+        {:ok, response}
+    after
+      timeout ->
+        {:error, client}
+    end
   end
 
   @impl GenServer
@@ -151,6 +174,12 @@ defmodule Raxx.NaiveClient do
       when transport_closed in [:tcp_closed, :ssl_closed] do
     send(state.caller, {state.reference, {:error, :closed}})
 
+    {:stop, :normal, state}
+  end
+
+  @impl GenServer
+  def handle_cast(:shutdown, state) do
+    :ok = close(state.socket)
     {:stop, :normal, state}
   end
 
@@ -274,11 +303,11 @@ defmodule Raxx.NaiveClient do
     :ssl.send(socket, message)
   end
 
-  # defp close({:tcp, socket}) do
-  #   :gen_tcp.close(socket)
-  # end
-  #
-  # defp close({:ssl, socket}) do
-  #   :ssl.close(socket)
-  # end
+  defp close({:tcp, socket}) do
+    :gen_tcp.close(socket)
+  end
+
+  defp close({:ssl, socket}) do
+    :ssl.close(socket)
+  end
 end

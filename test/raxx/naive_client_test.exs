@@ -75,6 +75,24 @@ defmodule Raxx.NaiveClientTest do
     assert response.body == "Hello, Raxx!!"
   end
 
+  test "Chunked response is buffered into response" do
+    {port, listen_socket} = listen()
+
+    request = Raxx.request(:GET, "http://localhost:#{port}/")
+
+    {:ok, exchange} = Client.async(request)
+    {:ok, socket} = accept(listen_socket)
+    {:ok, _first_request} = receive_packet(socket)
+
+    :ok = :gen_tcp.send(socket, "HTTP/1.1 200 OK\r\ntransfer-encoding: chunked\r\n\r\n")
+    :ok = :gen_tcp.send(socket, Raxx.HTTP1.serialize_chunk("Hello, "))
+    :ok = :gen_tcp.send(socket, Raxx.HTTP1.serialize_chunk("Raxx!!"))
+    :ok = :gen_tcp.send(socket, Raxx.HTTP1.serialize_chunk(""))
+    {:ok, response} = Client.yield(exchange, 1000)
+    assert response.status == 200
+    assert response.body == "Hello, Raxx!!"
+  end
+
   test "Response can be built from multiple packets" do
     packets = String.codepoints("HTTP/1.1 200 OK\r\ncontent-length: 13\r\n\r\nHello, Raxx!!")
     {port, listen_socket} = listen()

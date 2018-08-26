@@ -33,7 +33,8 @@ defmodule Raxx.NaiveClient do
     :socket,
     :buffer,
     :response,
-    :body
+    :body,
+    :body_buffer
   ]
 
   defstruct @enforce_keys
@@ -111,7 +112,8 @@ defmodule Raxx.NaiveClient do
       socket: nil,
       buffer: "",
       response: nil,
-      body: nil
+      body: nil,
+      body_buffer: ""
     }
 
     :do_send = send(self(), :do_send)
@@ -199,6 +201,26 @@ defmodule Raxx.NaiveClient do
         state = %{state | buffer: buffer}
         :ok = set_active(state.socket)
         {:noreply, state}
+    end
+  end
+
+  defp handle_packet(packet, state = %{body: :chunked}) do
+    case Raxx.HTTP1.parse_chunk(state.buffer <> packet) do
+      {:ok, {"", rest}} ->
+        response = %{state.response | body: state.body_buffer}
+        send(state.caller, {state.reference, {:ok, response}})
+
+        state = %{state | buffer: rest}
+        {:stop, :normal, state}
+
+      {:ok, {nil, rest}} ->
+        state = %{state | buffer: rest}
+        :ok = set_active(state.socket)
+        {:noreply, state}
+
+      {:ok, {chunk, rest}} ->
+        state = %{state | body_buffer: state.body_buffer <> chunk, buffer: rest}
+        handle_packet("", state)
     end
   end
 

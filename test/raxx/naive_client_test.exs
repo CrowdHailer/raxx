@@ -215,6 +215,38 @@ defmodule Raxx.NaiveClientTest do
     assert pid == exchange.client
   end
 
+  test "yield can only be called by the caller" do
+    request = Raxx.request(:GET, "http://localhost:1000/")
+
+    task =
+      Task.async(fn ->
+        {:ok, exchange} = Client.async(request)
+        exchange
+      end)
+
+    {:ok, exchange} = Task.yield(task)
+
+    assert_raise ArgumentError, fn ->
+      Client.yield(exchange, 1000)
+    end
+  end
+
+  test "shutdown can only be called by the caller" do
+    request = Raxx.request(:GET, "http://localhost:1000/")
+
+    task =
+      Task.async(fn ->
+        {:ok, exchange} = Client.async(request)
+        exchange
+      end)
+
+    {:ok, exchange} = Task.yield(task)
+
+    assert_raise ArgumentError, fn ->
+      Client.shutdown(exchange, 1000)
+    end
+  end
+
   defp listen(port \\ 0, transport \\ :tcp)
 
   defp listen(port, :tcp) do

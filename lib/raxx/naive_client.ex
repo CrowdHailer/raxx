@@ -76,8 +76,11 @@ defmodule Raxx.NaiveClient do
     end
   end
 
-  # TODO raise error if not caller
   @spec yield(exchange, integer) :: {:ok, Raxx.Response.t()} | {:error, :timeout | {:exit, term}}
+  def yield(exchange = %Exchange{caller: caller}, _timeout) when caller != self() do
+    raise ArgumentError, invalid_caller_error(exchange)
+  end
+
   def yield(%Exchange{reference: reference, client: client}, timeout) do
     monitor = Process.monitor(client)
 
@@ -97,8 +100,11 @@ defmodule Raxx.NaiveClient do
   @doc """
   return {:ok, nil or response}, or exit pid
   """
-  # TODO raise error if not caller
   @spec shutdown(exchange, integer) :: {:ok, Raxx.Response.t() | nil} | {:error, pid}
+  def shutdown(exchange = %Exchange{caller: caller}, _timeout) when caller != self() do
+    raise ArgumentError, invalid_caller_error(exchange)
+  end
+
   def shutdown(%Exchange{reference: reference, client: client}, timeout) do
     monitor = Process.monitor(client)
     :ok = GenServer.cast(client, :shutdown)
@@ -262,6 +268,12 @@ defmodule Raxx.NaiveClient do
     port = Raxx.request_port(request)
 
     {scheme, host, port}
+  end
+
+  defp invalid_caller_error(exchange = %Exchange{}) do
+    "Exchange #{inspect(exchange)} must be queried from the calling process, but was queried from #{
+      inspect(self())
+    }"
   end
 
   defp connect({:http, host, port}, timeout) do

@@ -19,7 +19,7 @@ defmodule Raxx.Mixfile do
   end
 
   def application do
-    [extra_applications: [:logger]]
+    [extra_applications: [:logger, :ssl]]
   end
 
   defp deps do

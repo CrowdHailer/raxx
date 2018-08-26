@@ -25,6 +25,15 @@ defmodule Raxx.NaiveClient do
   """
   use GenServer
 
+  alias __MODULE__.Exchange
+
+  @type exchange :: %Exchange{
+          caller: pid,
+          reference: reference,
+          request: Raxx.Request.t(),
+          client: pid
+        }
+
   @enforce_keys [
     :request,
     :reference,
@@ -39,17 +48,6 @@ defmodule Raxx.NaiveClient do
 
   defstruct @enforce_keys
 
-  defmodule Exchange do
-    @enforce_keys [
-      :caller,
-      :reference,
-      # NOTE sure request is needed in exchange struct
-      :request,
-      :client
-    ]
-    defstruct @enforce_keys
-  end
-
   defp start_link(request, reference, caller) do
     #   # max_body_size = Keyword.get(options, max_body_length)
     GenServer.start_link(__MODULE__, {request, reference, caller})
@@ -60,7 +58,8 @@ defmodule Raxx.NaiveClient do
   # I can't however think of a reason when that would actually be useful.
   # If the caller dies the client has no place to send the response.
   # Also the dynamic supervisor could become a bottleneck.
-  def async(request, _options \\ []) do
+  @spec async(Raxx.Request.t()) :: {:ok, exchange}
+  def async(request) do
     caller = self()
     reference = make_ref()
 
@@ -78,6 +77,7 @@ defmodule Raxx.NaiveClient do
   end
 
   # TODO raise error if not caller
+  @spec yield(exchange, integer) :: {:ok, Raxx.Response.t()} | {:error, :timeout | {:exit, term}}
   def yield(%Exchange{reference: reference, client: client}, timeout) do
     monitor = Process.monitor(client)
 
@@ -98,6 +98,7 @@ defmodule Raxx.NaiveClient do
   return {:ok, nil or response}, or exit pid
   """
   # TODO raise error if not caller
+  @spec shutdown(exchange, integer) :: {:ok, Raxx.Response.t() | nil} | {:error, pid}
   def shutdown(%Exchange{reference: reference, client: client}, timeout) do
     monitor = Process.monitor(client)
     :ok = GenServer.cast(client, :shutdown)

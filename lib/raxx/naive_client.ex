@@ -49,13 +49,16 @@ defmodule Raxx.NaiveClient do
     defstruct @enforce_keys
   end
 
-  # Can be called by supervisor or normal process
   defp start_link(request, reference, caller) do
-    #   # caller = Keyword.get(options, :caller, self())
     #   # max_body_size = Keyword.get(options, max_body_length)
     GenServer.start_link(__MODULE__, {request, reference, caller})
   end
 
+  # There could be an async_supervised that took a DynamicSupervisor pid as argument.
+  # This would mean the client process does not need to be linked to the caller.
+  # I can't however think of a reason when that would actually be useful.
+  # If the caller dies the client has no place to send the response.
+  # Also the dynamic supervisor could become a bottleneck.
   def async(request, _options \\ []) do
     caller = self()
     reference = make_ref()
@@ -127,6 +130,10 @@ defmodule Raxx.NaiveClient do
             state = %{state | socket: socket}
             {:noreply, state}
         end
+
+      {:error, reason} ->
+        send(state.caller, {state.reference, {:error, reason}})
+        {:stop, :normal, state}
     end
   end
 
@@ -136,6 +143,13 @@ defmodule Raxx.NaiveClient do
       )
       when transport in [:tcp, :ssl] do
     handle_packet(packet, state)
+  end
+
+  def handle_info({transport_closed, raw_socket}, state = %{socket: {_transport, raw_socket}})
+      when transport_closed in [:tcp_closed, :ssl_closed] do
+    send(state.caller, {state.reference, {:error, :closed}})
+
+    {:stop, :normal, state}
   end
 
   defp handle_packet(packet, state = %{response: nil}) do
@@ -159,6 +173,10 @@ defmodule Raxx.NaiveClient do
         state = %{state | buffer: buffer}
         :ok = set_active(state.socket)
         {:noreply, state}
+
+      {:error, reason} ->
+        send(state.caller, {state.reference, {:error, reason}})
+        {:stop, :normal, state}
     end
   end
 

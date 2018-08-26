@@ -115,6 +115,51 @@ defmodule Raxx.NaiveClientTest do
     assert response.body == ""
   end
 
+  test "Connection error is reported to client" do
+    request = Raxx.request(:GET, "http://localhost:1000/")
+
+    {:ok, exchange} = Client.async(request)
+    monitor = Process.monitor(exchange.client)
+
+    assert {:error, :econnrefused} = Client.yield(exchange, 1000)
+    assert_receive {:DOWN, ^monitor, :process, _pid, :normal}
+  end
+
+  test "Connection closed is reported to client." do
+    {port, listen_socket} = listen()
+
+    request = Raxx.request(:GET, "http://localhost:#{port}/")
+
+    {:ok, exchange} = Client.async(request)
+    monitor = Process.monitor(exchange.client)
+
+    {:ok, socket} = accept(listen_socket)
+    {:ok, _first_request} = receive_packet(socket)
+
+    :ok = :gen_tcp.send(socket, "HTTP/1.1 200 O")
+    :ok = :gen_tcp.close(socket)
+
+    {:error, :closed} = Client.yield(exchange, 1000)
+    assert_receive {:DOWN, ^monitor, :process, _pid, :normal}
+  end
+
+  test "Invalid response is reported to client" do
+    {port, listen_socket} = listen()
+
+    request = Raxx.request(:GET, "http://localhost:#{port}/")
+
+    {:ok, exchange} = Client.async(request)
+    monitor = Process.monitor(exchange.client)
+
+    {:ok, socket} = accept(listen_socket)
+    {:ok, _first_request} = receive_packet(socket)
+
+    :ok = :gen_tcp.send(socket, "!\r\n")
+
+    {:error, {:invalid_line, "!\r\n"}} = Client.yield(exchange, 1000)
+    assert_receive {:DOWN, ^monitor, :process, _pid, :normal}
+  end
+
   defp listen(port \\ 0, transport \\ :tcp)
 
   defp listen(port, :tcp) do

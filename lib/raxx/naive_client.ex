@@ -1,27 +1,9 @@
 defmodule Raxx.NaiveClient do
   @moduledoc ~S"""
   # NOTE run for ever until shutdown
-  When starting a client,
-  for the caller to be able to send the monitor as reference a secondary call must be made
-  We could send a different reference to the monitor.
 
-  init can use proc_lib.init_ack to send back a value in addition to the pid
 
-  handle_call {:async, request} can use GenServer.reply
 
-  Goal is to have a start_link that can be easily supervised
-
-  start_link(request: request, target: target)
-
-  Need to pass arguments like max headers etc
-
-  child_spec can do something clever to not not start monitors under supervisor
-  # Don't start monitor until yielding
-  This is confusing because if started supervised then the caller information can be lost
-  {:ok, pid, task} = Client.start_link(request, )
-  Client.yield()
-  what about when yield times out.
-  Message needs clearing up
   """
   use GenServer
 
@@ -58,7 +40,13 @@ defmodule Raxx.NaiveClient do
   # I can't however think of a reason when that would actually be useful.
   # If the caller dies the client has no place to send the response.
   # Also the dynamic supervisor could become a bottleneck.
-  @spec async(Raxx.Request.t()) :: {:ok, exchange}
+
+  # A client (or gateway) that limited total number of connections, or managed sessions,
+  # could easily make use of async.
+  # A coordination process could use async but pass a different caller.
+  # Then as long as that channel was passed to the caller, the client could do it?
+  # then yielding from that caller would work.
+  @spec async(Raxx.Request.t()) :: exchange
   def async(%Raxx.Request{body: true}) do
     raise ArgumentError, "Request had body `true`, client can only send complete requests."
   end
@@ -67,17 +55,16 @@ defmodule Raxx.NaiveClient do
     caller = self()
     reference = make_ref()
 
-    case start_link(request, reference, caller) do
-      {:ok, client} ->
-        exchange = %Exchange{
-          caller: caller,
-          reference: reference,
-          request: request,
-          client: client
-        }
+    # All match errors are this point come from bad arguments,
+    # and can therefore raise errors
+    {:ok, client} = start_link(request, reference, caller)
 
-        {:ok, exchange}
-    end
+    %Exchange{
+      caller: caller,
+      reference: reference,
+      request: request,
+      client: client
+    }
   end
 
   @spec yield(exchange, integer) :: {:ok, Raxx.Response.t()} | {:error, :timeout | {:exit, term}}

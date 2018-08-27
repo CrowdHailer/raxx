@@ -1,6 +1,6 @@
 defmodule Raxx.NaiveClient do
   @moduledoc ~S"""
-
+  # NOTE run for ever until shutdown
   When starting a client,
   for the caller to be able to send the monitor as reference a secondary call must be made
   We could send a different reference to the monitor.
@@ -59,7 +59,11 @@ defmodule Raxx.NaiveClient do
   # If the caller dies the client has no place to send the response.
   # Also the dynamic supervisor could become a bottleneck.
   @spec async(Raxx.Request.t()) :: {:ok, exchange}
-  def async(request) do
+  def async(%Raxx.Request{body: true}) do
+    raise ArgumentError, "Request had body `true`, client can only send complete requests."
+  end
+
+  def async(request = %Raxx.Request{}) do
     caller = self()
     reference = make_ref()
 

@@ -1,6 +1,5 @@
 defmodule Raxx.NaiveClientTest do
   use ExUnit.Case
-  # NOTE run for ever until shutdown
 
   alias Raxx.NaiveClient, as: Client
 
@@ -33,6 +32,20 @@ defmodule Raxx.NaiveClientTest do
     # connection close is always added because the HTTP client does not support HTTP/1.1 pipelining
     assert "POST / HTTP/1.1\r\nhost: localhost:#{port}\r\nconnection: close\r\ncontent-length: 13\r\n\r\nHello, Raxx!!" ==
              first_request
+  end
+
+  test "Incomplete requests cannot be sent by client" do
+    {port, _listen_socket} = listen()
+
+    request =
+      Raxx.request(:POST, "http://localhost:#{port}/")
+      |> Raxx.set_body(true)
+
+    assert_raise ArgumentError,
+                 "Request had body `true`, client can only send complete requests.",
+                 fn ->
+                   {:ok, _exchange} = Client.async(request)
+                 end
   end
 
   test "Response with no body is forwarded to client" do

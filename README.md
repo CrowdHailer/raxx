@@ -11,7 +11,20 @@
 - [Documentation available on hexdoc](https://hexdocs.pm/raxx)
 - [Discuss on slack](https://elixir-lang.slack.com/messages/C56H3TBH8/)
 
-## Extensions
+## Simple Client
+
+A very simple HTTP/1.1 client.
+
+```elixir
+request = Raxx.request(:GET, "http://example.com")
+|> Raxx.set_header("accept", "application/json")
+
+{:ok, response} = Raxx.SimpleClient.send_sync(request, 2000)
+```
+
+See `Raxx.SimpleClient` for full documentation.
+
+## Server Extensions
 
 This project includes:
 

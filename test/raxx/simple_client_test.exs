@@ -8,7 +8,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/path?query")
 
-    _channel = Client.async(request)
+    _channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, first_request} = receive_packet(socket)
 
@@ -25,7 +25,7 @@ defmodule Raxx.SimpleClientTest do
       |> Raxx.set_body("Hello, Raxx!!")
       |> Raxx.set_header("content-length", "13")
 
-    _channel = Client.async(request)
+    _channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, first_request} = receive_packet(socket)
 
@@ -44,7 +44,7 @@ defmodule Raxx.SimpleClientTest do
     assert_raise ArgumentError,
                  "Request had body `true`, client can only send complete requests.",
                  fn ->
-                   _channel = Client.async(request)
+                   _channel = Client.send_async(request)
                  end
   end
 
@@ -53,7 +53,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
@@ -69,7 +69,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
@@ -85,7 +85,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
@@ -106,7 +106,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
@@ -129,7 +129,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:HEAD, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
@@ -143,7 +143,7 @@ defmodule Raxx.SimpleClientTest do
   test "Connection error is reported to client" do
     request = Raxx.request(:GET, "http://localhost:1000/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     monitor = Process.monitor(channel.client)
 
     assert {:error, :econnrefused} = Client.yield(channel, 1000)
@@ -155,7 +155,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     monitor = Process.monitor(channel.client)
 
     {:ok, socket} = accept(listen_socket)
@@ -173,7 +173,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     monitor = Process.monitor(channel.client)
 
     {:ok, socket} = accept(listen_socket)
@@ -190,7 +190,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
@@ -208,7 +208,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
@@ -222,7 +222,7 @@ defmodule Raxx.SimpleClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    channel = Client.async(request)
+    channel = Client.send_async(request)
     channel = %{channel | client: spawn_link(fn -> Process.sleep(:infinity) end)}
     {:error, pid} = Client.shutdown(channel, 1000)
     assert pid == channel.client
@@ -233,7 +233,7 @@ defmodule Raxx.SimpleClientTest do
 
     task =
       Task.async(fn ->
-        channel = Client.async(request)
+        channel = Client.send_async(request)
         channel
       end)
 
@@ -249,7 +249,7 @@ defmodule Raxx.SimpleClientTest do
 
     task =
       Task.async(fn ->
-        channel = Client.async(request)
+        channel = Client.send_async(request)
         channel
       end)
 

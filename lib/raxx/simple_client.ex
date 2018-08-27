@@ -14,14 +14,19 @@ defmodule Raxx.SimpleClient do
       request = Raxx.request(:GET, "http://example.com")
       |> Raxx.set_header("accept", "text/html")
 
-  Send the request asynchronously,
-  the returned channel is used to then wait for a response when needed
+  #### Send the request asynchronously
 
-      channel = Raxx.SimpleClient.async(request)
+  A channel is returned to be used to then wait for a response when needed.
+
+      channel = Raxx.SimpleClient.send_async(request)
 
   Wait for a response on the channel.
 
       {:ok, response} = Raxx.SimpleClient.yield(channel, 2_000)
+
+  #### Send the request synchronously
+
+      {:ok, response} = Raxx.SimpleClient.send_sync(request, 2_000)
   """
   use GenServer
 
@@ -58,8 +63,8 @@ defmodule Raxx.SimpleClient do
   # Also the dynamic supervisor could become a bottleneck.
 
   # A client (or gateway) that limited total number of connections, or managed sessions,
-  # could easily make use of async.
-  # A coordination process could use async but pass a different caller.
+  # could easily make use of send_async.
+  # A coordination process could use send_async but pass a different caller.
   # Then as long as that channel was passed to the caller, the client could do it?
   # then yielding from that caller would work.
 
@@ -69,12 +74,12 @@ defmodule Raxx.SimpleClient do
   **NOTE:** Request streaming is not supported, so the request sent must be complete,
   i.e. have a full binary body or no body.
   """
-  @spec async(Raxx.Request.t()) :: channel
-  def async(%Raxx.Request{body: true}) do
+  @spec send_async(Raxx.Request.t()) :: channel
+  def send_async(%Raxx.Request{body: true}) do
     raise ArgumentError, "Request had body `true`, client can only send complete requests."
   end
 
-  def async(request = %Raxx.Request{}) do
+  def send_async(request = %Raxx.Request{}) do
     caller = self()
     reference = make_ref()
     # max_body_size = Keyword.get(options, max_body_length)
@@ -89,6 +94,32 @@ defmodule Raxx.SimpleClient do
       request: request,
       client: client
     }
+  end
+
+  @doc """
+  Send a request and wait for the response.
+
+  This function handles shutting down the client in case of a timeout.
+  """
+  def send_sync(request, timeout) do
+    channel = send_async(request)
+
+    case yield(channel, timeout) do
+      {:ok, response} ->
+        {:ok, response}
+
+      {:error, :timeout} ->
+        {:ok, maybe_response} = shutdown(channel, 1000)
+
+        if maybe_response do
+          {:ok, maybe_response}
+        else
+          {:error, :timeout}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @doc """
@@ -126,7 +157,7 @@ defmodule Raxx.SimpleClient do
   If the response was already available when client is shutdown then it is returned.
   This can be used if a response is wanted immediatly.
 
-      channel = Raxx.SimpleClient.async(request)
+      channel = Raxx.SimpleClient.send_async(request)
       # Do something slow
       {:ok, maybe_response} = Raxx.SimpleClient.shutdown(request, 1000)
       if response do

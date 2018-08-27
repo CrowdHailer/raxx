@@ -1,4 +1,4 @@
-defmodule Raxx.NaiveClient.Exchange do
+defmodule Raxx.SimpleClient.Channel do
   @enforce_keys [
     :caller,
     :reference,

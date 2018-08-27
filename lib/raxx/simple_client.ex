@@ -1,4 +1,4 @@
-defmodule Raxx.NaiveClient do
+defmodule Raxx.SimpleClient do
   @moduledoc ~S"""
   # NOTE run for ever until shutdown
 
@@ -7,9 +7,9 @@ defmodule Raxx.NaiveClient do
   """
   use GenServer
 
-  alias __MODULE__.Exchange
+  alias __MODULE__.Channel
 
-  @type exchange :: %Exchange{
+  @type channel :: %Channel{
           caller: pid,
           reference: reference,
           request: Raxx.Request.t(),
@@ -30,11 +30,6 @@ defmodule Raxx.NaiveClient do
 
   defstruct @enforce_keys
 
-  defp start_link(request, reference, caller) do
-    #   # max_body_size = Keyword.get(options, max_body_length)
-    GenServer.start_link(__MODULE__, {request, reference, caller})
-  end
-
   # There could be an async_supervised that took a DynamicSupervisor pid as argument.
   # This would mean the client process does not need to be linked to the caller.
   # I can't however think of a reason when that would actually be useful.
@@ -46,7 +41,7 @@ defmodule Raxx.NaiveClient do
   # A coordination process could use async but pass a different caller.
   # Then as long as that channel was passed to the caller, the client could do it?
   # then yielding from that caller would work.
-  @spec async(Raxx.Request.t()) :: exchange
+  @spec async(Raxx.Request.t()) :: channel
   def async(%Raxx.Request{body: true}) do
     raise ArgumentError, "Request had body `true`, client can only send complete requests."
   end
@@ -54,12 +49,13 @@ defmodule Raxx.NaiveClient do
   def async(request = %Raxx.Request{}) do
     caller = self()
     reference = make_ref()
+    # max_body_size = Keyword.get(options, max_body_length)
 
     # All match errors are this point come from bad arguments,
     # and can therefore raise errors
-    {:ok, client} = start_link(request, reference, caller)
+    {:ok, client} = GenServer.start_link(__MODULE__, {request, reference, caller})
 
-    %Exchange{
+    %Channel{
       caller: caller,
       reference: reference,
       request: request,
@@ -67,12 +63,12 @@ defmodule Raxx.NaiveClient do
     }
   end
 
-  @spec yield(exchange, integer) :: {:ok, Raxx.Response.t()} | {:error, :timeout | {:exit, term}}
-  def yield(exchange = %Exchange{caller: caller}, _timeout) when caller != self() do
-    raise ArgumentError, invalid_caller_error(exchange)
+  @spec yield(channel, integer) :: {:ok, Raxx.Response.t()} | {:error, :timeout | {:exit, term}}
+  def yield(channel = %Channel{caller: caller}, _timeout) when caller != self() do
+    raise ArgumentError, invalid_caller_error(channel)
   end
 
-  def yield(%Exchange{reference: reference, client: client}, timeout) do
+  def yield(%Channel{reference: reference, client: client}, timeout) do
     monitor = Process.monitor(client)
 
     receive do
@@ -91,12 +87,12 @@ defmodule Raxx.NaiveClient do
   @doc """
   return {:ok, nil or response}, or exit pid
   """
-  @spec shutdown(exchange, integer) :: {:ok, Raxx.Response.t() | nil} | {:error, pid}
-  def shutdown(exchange = %Exchange{caller: caller}, _timeout) when caller != self() do
-    raise ArgumentError, invalid_caller_error(exchange)
+  @spec shutdown(channel, integer) :: {:ok, Raxx.Response.t() | nil} | {:error, pid}
+  def shutdown(channel = %Channel{caller: caller}, _timeout) when caller != self() do
+    raise ArgumentError, invalid_caller_error(channel)
   end
 
-  def shutdown(%Exchange{reference: reference, client: client}, timeout) do
+  def shutdown(%Channel{reference: reference, client: client}, timeout) do
     monitor = Process.monitor(client)
     :ok = GenServer.cast(client, :shutdown)
 
@@ -261,8 +257,8 @@ defmodule Raxx.NaiveClient do
     {scheme, host, port}
   end
 
-  defp invalid_caller_error(exchange = %Exchange{}) do
-    "Exchange #{inspect(exchange)} must be queried from the calling process, but was queried from #{
+  defp invalid_caller_error(channel = %Channel{}) do
+    "Channel #{inspect(channel)} must be queried from the calling process, but was queried from #{
       inspect(self())
     }"
   end

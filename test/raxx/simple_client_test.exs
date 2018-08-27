@@ -1,14 +1,14 @@
-defmodule Raxx.NaiveClientTest do
+defmodule Raxx.SimpleClientTest do
   use ExUnit.Case
 
-  alias Raxx.NaiveClient, as: Client
+  alias Raxx.SimpleClient, as: Client
 
   test "Request with no body is sent to the server" do
     {port, listen_socket} = listen()
 
     request = Raxx.request(:GET, "http://localhost:#{port}/path?query")
 
-    _exchange = Client.async(request)
+    _channel = Client.async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, first_request} = receive_packet(socket)
 
@@ -25,7 +25,7 @@ defmodule Raxx.NaiveClientTest do
       |> Raxx.set_body("Hello, Raxx!!")
       |> Raxx.set_header("content-length", "13")
 
-    _exchange = Client.async(request)
+    _channel = Client.async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, first_request} = receive_packet(socket)
 
@@ -44,7 +44,7 @@ defmodule Raxx.NaiveClientTest do
     assert_raise ArgumentError,
                  "Request had body `true`, client can only send complete requests.",
                  fn ->
-                   _exchange = Client.async(request)
+                   _channel = Client.async(request)
                  end
   end
 
@@ -53,12 +53,12 @@ defmodule Raxx.NaiveClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
+    channel = Client.async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
     :ok = :gen_tcp.send(socket, "HTTP/1.1 200 OK\r\nfoo: bar\r\n\r\n")
-    {:ok, response} = Client.yield(exchange, 1000)
+    {:ok, response} = Client.yield(channel, 1000)
     assert response.status == 200
     assert response.headers == [{"foo", "bar"}]
     assert response.body == ""
@@ -69,12 +69,12 @@ defmodule Raxx.NaiveClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
+    channel = Client.async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
     :ok = :gen_tcp.send(socket, "HTTP/1.1 200 OK\r\ncontent-length: 13\r\n\r\nHello, Raxx!!")
-    {:ok, response} = Client.yield(exchange, 1000)
+    {:ok, response} = Client.yield(channel, 1000)
     assert response.status == 200
     assert response.headers == [{"content-length", "13"}]
     assert response.body == "Hello, Raxx!!"
@@ -85,7 +85,7 @@ defmodule Raxx.NaiveClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
+    channel = Client.async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
@@ -93,7 +93,7 @@ defmodule Raxx.NaiveClientTest do
     :ok = :gen_tcp.send(socket, Raxx.HTTP1.serialize_chunk("Hello, "))
     :ok = :gen_tcp.send(socket, Raxx.HTTP1.serialize_chunk("Raxx!!"))
     :ok = :gen_tcp.send(socket, Raxx.HTTP1.serialize_chunk(""))
-    {:ok, response} = Client.yield(exchange, 1000)
+    {:ok, response} = Client.yield(channel, 1000)
     assert response.status == 200
     assert response.body == "Hello, Raxx!!"
   end
@@ -106,7 +106,7 @@ defmodule Raxx.NaiveClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
+    channel = Client.async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
@@ -118,7 +118,7 @@ defmodule Raxx.NaiveClientTest do
       end
     )
 
-    {:ok, response} = Client.yield(exchange, 1000)
+    {:ok, response} = Client.yield(channel, 1000)
     assert response.status == 200
     assert response.headers == [{"content-length", "13"}]
     assert response.body == "Hello, Raxx!!"
@@ -129,12 +129,12 @@ defmodule Raxx.NaiveClientTest do
 
     request = Raxx.request(:HEAD, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
+    channel = Client.async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
     :ok = :gen_tcp.send(socket, "HTTP/1.1 200 OK\r\ncontent-length: 13\r\n\r\n")
-    {:ok, response} = Client.yield(exchange, 1000)
+    {:ok, response} = Client.yield(channel, 1000)
     assert response.status == 200
     assert response.headers == [{"content-length", "13"}]
     assert response.body == ""
@@ -143,10 +143,10 @@ defmodule Raxx.NaiveClientTest do
   test "Connection error is reported to client" do
     request = Raxx.request(:GET, "http://localhost:1000/")
 
-    exchange = Client.async(request)
-    monitor = Process.monitor(exchange.client)
+    channel = Client.async(request)
+    monitor = Process.monitor(channel.client)
 
-    assert {:error, :econnrefused} = Client.yield(exchange, 1000)
+    assert {:error, :econnrefused} = Client.yield(channel, 1000)
     assert_receive {:DOWN, ^monitor, :process, _pid, :normal}
   end
 
@@ -155,8 +155,8 @@ defmodule Raxx.NaiveClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
-    monitor = Process.monitor(exchange.client)
+    channel = Client.async(request)
+    monitor = Process.monitor(channel.client)
 
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
@@ -164,7 +164,7 @@ defmodule Raxx.NaiveClientTest do
     :ok = :gen_tcp.send(socket, "HTTP/1.1 200 O")
     :ok = :gen_tcp.close(socket)
 
-    {:error, :closed} = Client.yield(exchange, 1000)
+    {:error, :closed} = Client.yield(channel, 1000)
     assert_receive {:DOWN, ^monitor, :process, _pid, :normal}
   end
 
@@ -173,59 +173,59 @@ defmodule Raxx.NaiveClientTest do
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
-    monitor = Process.monitor(exchange.client)
+    channel = Client.async(request)
+    monitor = Process.monitor(channel.client)
 
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
     :ok = :gen_tcp.send(socket, "!\r\n")
 
-    {:error, {:invalid_line, "!\r\n"}} = Client.yield(exchange, 1000)
+    {:error, {:invalid_line, "!\r\n"}} = Client.yield(channel, 1000)
     assert_receive {:DOWN, ^monitor, :process, _pid, :normal}
   end
 
-  test "Shutting down an exchange returns response when available" do
+  test "Shutting down an channel returns response when available" do
     {port, listen_socket} = listen()
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
+    channel = Client.async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
     :ok = :gen_tcp.send(socket, "HTTP/1.1 200 OK\r\nfoo: bar\r\n\r\n")
     Process.sleep(100)
-    {:ok, response} = Client.shutdown(exchange, 1000)
+    {:ok, response} = Client.shutdown(channel, 1000)
     assert response.status == 200
     assert response.headers == [{"foo", "bar"}]
     assert response.body == ""
     assert {:error, :closed} = :gen_tcp.recv(socket, 0)
   end
 
-  test "Shutting down an exchange returns ok when no response" do
+  test "Shutting down an channel returns ok when no response" do
     {port, listen_socket} = listen()
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
+    channel = Client.async(request)
     {:ok, socket} = accept(listen_socket)
     {:ok, _first_request} = receive_packet(socket)
 
     Process.sleep(100)
-    {:ok, nil} = Client.shutdown(exchange, 1000)
+    {:ok, nil} = Client.shutdown(channel, 1000)
     assert {:error, :closed} = :gen_tcp.recv(socket, 0)
   end
 
-  test "Shutting down an exchange returns an error when the proccess does not exit" do
+  test "Shutting down an channel returns an error when the proccess does not exit" do
     {port, _listen_socket} = listen()
 
     request = Raxx.request(:GET, "http://localhost:#{port}/")
 
-    exchange = Client.async(request)
-    exchange = %{exchange | client: spawn_link(fn -> Process.sleep(:infinity) end)}
-    {:error, pid} = Client.shutdown(exchange, 1000)
-    assert pid == exchange.client
+    channel = Client.async(request)
+    channel = %{channel | client: spawn_link(fn -> Process.sleep(:infinity) end)}
+    {:error, pid} = Client.shutdown(channel, 1000)
+    assert pid == channel.client
   end
 
   test "yield can only be called by the caller" do
@@ -233,14 +233,14 @@ defmodule Raxx.NaiveClientTest do
 
     task =
       Task.async(fn ->
-        exchange = Client.async(request)
-        exchange
+        channel = Client.async(request)
+        channel
       end)
 
-    {:ok, exchange} = Task.yield(task)
+    {:ok, channel} = Task.yield(task)
 
     assert_raise ArgumentError, fn ->
-      Client.yield(exchange, 1000)
+      Client.yield(channel, 1000)
     end
   end
 
@@ -249,14 +249,14 @@ defmodule Raxx.NaiveClientTest do
 
     task =
       Task.async(fn ->
-        exchange = Client.async(request)
-        exchange
+        channel = Client.async(request)
+        channel
       end)
 
-    {:ok, exchange} = Task.yield(task)
+    {:ok, channel} = Task.yield(task)
 
     assert_raise ArgumentError, fn ->
-      Client.shutdown(exchange, 1000)
+      Client.shutdown(channel, 1000)
     end
   end
 

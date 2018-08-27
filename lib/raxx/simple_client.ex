@@ -1,14 +1,35 @@
 defmodule Raxx.SimpleClient do
   @moduledoc ~S"""
-  # NOTE run for ever until shutdown
+  A very simple HTTP/1.1 client.
 
+  This client makes very few assumptions about how to send requests.
+  i.e. Each request is sent over a new connection, no HTTP/1.1 pipelining.
 
+  This makes it ideal for testing servers
 
+  ## Usage
+
+  Build a request using the helpers available in `Raxx` module.
+
+      request = Raxx.request(:GET, "http://example.com")
+      |> Raxx.set_header("accept", "text/html")
+
+  Send the request asynchronously,
+  the returned channel is used to then wait for a response when needed
+
+      channel = Raxx.SimpleClient.async(request)
+
+  Wait for a response on the channel.
+
+      {:ok, response} = Raxx.SimpleClient.yield(channel, 2_000)
   """
   use GenServer
 
   alias __MODULE__.Channel
 
+  @typedoc """
+  A reference to a running client process that can be used to yield or shutdown the request
+  """
   @type channel :: %Channel{
           caller: pid,
           reference: reference,
@@ -41,6 +62,13 @@ defmodule Raxx.SimpleClient do
   # A coordination process could use async but pass a different caller.
   # Then as long as that channel was passed to the caller, the client could do it?
   # then yielding from that caller would work.
+
+  @doc """
+  Send a request over a new channel.
+
+  **NOTE:** Request streaming is not supported, so the request sent must be complete,
+  i.e. have a full binary body or no body.
+  """
   @spec async(Raxx.Request.t()) :: channel
   def async(%Raxx.Request{body: true}) do
     raise ArgumentError, "Request had body `true`, client can only send complete requests."
@@ -63,6 +91,14 @@ defmodule Raxx.SimpleClient do
     }
   end
 
+  @doc """
+  Await the response from the given channel.
+
+  **NOTE:** A response can only be yielded once, it checks the process mailbox for the response.
+
+  **NOTE:** If yielding returns `{:error, :timeout}` then a response could be received in the future.
+  To ensure in this case that there is no message left in the mailbox, run `shutdown/2` after yield.
+  """
   @spec yield(channel, integer) :: {:ok, Raxx.Response.t()} | {:error, :timeout | {:exit, term}}
   def yield(channel = %Channel{caller: caller}, _timeout) when caller != self() do
     raise ArgumentError, invalid_caller_error(channel)
@@ -85,7 +121,20 @@ defmodule Raxx.SimpleClient do
   end
 
   @doc """
-  return {:ok, nil or response}, or exit pid
+  Shutdown a running channel.
+
+  If the response was already available when client is shutdown then it is returned.
+  This can be used if a response is wanted immediatly.
+
+      channel = Raxx.SimpleClient.async(request)
+      # Do something slow
+      {:ok, maybe_response} = Raxx.SimpleClient.shutdown(request, 1000)
+      if response do
+        # Look, a response
+      end
+
+  **NOTE:** timeout is allowed maximum for process to exit.
+  It is not time waiting for a response.
   """
   @spec shutdown(channel, integer) :: {:ok, Raxx.Response.t() | nil} | {:error, pid}
   def shutdown(channel = %Channel{caller: caller}, _timeout) when caller != self() do
@@ -96,20 +145,20 @@ defmodule Raxx.SimpleClient do
     monitor = Process.monitor(client)
     :ok = GenServer.cast(client, :shutdown)
 
-    response =
-      receive do
-        {^reference, {:ok, response}} ->
-          response
-
-        {^reference, _} ->
-          nil
-      after
-        0 ->
-          nil
-      end
-
     receive do
       {:DOWN, ^monitor, _, _, _reason} ->
+        response =
+          receive do
+            {^reference, {:ok, response}} ->
+              response
+
+            {^reference, _} ->
+              nil
+          after
+            0 ->
+              nil
+          end
+
         {:ok, response}
     after
       timeout ->

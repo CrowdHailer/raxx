@@ -1,8 +1,10 @@
 defmodule Raxx.SimpleClient.Channel do
+  @moduledoc false
+
   @enforce_keys [
     :caller,
     :reference,
-    # NOTE sure request is needed in exchange struct
+    # NOTE not sure request is needed in exchange struct
     :request,
     :client
   ]

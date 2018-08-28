@@ -595,11 +595,11 @@ defmodule Raxx.HTTP1 do
 
   defp decode_connection_status(headers) do
     case Enum.split_with(headers, fn {key, _value} -> key == "connection" end) do
-      {[{"connection", "close"}], headers} ->
-        {:close, headers}
-
-      {[{"connection", "keep-alive"}], headers} ->
-        {:keepalive, headers}
+      {[{"connection", value}, headers]} ->
+        case String.downcase(value) do
+          "close" -> {:close, headers}
+          "keep-alive" -> {:keepalive, headers}
+        end
 
       {[], headers} ->
         {nil, headers}

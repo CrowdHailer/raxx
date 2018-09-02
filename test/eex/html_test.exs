@@ -2,13 +2,13 @@ defmodule EEx.HTMlTest do
   use ExUnit.Case, async: true
   doctest EEx.HTML
 
-  import EEx.HTML, only: [escape: 1]
+  import EEx.HTML, only: [escape_to_binary: 1]
 
   test "escapes HTML" do
-    assert escape("<script>") == "&lt;script&gt;"
-    assert escape("html&company") == "html&amp;company"
-    assert escape("\"quoted\"") == "&quot;quoted&quot;"
-    assert escape("html's test") == "html&#39;s test"
+    assert escape_to_binary("<script>") == "&lt;script&gt;"
+    assert escape_to_binary("html&company") == "html&amp;company"
+    assert escape_to_binary("\"quoted\"") == "&quot;quoted&quot;"
+    assert escape_to_binary("html's test") == "html&#39;s test"
   end
 
   test "escapes HTML to iodata" do

@@ -76,11 +76,17 @@ defmodule Raxx.View do
 
     arguments = Enum.map(arguments, fn a when is_atom(a) -> {a, [line: 1], nil} end)
 
-    compiled_page = EEx.compile_file(page_template)
+    compiled_page = EEx.compile_file(page_template, engine: EEx.HTMLEngine)
+
+    # This step would not be necessary if the compiler could return a wrapped value.
+    safe_compiled_page =
+      quote do
+        EEx.HTML.raw(unquote(compiled_page))
+      end
 
     compiled_layout =
       if layout_template do
-        EEx.compile_file(layout_template)
+        EEx.compile_file(layout_template, engine: EEx.HTMLEngine)
       else
         {:__content__, [], nil}
       end
@@ -88,7 +94,7 @@ defmodule Raxx.View do
     {compiled, has_page?} =
       Macro.prewalk(compiled_layout, false, fn
         {:__content__, _opts, nil}, _acc ->
-          {compiled_page, true}
+          {safe_compiled_page, true}
 
         ast, acc ->
           {ast, acc}
@@ -99,6 +105,8 @@ defmodule Raxx.View do
     end
 
     quote do
+      import EEx.HTML, only: [raw: 1]
+
       if unquote(layout_template) do
         @external_resource unquote(layout_template)
         @file unquote(layout_template)
@@ -109,11 +117,12 @@ defmodule Raxx.View do
       def render(request, unquote_splicing(arguments)) do
         request
         |> Raxx.set_header("content-type", "text/html")
-        |> Raxx.set_body(html(unquote_splicing(arguments)))
+        # FIXME when Raxx works through with iodata
+        |> Raxx.set_body("#{html(unquote_splicing(arguments)).data}")
       end
 
       def html(unquote_splicing(arguments)) do
-        unquote(compiled)
+        EEx.HTML.raw(unquote(compiled))
       end
     end
   end

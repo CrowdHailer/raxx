@@ -1,2 +1,2 @@
-<%= x + y %>
-<%= private() %>
+<%= var %>
+<%= raw private() %>

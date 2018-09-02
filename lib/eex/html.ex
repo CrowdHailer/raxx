@@ -2,18 +2,37 @@ defmodule EEx.HTML do
   @moduledoc """
   Conveniences for generating HTML.
   """
+  alias __MODULE__.Safe
+
+  # Short circuit escaping the content, if already wrapped as safe.
+  def escape(content = %Safe{}) do
+    content
+  end
+
+  def escape(term) do
+    data = Safe.to_iodata(term)
+    raw(data)
+  end
+
+  def raw(content = %Safe{}) do
+    content
+  end
+
+  def raw(iodata) do
+    %Safe{data: iodata}
+  end
 
   @doc ~S"""
   Escapes the given HTML to string.
-      iex> EEx.HTML.escape("foo")
+      iex> EEx.HTML.escape_to_binary("foo")
       "foo"
-      iex> EEx.HTML.escape("<foo>")
+      iex> EEx.HTML.escape_to_binary("<foo>")
       "&lt;foo&gt;"
-      iex> EEx.HTML.escape("quotes: \" & \'")
+      iex> EEx.HTML.escape_to_binary("quotes: \" & \'")
       "quotes: &quot; &amp; &#39;"
   """
-  @spec escape(String.t()) :: String.t()
-  def escape(data) when is_binary(data) do
+  @spec escape_to_binary(String.t()) :: String.t()
+  def escape_to_binary(data) when is_binary(data) do
     IO.iodata_to_binary(to_iodata(data, 0, data, []))
   end
 

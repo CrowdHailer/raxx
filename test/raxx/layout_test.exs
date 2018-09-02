@@ -22,7 +22,8 @@ defmodule Raxx.LayoutTest do
   end
 
   test "List of imports are available in template" do
-    assert ["7", "layout_function", "helper_function"] = lines(DefaultLayoutExample.html(3, 4))
+    assert ["7", "layout_function", "helper_function"] =
+             lines("#{DefaultLayoutExample.html(3, 4)}")
   end
 
   defp lines(text) do

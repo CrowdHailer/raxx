@@ -46,7 +46,13 @@ defmodule Raxx.ViewTest do
 
   # TEST INVALID Layout
 
-  # test setting unknown options, or duplicate options
+  test "unexpected options are an argument error" do
+    assert_raise ArgumentError, fn ->
+      defmodule Tmp do
+        use Raxx.View, random: :foo
+      end
+    end
+  end
 
   defp lines(text) do
     String.split(text, ~r/\R/)

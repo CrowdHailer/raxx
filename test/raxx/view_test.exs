@@ -44,9 +44,15 @@ defmodule Raxx.ViewTest do
     assert ["3", "5"] = lines(RelativeTemplate.html(3, 5))
   end
 
-  # TEST INVALID Layout
+  test "An layout missing space for content is invalid" do
+    assert_raise ArgumentError, fn ->
+      defmodule Tmp do
+        use Raxx.View, layout: "view_test_invalid_layout.html.eex"
+      end
+    end
+  end
 
-  test "unexpected options are an argument error" do
+  test "Unexpected options are an argument error" do
     assert_raise ArgumentError, fn ->
       defmodule Tmp do
         use Raxx.View, random: :foo

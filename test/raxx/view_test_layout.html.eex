@@ -1,2 +1,2 @@
 LAYOUT
-<%= __page__ %>
+<%= __content__ %>

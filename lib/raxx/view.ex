@@ -36,19 +36,21 @@ defmodule Raxx.View do
       if layout_template do
         EEx.compile_file(layout_template)
       else
-        {:__page__, [], nil}
+        {:__content__, [], nil}
       end
 
-    {compiled, has_page} =
+    {compiled, has_page?} =
       Macro.prewalk(compiled_layout, false, fn
-        {:__page__, _opts, nil}, _acc ->
+        {:__content__, _opts, nil}, _acc ->
           {compiled_page, true}
 
         ast, acc ->
           {ast, acc}
       end)
 
-    IO.inspect(has_page)
+    if !has_page? do
+      raise ArgumentError, "Layout missing content, add `<%= __content__ %>` to template"
+    end
 
     quote do
       if unquote(layout_template) do

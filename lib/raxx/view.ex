@@ -28,10 +28,10 @@ defmodule Raxx.View do
       Raxx.response(:ok)
       |> Greet.render("Bob")
       # => %Raxx.Response{
-        status: 200,
-        headers: [{"content-type", "text/html"}],
-        body: "<h1>Greetings</h1>\n<p>Hello, Alice</p>"
-      }
+      #      status: 200,
+      #      headers: [{"content-type", "text/html"}],
+      #      body: "<h1>Greetings</h1>\n<p>Hello, Alice</p>"
+      #    }
 
   ### Options
 

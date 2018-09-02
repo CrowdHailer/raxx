@@ -1,4 +1,30 @@
 defmodule EEx.HTMLEngine do
+  @moduledoc """
+  An engine for templating HTML content.
+
+  Interpolated values are HTML escaped,
+  unless the term implements the `EEx.HTML.Safe` protocol.
+
+  Values returned are `io_lists` for performance reasons.
+
+  ## Examples
+
+      iex> EEx.eval_string("foo <%= bar %>", [bar: "baz"], engine: EEx.HTMLEngine)
+      ...> |> IO.iodata_to_binary()
+      "foo baz"
+
+      iex> EEx.eval_string("foo <%= bar %>", [bar: "<script>"], engine: EEx.HTMLEngine)
+      ...> |> IO.iodata_to_binary()
+      "foo &lt;script&gt;"
+
+      iex> EEx.eval_string("foo <%= bar %>", [bar: EEx.HTML.raw("<script>")], engine: EEx.HTMLEngine)
+      ...> |> IO.iodata_to_binary()
+      "foo <script>"
+
+      iex> EEx.eval_string("foo <%= @bar %>", [assigns: %{bar: "<script>"}], engine: EEx.HTMLEngine)
+      ...> |> IO.iodata_to_binary()
+      "foo &lt;script&gt;"
+  """
   use EEx.Engine
 
   def init(_options) do

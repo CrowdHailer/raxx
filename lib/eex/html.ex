@@ -4,6 +4,11 @@ defmodule EEx.HTML do
   """
   alias __MODULE__.Safe
 
+  @doc """
+  Escape the HTML content derived from the given term.
+
+  The content is returned wrapped in an `EEx.HTML.Safe` struct so it is not reescaped by templates etc.
+  """
   # Short circuit escaping the content, if already wrapped as safe.
   def escape(content = %Safe{}) do
     content

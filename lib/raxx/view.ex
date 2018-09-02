@@ -58,19 +58,16 @@ defmodule Raxx.View do
 
     page_template = Path.expand(page_template, Path.dirname(__CALLER__.file))
 
-    layout_template =
-      case Keyword.pop_first(options, :layout) do
-        {layout_template, []} ->
-          layout_template
+    {layout_template, remaining_options} = Keyword.pop_first(options, :layout)
 
-        {_, remaining_options} ->
-          keys =
-            Keyword.keys(remaining_options)
-            |> Enum.map(&inspect/1)
-            |> Enum.join(", ")
+    if remaining_options != [] do
+      keys =
+        Keyword.keys(remaining_options)
+        |> Enum.map(&inspect/1)
+        |> Enum.join(", ")
 
-          raise ArgumentError, "Unexpected options for #{inspect(unquote(__MODULE__))}: [#{keys}]"
-      end
+      raise ArgumentError, "Unexpected options for #{inspect(unquote(__MODULE__))}: [#{keys}]"
+    end
 
     layout_template =
       if layout_template do
@@ -115,7 +112,6 @@ defmodule Raxx.View do
         |> Raxx.set_body(html(unquote_splicing(arguments)))
       end
 
-      # TODO get warning for unused argument
       def html(unquote_splicing(arguments)) do
         unquote(compiled)
       end

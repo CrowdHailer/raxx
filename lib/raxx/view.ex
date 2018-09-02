@@ -51,6 +51,13 @@ defmodule Raxx.View do
     IO.inspect(has_page)
 
     quote do
+      if unquote(layout_template) do
+        @external_resource unquote(layout_template)
+        @file unquote(layout_template)
+      end
+
+      @external_resource unquote(page_template)
+      @file unquote(page_template)
       def render(request, unquote_splicing(arguments)) do
         request
         |> Raxx.set_header("content-type", "text/html")

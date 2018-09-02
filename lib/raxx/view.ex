@@ -1,4 +1,53 @@
+# Maybe rename Raxx.HTMLTemplate
 defmodule Raxx.View do
+  @moduledoc ~S"""
+  Generate views from `.eex` template files.
+
+  Using this module will add the functions `html` and `render` to a module.
+
+  ## Example
+
+      # greet.html.eex
+      <p>Hello, <%= name %></p>
+
+      # layout.html.eex
+      <h1>Greetings</h1>
+      <%= __content__ %>
+
+      # greet.ex
+      defmodule Greet do
+        use Raxx.View,
+          arguments: [:name],
+          layout: "layout.html.eex"
+      end
+
+      # iex -S mix
+      Greet.html("Alice")
+      # => "<h1>Greetings</h1>\n<p>Hello, Alice</p>"
+
+      Raxx.response(:ok)
+      |> Greet.render("Bob")
+      # => %Raxx.Response{
+        status: 200,
+        headers: [{"content-type", "text/html"}],
+        body: "<h1>Greetings</h1>\n<p>Hello, Alice</p>"
+      }
+
+  ### Options
+
+    - **arguments:** A list of atoms for variables used in the template.
+      This will be the argument list for the html function.
+      The render function takes one additional argument to this list,
+      a response struct.
+
+    - **template (optional):** The eex file containing a main content template.
+      If not given the template file will be generated from the file of the calling module.
+      i.e. `path/to/file.ex` -> `path/to/file.html.eex`
+
+    - **layout (optional):** An eex file containing a layout template.
+      This template can use all the same variables as the main template.
+      In addition it must include the content using `<%= __content %>`
+  """
   defmacro __using__(options) do
     {options, []} = Module.eval_quoted(__CALLER__, options)
 
@@ -73,6 +122,7 @@ defmodule Raxx.View do
     end
   end
 
+  @doc false
   def template_for(file) do
     case String.split(file, ~r/\.ex(s)?$/) do
       [path_and_name, ""] ->

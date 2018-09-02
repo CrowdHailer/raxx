@@ -23,6 +23,15 @@ defmodule Raxx.ViewTest do
     assert ["8", "DefaultTemplate"] = lines(DefaultTemplate.html(3, 5))
   end
 
+  test "Render will set content-type and body" do
+    response =
+      Raxx.response(:ok)
+      |> DefaultTemplate.render(1, 2)
+
+    assert ["3", "DefaultTemplate"] = lines(response.body)
+    assert [{"content-type", "text/html"}] = response.headers
+  end
+
   test "View can be rendered within a layout" do
     assert ["LAYOUT", "8", "WithLayout"] = lines(WithLayout.html(3, 5))
   end

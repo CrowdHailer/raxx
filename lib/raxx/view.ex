@@ -39,8 +39,13 @@ defmodule Raxx.View do
     IO.inspect(has_page)
 
     quote do
+      def render(request, unquote_splicing(arguments)) do
+        request
+        |> Raxx.set_header("content-type", "text/html")
+        |> Raxx.set_body(html(unquote_splicing(arguments)))
+      end
+
       # TODO get warning for unused argument
-      # This should take a response/request
       def html(unquote_splicing(arguments)) do
         unquote(compiled)
       end

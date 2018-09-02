@@ -1,9 +1,10 @@
-# Maybe rename Raxx.HTMLTemplate
 defmodule Raxx.View do
   @moduledoc ~S"""
   Generate views from `.eex` template files.
 
   Using this module will add the functions `html` and `render` to a module.
+
+  To create layouts that can be reused across multiple pages check out `Raxx.Layout`.
 
   ## Example
 
@@ -33,7 +34,7 @@ defmodule Raxx.View do
       #      body: "<h1>Greetings</h1>\n<p>Hello, Alice</p>"
       #    }
 
-  ### Options
+  ## Options
 
     - **arguments:** A list of atoms for variables used in the template.
       This will be the argument list for the html function.
@@ -47,6 +48,20 @@ defmodule Raxx.View do
     - **layout (optional):** An eex file containing a layout template.
       This template can use all the same variables as the main template.
       In addition it must include the content using `<%= __content %>`
+
+  ## Safety
+  ### [XSS (Cross Site Scripting) Prevention](https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.231_-_HTML_Escape_Before_Inserting_Untrusted_Data_into_HTML_Element_Content)
+
+  All content interpolated into a view is escaped.
+
+      iex> Greet.html("<script>")
+      # => "<h1>Greetings</h1>\n<p>Hello, &lt;script&gt;</p>"
+
+  Values in the template can be marked as secure using the `EEx.HTML.raw/1` function.
+  *raw is automatically imported to the template scope*.
+
+      # greet.html.eex
+      <p>Hello, <%= raw name %></p>
   """
   defmacro __using__(options) do
     {options, []} = Module.eval_quoted(__CALLER__, options)

@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- `Raxx.request_host` to get the doman or ip a request is for.
+- `Raxx.request_host` to get the domain or ip a request is for.
 - `Raxx.request_port` to get the numeric port a request is sent to.
 
 ## [0.15.4](https://github.com/CrowdHailer/raxx/tree/0.15.4) - 2018-05-20

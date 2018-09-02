@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.15.9](https://github.com/CrowdHailer/raxx/tree/0.15.9) - 2018-09-02
+
+### Added
+
+- `Raxx.View` to generate render functions from `eex` templates.
+- `Raxx.Layout` generate views from a reusable layout and set of helpers.
+- `EEx.HTML`, `EEx.HTML.Safe` and `EEx.HTMLEngine`.
+  **These are temporary additions**, used to provide HTML escaping in view and layout modules.
+  They will be moved to `eex` or a new project before `1.0`.
+
 ## [0.15.8](https://github.com/CrowdHailer/raxx/tree/0.15.8) - 2018-08-27
 
 ### Added

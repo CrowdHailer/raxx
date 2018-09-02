@@ -4,7 +4,7 @@ defmodule Raxx.Mixfile do
   def project do
     [
       app: :raxx,
-      version: "0.15.8",
+      version: "0.15.9",
       elixir: "~> 1.6",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -19,7 +19,7 @@ defmodule Raxx.Mixfile do
   end
 
   def application do
-    [extra_applications: [:logger, :ssl]]
+    [extra_applications: [:logger, :ssl, :eex]]
   end
 
   defp deps do

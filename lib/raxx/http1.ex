@@ -723,7 +723,7 @@ defmodule Raxx.HTTP1 do
     payload_headers =
       case content_length(headers) do
         nil ->
-          # NOTE `:erlang.iolist_size/1` acceps binaries, i.e. should be `:erlang.iodata_size/1`
+          # NOTE `:erlang.iolist_size/1` accepts binaries, i.e. should be `:erlang.iodata_size/1`
           case :erlang.iolist_size(iodata) do
             0 ->
               []

@@ -338,7 +338,9 @@ defmodule Raxx.HTTP1 do
           {:ok, Enum.reverse(headers), rest}
 
         {:ok, {:http_header, _, key, _, value}, rest} ->
-          parse_headers(rest, options, [{String.downcase("#{key}"), value} | headers])
+          parse_headers(rest, options, [
+            {String.downcase("#{key}"), value} | headers
+          ])
 
         {:ok, {:http_error, invalid_line}, _rest} ->
           {:error, {:invalid_line, invalid_line}}
@@ -492,6 +494,24 @@ defmodule Raxx.HTTP1 do
         body: false
       }, :keepalive, {:complete, ""}, ""}}
 
+      # Test exceptional case when server returns Title case values
+      iex> "HTTP/1.1 204 No Content\r\nconnection: Close\r\nfoo: bar\r\n\r\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:ok, {%Raxx.Response{
+        status: 204,
+        headers: [{"foo", "bar"}],
+        body: false
+      }, :close, {:complete, ""}, ""}}
+
+      # Test exceptional case when server uses Title case values
+      iex> "HTTP/1.1 204 No Content\r\nconnection: Keep-alive\r\nfoo: bar\r\n\r\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:ok, {%Raxx.Response{
+        status: 204,
+        headers: [{"foo", "bar"}],
+        body: false
+      }, :keepalive, {:complete, ""}, ""}}
+
       # Test line_length is limited
       # "HTTP/1.1 204 " + newlines = 15
       iex> reason_phrase = String.duplicate("A", 986)
@@ -595,11 +615,11 @@ defmodule Raxx.HTTP1 do
 
   defp decode_connection_status(headers) do
     case Enum.split_with(headers, fn {key, _value} -> key == "connection" end) do
-      {[{"connection", "close"}], headers} ->
-        {:close, headers}
-
-      {[{"connection", "keep-alive"}], headers} ->
-        {:keepalive, headers}
+      {[{"connection", value}], headers} ->
+        case String.downcase(value) do
+          "close" -> {:close, headers}
+          "keep-alive" -> {:keepalive, headers}
+        end
 
       {[], headers} ->
         {nil, headers}

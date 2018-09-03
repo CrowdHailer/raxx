@@ -47,7 +47,7 @@ defmodule Raxx.View do
 
     - **layout (optional):** An eex file containing a layout template.
       This template can use all the same variables as the main template.
-      In addition it must include the content using `<%= __content %>`
+      In addition it must include the content using `<%= __content__ %>`
 
   ## Safety
   ### [XSS (Cross Site Scripting) Prevention](https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.231_-_HTML_Escape_Before_Inserting_Untrusted_Data_into_HTML_Element_Content)

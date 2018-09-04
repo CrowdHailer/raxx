@@ -4,7 +4,7 @@ defmodule Raxx.Mixfile do
   def project do
     [
       app: :raxx,
-      version: "0.15.10",
+      version: "0.15.11",
       elixir: "~> 1.6",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -26,6 +26,7 @@ defmodule Raxx.Mixfile do
     [
       # TODO remove once sessions are in separate repo.
       {:cookie, "~> 0.1.0"},
+      {:jason, "~> 1.0.0", optional: true},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]

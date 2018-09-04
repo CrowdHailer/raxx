@@ -50,6 +50,7 @@ defmodule Raxx.View do
       In addition it must include the content using `<%= __content__ %>`
 
   ## Safety
+
   ### [XSS (Cross Site Scripting) Prevention](https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.231_-_HTML_Escape_Before_Inserting_Untrusted_Data_into_HTML_Element_Content)
 
   All content interpolated into a view is escaped.
@@ -62,6 +63,20 @@ defmodule Raxx.View do
 
       # greet.html.eex
       <p>Hello, <%= raw name %></p>
+
+  ### JavaScript
+
+  >  Including untrusted data inside any other JavaScript context is quite dangerous, as it is extremely easy to switch into an execution context with characters including (but not limited to) semi-colon, equals, space, plus, and many more, so use with caution.
+  [XSS Prevention Cheat Sheet](https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.233_-_JavaScript_Escape_Before_Inserting_Untrusted_Data_into_JavaScript_Data_Values)
+
+  **DONT DO THIS**
+  ```eex
+  <script type="text/javascript">
+    console.log('Hello, ' + <%= name %>)
+  </script>
+  ```
+
+  Use `javascript_variables/1` for injecting variables into any JavaScript environment.
   """
   defmacro __using__(options) do
     {options, []} = Module.eval_quoted(__CALLER__, options)
@@ -121,6 +136,7 @@ defmodule Raxx.View do
 
     quote do
       import EEx.HTML, only: [raw: 1]
+      import unquote(__MODULE__), only: [javascript_variables: 1]
 
       if unquote(layout_template) do
         @external_resource unquote(layout_template)
@@ -151,5 +167,43 @@ defmodule Raxx.View do
       _ ->
         raise "#{__MODULE__} needs to be used from a `.ex` or `.exs` file"
     end
+  end
+
+  @doc """
+  Safety inject server variables into a pages JavaScript.
+
+  ## Example
+
+  ```eex
+  <%= javascript_variables name: "Cynthia" %>
+  <script type="text/javascript">
+    console.log('Hello, ' + name)
+  </script>
+  ```
+  """
+  case Code.ensure_loaded(Jason) do
+    {:module, _} ->
+      @javascript_variables_template "<div style='display:none;'><%= encoded %></div><script>const{<%= key_string %>}=JSON.parse(document.currentScript.previousElementSibling.textContent)</script>"
+
+      def javascript_variables(variables) do
+        variables = Enum.into(variables, %{})
+        {:ok, json} = Jason.encode(variables)
+        encoded = EEx.HTML.escape(json)
+
+        key_string =
+          variables
+          |> Map.keys()
+          |> Enum.map(&Atom.to_string/1)
+          |> Enum.join(", ")
+
+        EEx.HTML.raw(
+          unquote(EEx.compile_string(@javascript_variables_template, engine: EEx.HTMLEngine))
+        )
+      end
+
+    {:error, :nofile} ->
+      def javascript_variables(_variables) do
+        raise "`javascript_variables/1` requires the Jason encoder, add `{:jason, \"~> 1.0.0\"}` to `mix.exs`"
+      end
   end
 end

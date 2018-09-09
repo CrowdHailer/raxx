@@ -523,6 +523,11 @@ defmodule Raxx do
   @doc """
   Add a complete body to a message.
 
+  All 1xx (Informational), 204 (No Content), and 304 (Not Modified) responses do not include a message body.
+  This functional will raise an `ArgumentError` if a body is set on one of these reponses.
+
+  https://tools.ietf.org/html/rfc7230#section-3.1.2
+
   ## Examples
 
       iex> request(:GET, "/")
@@ -532,6 +537,11 @@ defmodule Raxx do
   """
   @spec set_body(Raxx.Request.t(), body) :: Raxx.Request.t()
   @spec set_body(Raxx.Response.t(), body) :: Raxx.Response.t()
+  def set_body(%{status: status}, _body)
+      when status in 100..199 or status == 204 or status == 304 do
+    raise ArgumentError, "Response with status `#{status}` cannot have a body, see documentation."
+  end
+
   def set_body(message = %{body: false}, body) do
     %{message | body: body}
   end

@@ -42,4 +42,25 @@ defmodule RaxxTest do
       |> Raxx.get_header("Foo")
     end
   end
+
+  test "Cannot set the body of an informational (1xx) response" do
+    assert_raise ArgumentError, fn ->
+      Raxx.response(:continue)
+      |> Raxx.set_body("Hello, World!")
+    end
+  end
+
+  test "Cannot set the body of an no content response" do
+    assert_raise ArgumentError, fn ->
+      Raxx.response(:no_content)
+      |> Raxx.set_body("Hello, World!")
+    end
+  end
+
+  test "Cannot set the body of an not modified response" do
+    assert_raise ArgumentError, fn ->
+      Raxx.response(:not_modified)
+      |> Raxx.set_body("Hello, World!")
+    end
+  end
 end

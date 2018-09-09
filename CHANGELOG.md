@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Raxx.set_content_length/3` to set the content length of a request or response.
 - `Raxx.get_content_length/2` to get the integer value for the content length of a message.
 
+### Changed
+
+- `Raxx.set_body/2` will raise an exception for responses that cannot have a body.
+
 ## [0.15.11](https://github.com/CrowdHailer/raxx/tree/0.15.11) - 2018-09-04
 
 ### Added

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## master
+
+### Added
+
+- `Raxx.set_content_length/3` to set the content length of a request or response.
+- `Raxx.get_content_length/2` to get the integer value for the content length of a message.
+
 ## [0.15.11](https://github.com/CrowdHailer/raxx/tree/0.15.11) - 2018-09-04
 
 ### Added

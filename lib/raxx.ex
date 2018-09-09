@@ -472,6 +472,55 @@ defmodule Raxx do
   end
 
   @doc """
+  Set the content length of a request or response.
+
+  The content length must be a non negative integer.
+
+  ## Examples
+
+      iex> response(:ok)
+      ...> |> set_content_length(13)
+      ...> |> get_header("content-length")
+      "13"
+  """
+  @spec set_content_length(Raxx.Request.t(), non_neg_integer()) :: Raxx.Request.t()
+  @spec set_content_length(Raxx.Response.t(), non_neg_integer()) :: Raxx.Response.t()
+  def set_content_length(message, content_length) when content_length >= 0 do
+    set_header(message, "content-length", Integer.to_string(content_length))
+  end
+
+  @doc """
+  Get the integer value for the content length of a message.
+
+  A well formed struct will always have a non negative content length, or none.
+
+  ## Examples
+
+      iex> response(:ok)
+      ...> |> set_content_length(0)
+      ...> |> get_content_length()
+      0
+
+      iex> response(:ok)
+      ...> |> get_content_length()
+      nil
+  """
+  @spec get_content_length(Raxx.Request.t()) :: nil | non_neg_integer()
+  @spec get_content_length(Raxx.Response.t()) :: nil | non_neg_integer()
+  def get_content_length(message) do
+    case get_header(message, "content-length") do
+      nil ->
+        nil
+
+      binary ->
+        case Integer.parse(binary) do
+          {content_length, ""} when content_length >= 0 ->
+            content_length
+        end
+    end
+  end
+
+  @doc """
   Add a complete body to a message.
 
   ## Examples

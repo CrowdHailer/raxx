@@ -185,18 +185,40 @@ defmodule Raxx.HTTP1 do
          scheme: :http
        }, nil, {:bytes, 13}, ""}}
 
+      # Packet split in request line
       iex> "GET /path?qs HT"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:more, "GET /path?qs HT"}
 
-      iex> "GET /path?qs HTTP/1.1\r\nhost: exa"
+      # Packet split in headers
+      iex> "GET / HTTP/1.1\r\nhost: exa"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
-      {:more, "GET /path?qs HTTP/1.1\r\nhost: exa"}
+      {:more, "GET / HTTP/1.1\r\nhost: exa"}
+
+      # Sending response
+      iex> "HTTP/1.1 204 No Content\r\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
+      {:error, {:invalid_line, "HTTP/1.1 204 No Content"}}
 
       # Missing host header
-      iex> "GET /path?qs HTTP/1.1\r\naccept: text/plain\r\n\r\n"
+      iex> "GET / HTTP/1.1\r\naccept: text/plain\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:error, :no_host_header}
+
+      # Duplicate host header
+      iex> "GET / HTTP/1.1\r\nhost: example.com\r\nhost: example2.com\r\n\r\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
+      {:error, :multiple_host_headers}
+
+      # Invalid content length header
+      iex> "GET / HTTP/1.1\r\nhost: example.com\r\ncontent-length: eleven\r\n\r\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
+      {:error, :invalid_content_length_header}
+
+      # Duplicate content length header
+      iex> "GET / HTTP/1.1\r\nhost: example.com\r\ncontent-length: 12\r\ncontent-length: 14\r\n\r\n"
+      ...> |> Raxx.HTTP1.parse_request(scheme: :http)
+      {:error, :multiple_content_length_headers}
 
       # Invalid start line
       iex> "!!!BAD_REQUEST_LINE\r\n"
@@ -209,7 +231,7 @@ defmodule Raxx.HTTP1 do
       {:error, {:invalid_line, "!!!BAD_HEADER\r\n"}}
 
       # Test connection status is extracted
-      iex> "GET /path?qs HTTP/1.1\r\nhost: example.com\r\nconnection: close\r\naccept: text/plain\r\n\r\n"
+      iex> "GET / HTTP/1.1\r\nhost: example.com\r\nconnection: close\r\naccept: text/plain\r\n\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:ok,
        {%Raxx.Request{
@@ -218,13 +240,13 @@ defmodule Raxx.HTTP1 do
          headers: [{"accept", "text/plain"}],
          method: :GET,
          mount: [],
-         path: ["path"],
-         query: "qs",
-         raw_path: "/path",
+         path: [],
+         query: nil,
+         raw_path: "/",
          scheme: :http
        }, :close, {:complete, ""}, ""}}
 
-       iex> "GET /path?qs HTTP/1.1\r\nhost: example.com\r\nconnection: keep-alive\r\naccept: text/plain\r\n\r\n"
+       iex> "GET / HTTP/1.1\r\nhost: example.com\r\nconnection: keep-alive\r\naccept: text/plain\r\n\r\n"
        ...> |> Raxx.HTTP1.parse_request(scheme: :http)
        {:ok,
         {%Raxx.Request{
@@ -233,9 +255,9 @@ defmodule Raxx.HTTP1 do
           headers: [{"accept", "text/plain"}],
           method: :GET,
           mount: [],
-          path: ["path"],
-          query: "qs",
-          raw_path: "/path",
+          path: [],
+          query: nil,
+          raw_path: "/",
           scheme: :http
         }, :keepalive, {:complete, ""}, ""}}
 
@@ -291,21 +313,28 @@ defmodule Raxx.HTTP1 do
           {:ok, headers, rest2} ->
             case Enum.split_with(headers, fn {key, _value} -> key == "host" end) do
               {[{"host", host}], headers} ->
-                {headers, body_present, body_read_state} = decode_payload(headers)
+                case decode_payload(headers) do
+                  {:ok, {headers, body_present, body_read_state}} ->
+                    {connection_status, headers} = decode_connection_status(headers)
 
-                {connection_status, headers} = decode_connection_status(headers)
+                    request =
+                      Raxx.request(method, path_and_query)
+                      |> Map.put(:scheme, scheme)
+                      |> Map.put(:authority, host)
+                      |> Map.put(:headers, headers)
+                      |> Map.put(:body, body_present)
 
-                request =
-                  Raxx.request(method, path_and_query)
-                  |> Map.put(:scheme, scheme)
-                  |> Map.put(:authority, host)
-                  |> Map.put(:headers, headers)
-                  |> Map.put(:body, body_present)
+                    {:ok, {request, connection_status, body_read_state, rest2}}
 
-                {:ok, {request, connection_status, body_read_state, rest2}}
+                  {:error, reason} ->
+                    {:error, reason}
+                end
 
               {[], _headers} ->
                 {:error, :no_host_header}
+
+              {_host_headers, _headers} ->
+                {:error, :multiple_host_headers}
             end
 
           {:error, reason} ->
@@ -314,6 +343,10 @@ defmodule Raxx.HTTP1 do
           {:more, :undefined} ->
             {:more, buffer}
         end
+
+      {:ok, {:http_response, _, _, _}, _rest} ->
+        [invalid_line, _rest] = String.split(buffer, ~r/\R/, parts: 2)
+        {:error, {:invalid_line, invalid_line}}
 
       {:ok, {:http_error, invalid_line}, _rest} ->
         {:error, {:invalid_line, invalid_line}}
@@ -571,13 +604,17 @@ defmodule Raxx.HTTP1 do
                maximum_headers_count: maximum_headers_count
              ) do
           {:ok, headers, rest2} ->
-            {headers, body_present, body_read_state} = decode_payload(headers)
+            case decode_payload(headers) do
+              {:ok, {headers, body_present, body_read_state}} ->
+                {connection_status, headers} = decode_connection_status(headers)
 
-            {connection_status, headers} = decode_connection_status(headers)
+                {:ok,
+                 {%Raxx.Response{status: status, headers: headers, body: body_present},
+                  connection_status, body_read_state, rest2}}
 
-            {:ok,
-             {%Raxx.Response{status: status, headers: headers, body: body_present},
-              connection_status, body_read_state, rest2}}
+              {:error, reason} ->
+                {:error, reason}
+            end
 
           {:error, reason} ->
             {:error, reason}
@@ -600,15 +637,18 @@ defmodule Raxx.HTTP1 do
   defp decode_payload(headers) do
     case Enum.split_with(headers, fn {key, _value} -> key == "transfer-encoding" end) do
       {[{"transfer-encoding", "chunked"}], headers} ->
-        {headers, true, :chunked}
+        {:ok, {headers, true, :chunked}}
 
       {[], headers} ->
-        case content_length(headers) do
-          nuffink when nuffink in [nil, 0] ->
-            {headers, false, {:complete, ""}}
+        case fetch_content_length(headers) do
+          {:ok, nuffink} when nuffink in [nil, 0] ->
+            {:ok, {headers, false, {:complete, ""}}}
 
-          bytes ->
-            {headers, true, {:bytes, bytes}}
+          {:ok, bytes} ->
+            {:ok, {headers, true, {:bytes, bytes}}}
+
+          {:error, reason} ->
+            {:error, reason}
         end
     end
   end
@@ -706,11 +746,12 @@ defmodule Raxx.HTTP1 do
   end
 
   defp payload(%{headers: headers, body: true}) do
-    case content_length(headers) do
-      nil ->
+    # Assume well formed message so don't handle error case
+    case fetch_content_length(headers) do
+      {:ok, nil} ->
         {[{"transfer-encoding", "chunked"}], :chunked}
 
-      content_length ->
+      {:ok, content_length} ->
         {[], {:bytes, content_length}}
     end
   end
@@ -720,9 +761,10 @@ defmodule Raxx.HTTP1 do
   end
 
   defp payload(%{headers: headers, body: iodata}) do
+    # Assume well formed message so don't handle error case
     payload_headers =
-      case content_length(headers) do
-        nil ->
+      case fetch_content_length(headers) do
+        {:ok, nil} ->
           case :erlang.iolist_size(iodata) do
             0 ->
               []
@@ -731,7 +773,7 @@ defmodule Raxx.HTTP1 do
               [{"content-length", Integer.to_string(content_length)}]
           end
 
-        _value ->
+        {:ok, _value} ->
           # If a content-length is already set it is the callers responsibility to set the correct value
           []
       end
@@ -739,14 +781,22 @@ defmodule Raxx.HTTP1 do
     {payload_headers, {:complete, iodata}}
   end
 
-  defp content_length(headers) do
+  defp fetch_content_length(headers) do
     case :proplists.get_all_values("content-length", headers) do
       [] ->
-        nil
+        {:ok, nil}
 
       [binary] ->
-        {content_length, ""} = Integer.parse(binary)
-        content_length
+        case Integer.parse(binary) do
+          {content_length, ""} ->
+            {:ok, content_length}
+
+          _ ->
+            {:error, :invalid_content_length_header}
+        end
+
+      _ ->
+        {:error, :multiple_content_length_headers}
     end
   end
 end

@@ -247,30 +247,30 @@ defmodule Raxx.HTTP1 do
       {:error, {:line_length_limit_exceeded, :request_line}}
 
       iex> path = "/" <> String.duplicate("a", 984)
-      ...> {:more, _} = "GET #{path} HTTP/1.1\r\n"
+      ...> "GET #{path} HTTP/1.1\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
-      ...> :ok
-      :ok
+      ...> |> elem(0)
+      :more
 
       iex> path = "/" <> String.duplicate("a", 1984)
-      ...> {:more, _} = "GET #{path} HTTP/1.1\r\n"
+      ...> "GET #{path} HTTP/1.1\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http, maximum_line_length: 2000)
-      ...> :ok
-      :ok
+      ...> |> elem(0)
+      :more
 
       iex> "GET / HTTP/1.1\r\nhost: #{String.duplicate("a", 993)}\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
       {:error, {:line_length_limit_exceeded, :header_line}}
 
-      iex> {:more, _} = "GET / HTTP/1.1\r\nhost: #{String.duplicate("a", 992)}\r\n"
+      iex> "GET / HTTP/1.1\r\nhost: #{String.duplicate("a", 992)}\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
-      ...> :ok
-      :ok
+      ...> |> elem(0)
+      :more
 
-      iex> {:more, _} = "GET / HTTP/1.1\r\nhost: #{String.duplicate("a", 1992)}\r\n"
+      iex> "GET / HTTP/1.1\r\nhost: #{String.duplicate("a", 1992)}\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http, maximum_line_length: 2000)
-      ...> :ok
-      :ok
+      ...> |> elem(0)
+      :more
   """
   @spec parse_request(binary, [option]) ::
           {:ok, {Raxx.Request.t(), connection_status, body_read_state, binary}}
@@ -520,30 +520,30 @@ defmodule Raxx.HTTP1 do
       {:error, {:line_length_limit_exceeded, :status_line}}
 
       iex> reason_phrase = String.duplicate("A", 985)
-      ...> {:more, _} = "HTTP/1.1 204 #{reason_phrase}\r\n"
+      ...> "HTTP/1.1 204 #{reason_phrase}\r\n"
       ...> |> Raxx.HTTP1.parse_response()
-      ...> :ok
-      :ok
+      ...> |> elem(0)
+      :more
 
       iex> reason_phrase = String.duplicate("A", 1985)
-      ...> {:more, _} = "HTTP/1.1 204 #{reason_phrase}\r\n"
+      ...> "HTTP/1.1 204 #{reason_phrase}\r\n"
       ...> |> Raxx.HTTP1.parse_response(maximum_line_length: 2000)
-      ...> :ok
-      :ok
+      ...> |> elem(0)
+      :more
 
       iex> "HTTP/1.1 204 No Content\r\nfoo: #{String.duplicate("a", 994)}\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       {:error, {:line_length_limit_exceeded, :header_line}}
 
-      iex> {:more, _} = "HTTP/1.1 204 No Content\r\nfoo: #{String.duplicate("a", 993)}\r\n"
+      iex> "HTTP/1.1 204 No Content\r\nfoo: #{String.duplicate("a", 993)}\r\n"
       ...> |> Raxx.HTTP1.parse_response()
-      ...> :ok
-      :ok
+      ...> |> elem(0)
+      :more
 
-      iex> {:more, _} = "HTTP/1.1 204 No Content\r\nfoo: #{String.duplicate("a", 1993)}\r\n"
+      iex> "HTTP/1.1 204 No Content\r\nfoo: #{String.duplicate("a", 1993)}\r\n"
       ...> |> Raxx.HTTP1.parse_response(maximum_line_length: 2000)
-      ...> :ok
-      :ok
+      ...> |> elem(0)
+      :more
 
       # Test maximum number of headers is limited
       iex> "HTTP/1.1 204 No Content\r\n#{String.duplicate("foo: bar\r\n", 101)}"

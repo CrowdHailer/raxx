@@ -20,6 +20,13 @@ defmodule EEx.HTML do
       %EEx.HTML.Safe{data: [[[[] | "<h1>Hello, "], [[[] | "&lt;"], "script" | "&gt;"]] | "</h1>"]}
       iex> String.Chars.to_string(content)
       "<h1>Hello, &lt;script&gt;</h1>"
+
+      # Any term that implements `String.Chars` protocol can be returned by an embedded expression.
+      iex> name = :"John"
+      iex> content = ~E"<h1>Hello, <%= name %></h1>"
+      %EEx.HTML.Safe{data: [[[[] | "<h1>Hello, "], "John"] | "</h1>"]}
+      iex> String.Chars.to_string(content)
+      "<h1>Hello, John</h1>"
   """
   alias __MODULE__.Safe
 
@@ -34,19 +41,32 @@ defmodule EEx.HTML do
   end
 
   def escape(term) do
-    data = Safe.to_iodata(term)
-    raw(data)
+    iodata = Safe.to_iodata(term)
+    %Safe{data: iodata}
   end
 
   @doc """
   Mark some content as safe so that it can be used in a template.
+
+  Will check that content is an iolist or implements `String.Chars` protocol.
   """
   def raw(content = %Safe{}) do
     content
   end
 
-  def raw(iodata) do
+  def raw(iodata) when is_binary(iodata) do
     %Safe{data: iodata}
+  end
+
+  def raw(iodata) when is_list(iodata) do
+    # NOTE this check raises an argument error when a length cannot be calculated.
+    _ = :erlang.iolist_size(iodata)
+    %Safe{data: iodata}
+  end
+
+  def raw(term) do
+    binary = String.Chars.to_string(term)
+    %Safe{data: binary}
   end
 
   # NOTE uppercase sigil ignores `#{}`
@@ -63,12 +83,27 @@ defmodule EEx.HTML do
 
   @doc ~S"""
   Escapes the given HTML to string.
+
       iex> EEx.HTML.escape_to_binary("foo")
       "foo"
+
       iex> EEx.HTML.escape_to_binary("<foo>")
       "&lt;foo&gt;"
+
       iex> EEx.HTML.escape_to_binary("quotes: \" & \'")
       "quotes: &quot; &amp; &#39;"
+
+      iex> escape_to_binary("<script>")
+      "&lt;script&gt;"
+
+      iex> escape_to_binary("html&company")
+      "html&amp;company"
+
+      iex> escape_to_binary("\"quoted\"")
+      "&quot;quoted&quot;"
+
+      iex> escape_to_binary("html's test")
+      "html&#39;s test"
   """
   @spec escape_to_binary(String.t()) :: String.t()
   def escape_to_binary(data) when is_binary(data) do
@@ -77,10 +112,13 @@ defmodule EEx.HTML do
 
   @doc ~S"""
   Escapes the given HTML to iodata.
+
       iex> EEx.HTML.escape_to_iodata("foo")
       "foo"
+
       iex> EEx.HTML.escape_to_iodata("<foo>")
       [[[] | "&lt;"], "foo" | "&gt;"]
+
       iex> EEx.HTML.escape_to_iodata("quotes: \" & \'")
       [[[[], "quotes: " | "&quot;"], " " | "&amp;"], " " | "&#39;"]
   """

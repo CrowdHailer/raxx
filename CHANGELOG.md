@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `Raxx.set_body/2` will raise an exception for responses that cannot have a body.
 - `Raxx.set_body/2` automatically adds the "content-length" if it is able.
+- `EEx.HTML.raw/1` checks that terms are iodata or implement `String.Chars` protocol.
 
 ### Removed
 

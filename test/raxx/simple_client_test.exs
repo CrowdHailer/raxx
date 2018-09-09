@@ -23,7 +23,6 @@ defmodule Raxx.SimpleClientTest do
     request =
       Raxx.request(:POST, "http://localhost:#{port}/")
       |> Raxx.set_body("Hello, Raxx!!")
-      |> Raxx.set_header("content-length", "13")
 
     _channel = Client.send_async(request)
     {:ok, socket} = accept(listen_socket)

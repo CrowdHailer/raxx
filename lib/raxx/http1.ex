@@ -365,7 +365,7 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.set_body("Hello, World!")
       ...> {head, body} =  Raxx.HTTP1.serialize_response(response)
       ...> :erlang.iolist_to_binary(head)
-      "HTTP/1.1 200 OK\r\ncontent-length: 13\r\ncontent-type: text/plain\r\n\r\n"
+      "HTTP/1.1 200 OK\r\ncontent-type: text/plain\r\ncontent-length: 13\r\n\r\n"
       iex> body
       {:complete, "Hello, World!"}
 

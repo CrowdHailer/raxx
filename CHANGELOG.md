@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - `Raxx.set_body/2` will raise an exception for responses that cannot have a body.
+- `Raxx.set_body/2` automatically adds the "content-length" if it is able.
 
 ## [0.15.11](https://github.com/CrowdHailer/raxx/tree/0.15.11) - 2018-09-04
 

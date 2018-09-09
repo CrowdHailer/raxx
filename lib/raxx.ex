@@ -528,12 +528,26 @@ defmodule Raxx do
 
   https://tools.ietf.org/html/rfc7230#section-3.1.2
 
+  ### Content Length
+
+  When setting the body of a message to some iodata value,
+  then the content length is also set.
+
   ## Examples
 
-      iex> request(:GET, "/")
-      ...> |> set_body("Hello")
-      ...> |> Map.get(:body)
-      "Hello"
+      iex> request = request(:GET, "/")
+      ...> |> set_body("Hello, World!")
+      iex> request.body
+      "Hello, World!"
+      iex> Raxx.get_content_length(request)
+      13
+
+      iex> request = request(:GET, "/")
+      ...> |> set_body(true)
+      iex> request.body
+      true
+      iex> Raxx.get_content_length(request)
+      nil
   """
   @spec set_body(Raxx.Request.t(), body) :: Raxx.Request.t()
   @spec set_body(Raxx.Response.t(), body) :: Raxx.Response.t()
@@ -542,8 +556,16 @@ defmodule Raxx do
     raise ArgumentError, "Response with status `#{status}` cannot have a body, see documentation."
   end
 
+  def set_body(message = %{body: false}, true) do
+    %{message | body: true}
+  end
+
   def set_body(message = %{body: false}, body) do
-    %{message | body: body}
+    content_length = :erlang.iolist_size(body)
+
+    message
+    |> set_content_length(content_length)
+    |> Map.put(:body, body)
   end
 
   @doc """

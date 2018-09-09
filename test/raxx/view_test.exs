@@ -37,7 +37,7 @@ defmodule Raxx.ViewTest do
       |> DefaultTemplate.render("bar")
 
     assert ["bar", "DefaultTemplate"] = lines(response.body)
-    assert [{"content-type", "text/html"}] = response.headers
+    assert [{"content-type", "text/html"}, {"content-length", "20"}] = response.headers
   end
 
   test "View can be rendered within a layout" do

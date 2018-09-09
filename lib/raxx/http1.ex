@@ -198,7 +198,7 @@ defmodule Raxx.HTTP1 do
       # Sending response
       iex> "HTTP/1.1 204 No Content\r\n"
       ...> |> Raxx.HTTP1.parse_request(scheme: :http)
-      {:error, {:invalid_line, "HTTP/1.1 204 No Content"}}
+      {:error, {:invalid_line, "HTTP/1.1 204 No Content\r\n"}}
 
       # Missing host header
       iex> "GET / HTTP/1.1\r\naccept: text/plain\r\n\r\n"
@@ -315,16 +315,20 @@ defmodule Raxx.HTTP1 do
               {[{"host", host}], headers} ->
                 case decode_payload(headers) do
                   {:ok, {headers, body_present, body_read_state}} ->
-                    {connection_status, headers} = decode_connection_status(headers)
+                    case decode_connection_status(headers) do
+                      {:ok, {connection_status, headers}} ->
+                        request =
+                          Raxx.request(method, path_and_query)
+                          |> Map.put(:scheme, scheme)
+                          |> Map.put(:authority, host)
+                          |> Map.put(:headers, headers)
+                          |> Map.put(:body, body_present)
 
-                    request =
-                      Raxx.request(method, path_and_query)
-                      |> Map.put(:scheme, scheme)
-                      |> Map.put(:authority, host)
-                      |> Map.put(:headers, headers)
-                      |> Map.put(:body, body_present)
+                        {:ok, {request, connection_status, body_read_state, rest2}}
 
-                    {:ok, {request, connection_status, body_read_state, rest2}}
+                      {:error, reason} ->
+                        {:error, reason}
+                    end
 
                   {:error, reason} ->
                     {:error, reason}
@@ -346,7 +350,7 @@ defmodule Raxx.HTTP1 do
 
       {:ok, {:http_response, _, _, _}, _rest} ->
         [invalid_line, _rest] = String.split(buffer, ~r/\R/, parts: 2)
-        {:error, {:invalid_line, invalid_line}}
+        {:error, {:invalid_line, invalid_line <> "\r\n"}}
 
       {:ok, {:http_error, invalid_line}, _rest} ->
         {:error, {:invalid_line, invalid_line}}
@@ -503,6 +507,11 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.HTTP1.parse_response()
       {:more, :undefined}
 
+      # Request given
+      iex> "GET / HTTP/1.1\r\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:error, {:invalid_line, "GET / HTTP/1.1\r\n"}}
+
       iex> "!!!BAD_STATUS_LINE\r\n"
       ...> |> Raxx.HTTP1.parse_response()
       {:error, {:invalid_line, "!!!BAD_STATUS_LINE\r\n"}}
@@ -544,6 +553,16 @@ defmodule Raxx.HTTP1 do
         headers: [{"foo", "bar"}],
         body: false
       }, :keepalive, {:complete, ""}, ""}}
+
+      # Invalid connection header
+      iex> "HTTP/1.1 204 No Content\r\nconnection: Invalid\r\n\r\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:error, :invalid_connection_header}
+
+      # duplicate connection header
+      iex> "HTTP/1.1 204 No Content\r\nconnection: close\r\nconnection: keep-alive\r\n\r\n"
+      ...> |> Raxx.HTTP1.parse_response()
+      {:error, :multiple_connection_headers}
 
       # Test line_length is limited
       # "HTTP/1.1 204 " + newlines = 15
@@ -606,11 +625,15 @@ defmodule Raxx.HTTP1 do
           {:ok, headers, rest2} ->
             case decode_payload(headers) do
               {:ok, {headers, body_present, body_read_state}} ->
-                {connection_status, headers} = decode_connection_status(headers)
+                case decode_connection_status(headers) do
+                  {:ok, {connection_status, headers}} ->
+                    {:ok,
+                     {%Raxx.Response{status: status, headers: headers, body: body_present},
+                      connection_status, body_read_state, rest2}}
 
-                {:ok,
-                 {%Raxx.Response{status: status, headers: headers, body: body_present},
-                  connection_status, body_read_state, rest2}}
+                  {:error, reason} ->
+                    {:error, reason}
+                end
 
               {:error, reason} ->
                 {:error, reason}
@@ -622,6 +645,10 @@ defmodule Raxx.HTTP1 do
           {:more, :undefined} ->
             {:more, :undefined}
         end
+
+      {:ok, {:http_request, _, _, _}, _rest} ->
+        [invalid_line, _rest] = String.split(buffer, ~r/\R/, parts: 2)
+        {:error, {:invalid_line, invalid_line <> "\r\n"}}
 
       {:ok, {:http_error, invalid_line}, _rest} ->
         {:error, {:invalid_line, invalid_line}}
@@ -657,12 +684,21 @@ defmodule Raxx.HTTP1 do
     case Enum.split_with(headers, fn {key, _value} -> key == "connection" end) do
       {[{"connection", value}], headers} ->
         case String.downcase(value) do
-          "close" -> {:close, headers}
-          "keep-alive" -> {:keepalive, headers}
+          "close" ->
+            {:ok, {:close, headers}}
+
+          "keep-alive" ->
+            {:ok, {:keepalive, headers}}
+
+          _ ->
+            {:error, :invalid_connection_header}
         end
 
       {[], headers} ->
-        {nil, headers}
+        {:ok, {nil, headers}}
+
+      {_connection_headers, _headers} ->
+        {:error, :multiple_connection_headers}
     end
   end
 

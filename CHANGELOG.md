@@ -21,6 +21,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `Raxx.html_escape/1` replaced by `EEx.HTML.escape_to_binary/1`.
 
+### Fixed
+
+- `Raxx.HTTP1.parse_request/1` and `Raxx.HTTP1.parse_response/1` handle more error cases.
+  - response/request sent when request/response expected.
+  - multiple "host" headers in message.
+  - invalid "content-length" header.
+  - multiple "content-length" headers in message.
+  - invalid "connection" header.
+  - multiple "connection" headers in message.
+
 ## [0.15.11](https://github.com/CrowdHailer/raxx/tree/0.15.11) - 2018-09-04
 
 ### Added

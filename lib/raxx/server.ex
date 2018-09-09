@@ -72,6 +72,11 @@ defmodule Raxx.Server do
         end
       end
 
+  ## Options
+
+  - **maximum_body_length** (default 8MB) the maximum sized body that will be automatically buffered.
+    For large requests, e.g. file uploads, consider implementing a streaming server.
+
   ### Notes
 
   - `handle_head/2` will always be called with a request that has body as a boolean.
@@ -178,11 +183,11 @@ defmodule Raxx.Server do
   """
   @callback handle_info(any(), state()) :: next
 
-  defmacro __using__(_opts) do
+  defmacro __using__(options) do
     quote do
       @behaviour unquote(__MODULE__)
 
-      use Raxx.NotFound
+      use Raxx.NotFound, unquote(options)
 
       import Raxx
       alias Raxx.{Request, Response}

@@ -39,4 +39,37 @@ defmodule Raxx.ServerTest do
     assert String.contains?(logs, "unexpected message")
     assert String.contains?(logs, ":foo")
   end
+
+  test "default server will not butter more than 8MB into one request" do
+    request =
+      Raxx.request(:POST, "/")
+      |> Raxx.set_body(true)
+
+    state = %{}
+
+    assert {[], state} = DefaultServer.handle_head(request, state)
+    four_Mb = String.duplicate("1234", round(:math.pow(2, 20)))
+    assert {[], state} = DefaultServer.handle_data(four_Mb, state)
+    assert {[], state} = DefaultServer.handle_data(four_Mb, state)
+    assert response = %{status: 413} = DefaultServer.handle_data("straw", state)
+  end
+
+  defmodule BigServer do
+    use Raxx.Server, maximum_body_length: 12 * 1024 * 1024
+  end
+
+  test "Server max body size can be configured" do
+    request =
+      Raxx.request(:POST, "/")
+      |> Raxx.set_body(true)
+
+    state = %{}
+
+    assert {[], state} = BigServer.handle_head(request, state)
+    four_Mb = String.duplicate("1234", round(:math.pow(2, 20)))
+    assert {[], state} = BigServer.handle_data(four_Mb, state)
+    assert {[], state} = BigServer.handle_data(four_Mb, state)
+    assert {[], state} = BigServer.handle_data(four_Mb, state)
+    assert response = %{status: 413} = BigServer.handle_data("straw", state)
+  end
 end

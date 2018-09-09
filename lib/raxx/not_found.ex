@@ -1,11 +1,14 @@
 defmodule Raxx.NotFound do
   require EEx
+  @eight_MB 8 * 1024 * 1024
 
   template = Path.join(__DIR__, "./not_found.html.eex")
   EEx.function_from_file(:defp, :not_found_page, template, [:example_module])
 
-  defmacro __using__(_opts) do
+  defmacro __using__(options) do
     body = not_found_page(__CALLER__.module)
+    {options, []} = Module.eval_quoted(__CALLER__, options)
+    maximum_body_length = Keyword.get(options, :maximum_body_length, @eight_MB)
 
     quote do
       @impl Raxx.Server
@@ -31,7 +34,14 @@ defmodule Raxx.NotFound do
 
       @impl Raxx.Server
       def handle_data(data, {request, buffer, state}) do
-        {[], {request, buffer <> data, state}}
+        buffer = buffer <> data
+
+        if :erlang.iolist_size(buffer) <= unquote(maximum_body_length) do
+          {[], {request, buffer, state}}
+        else
+          Raxx.response(:payload_too_large)
+          |> Raxx.set_body("Payload Too Large")
+        end
       end
 
       @impl Raxx.Server

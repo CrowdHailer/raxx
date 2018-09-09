@@ -521,6 +521,43 @@ defmodule Raxx do
   end
 
   @doc """
+  Set the "content-disposition" header on a response indicating the file should be downloaded.
+
+  Set's the disposition to `attachment` the only other value of `inline` is assumed when no `content-disposition` header.
+
+  **NOTE:** no integration with multipart downloads,
+  see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition#As_a_response_header_for_the_main_body for full details.
+
+  **NOTE:** Sinatra sets `content-type` from filename extension,
+  This is not done here in preference of being more explicit.
+  https://github.com/sinatra/sinatra/blob/9590706ec6691520970c67b929776fd97d3c9ddd/lib/sinatra/base.rb#L362-L370
+
+
+  ## Examples
+
+      iex> response(:ok)
+      ...> |> set_body("Hello, World!")
+      ...> |> set_attachment("hello.txt")
+      ...> |> get_header("content-disposition")
+      "attachment; filename=hello.txt"
+
+      iex> response(:ok)
+      ...> |> set_body("Hello, World!")
+      ...> |> set_attachment("hello world.txt")
+      ...> |> get_header("content-disposition")
+      "attachment; filename=hello+world.txt"
+  """
+  @spec set_attachment(Raxx.Request.t(), String.t()) :: Raxx.Request.t()
+  @spec set_attachment(Raxx.Response.t(), String.t()) :: Raxx.Response.t()
+  def set_attachment(message, filename) do
+    set_header(
+      message,
+      "content-disposition",
+      "attachment; filename=#{URI.encode_www_form(filename)}"
+    )
+  end
+
+  @doc """
   Add a complete body to a message.
 
   All 1xx (Informational), 204 (No Content), and 304 (Not Modified) responses do not include a message body.

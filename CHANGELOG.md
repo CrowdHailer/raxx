@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `:maximum_body_length` options when using `Raxx.Server` so protect against bad clients.
 - `Raxx.set_content_length/3` to set the content length of a request or response.
 - `Raxx.get_content_length/2` to get the integer value for the content length of a message.
+- `Raxx.set_attachment/2` helper to tell the browser the response should be stored on disk rather than displayed in the browser.
 
 ### Changed
 

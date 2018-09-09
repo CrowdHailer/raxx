@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- `~E` sigil for generating HTML safe content.
 - `:maximum_body_length` options when using `Raxx.Server` so protect against bad clients.
 - `Raxx.set_content_length/3` to set the content length of a request or response.
 - `Raxx.get_content_length/2` to get the integer value for the content length of a message.

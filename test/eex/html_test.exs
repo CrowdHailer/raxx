@@ -1,8 +1,7 @@
 defmodule EEx.HTMlTest do
   use ExUnit.Case, async: true
+  import EEx.HTML
   doctest EEx.HTML
-
-  import EEx.HTML, only: [escape_to_binary: 1]
 
   test "escapes HTML" do
     assert escape_to_binary("<script>") == "&lt;script&gt;"
@@ -19,6 +18,6 @@ defmodule EEx.HTMlTest do
   end
 
   defp iodata_escape(data) do
-    data |> EEx.HTML.escape_to_iodata() |> IO.iodata_to_binary()
+    data |> escape_to_iodata() |> IO.iodata_to_binary()
   end
 end

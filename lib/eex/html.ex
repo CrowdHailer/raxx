@@ -1,6 +1,25 @@
 defmodule EEx.HTML do
   @moduledoc """
   Conveniences for generating HTML.
+
+  ## Usage
+
+  This module adds `~E` sigil for safe HTML escaped content.
+  Content within an `~E` sigil should be EEx content.
+
+  ## Examples
+
+      iex> name = "John"
+      iex> content = ~E"<h1>Hello, <%= name %></h1>"
+      %EEx.HTML.Safe{data: [[[[] | "<h1>Hello, "], "John"] | "</h1>"]}
+      iex> String.Chars.to_string(content)
+      "<h1>Hello, John</h1>"
+
+      iex> name = "<script>"
+      iex> content = ~E"<h1>Hello, <%= name %></h1>"
+      %EEx.HTML.Safe{data: [[[[] | "<h1>Hello, "], [[[] | "&lt;"], "script" | "&gt;"]] | "</h1>"]}
+      iex> String.Chars.to_string(content)
+      "<h1>Hello, &lt;script&gt;</h1>"
   """
   alias __MODULE__.Safe
 
@@ -19,12 +38,27 @@ defmodule EEx.HTML do
     raw(data)
   end
 
+  @doc """
+  Mark some content as safe so that it can be used in a template.
+  """
   def raw(content = %Safe{}) do
     content
   end
 
   def raw(iodata) do
     %Safe{data: iodata}
+  end
+
+  # NOTE uppercase sigil ignores `#{}`
+  @doc """
+  This module adds `~E` sigil for safe HTML escaped content.
+  """
+  defmacro sigil_E({:<<>>, [line: line], [template]}, []) do
+    ast = EEx.compile_string(template, engine: EEx.HTMLEngine, line: line + 1)
+
+    quote do
+      EEx.HTML.raw(unquote(ast))
+    end
   end
 
   @doc ~S"""

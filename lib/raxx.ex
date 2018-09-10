@@ -794,6 +794,82 @@ defmodule Raxx do
         {:error, "module `#{Macro.to_string(module)}` is not available."}
     end
   end
+
+  @doc false
+  # Use to turn errors into a standard reponse format.
+  # In the future could be replaced with a protocol,
+  # would require redefining errors as structs.
+  def error_response(reason)
+
+  # Extend error to include what kind or line, request/header
+  def error_response({:invalid_line, line}) do
+    response(:bad_request)
+    |> set_header("content-type", "text/plain")
+    |> set_body(["Invalid line:\r\n\r\n", line])
+  end
+
+  def error_response({:line_length_limit_exceeded, :request_line}) do
+    response(:uri_too_long)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Request line too long")
+  end
+
+  def error_response({:line_length_limit_exceeded, :header_line}) do
+    response(:bad_request)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Header line too long")
+  end
+
+  def error_response({:header_count_exceeded, maximum_headers_count}) do
+    response(:bad_request)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Maximum number of headers (#{maximum_headers_count}) exceeded")
+  end
+
+  def error_response(:multiple_connection_headers) do
+    response(:bad_request)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Singular header 'connection' was submitted multiple times")
+  end
+
+  def error_response(:invalid_connection_header) do
+    response(:bad_request)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Required header 'connection' was invalid")
+  end
+
+  def error_response(:no_host_header) do
+    response(:bad_request)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Required header 'host' was missing")
+  end
+
+  def error_response(:multiple_host_headers) do
+    response(:bad_request)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Singular header 'host' was submitted multiple times")
+  end
+
+  def error_response(:multiple_content_length_headers) do
+    response(:bad_request)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Singular header 'content-length' was submitted multiple times")
+  end
+
+  def error_response(:invalid_content_length_header) do
+    response(:bad_request)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Required header 'content-length' was invalid")
+  end
+
+  def error_response(status) do
+    response = response(status)
+    reason_phrase = reason_phrase(response.status)
+
+    response
+    |> set_header("content-type", "text/plain")
+    |> set_body(reason_phrase)
+  end
 end
 
 defmodule :raxx do

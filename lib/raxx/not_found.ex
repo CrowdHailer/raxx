@@ -39,8 +39,7 @@ defmodule Raxx.NotFound do
         if :erlang.iolist_size(iodata_buffer) <= unquote(maximum_body_length) do
           {[], {request, iodata_buffer, state}}
         else
-          Raxx.response(:payload_too_large)
-          |> Raxx.set_body("Payload Too Large")
+          Raxx.error_response(:payload_too_large)
         end
       end
 

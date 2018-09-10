@@ -368,7 +368,7 @@ defmodule Raxx.HTTP1 do
     {:ok, maximum_headers_count} = Keyword.fetch(options, :maximum_headers_count)
 
     if length(headers) >= maximum_headers_count do
-      {:error, :header_count_exceeded}
+      {:error, {:header_count_exceeded, maximum_headers_count}}
     else
       case :erlang.decode_packet(:httph_bin, buffer, line_length: maximum_line_length) do
         {:ok, :http_eoh, rest} ->
@@ -600,12 +600,12 @@ defmodule Raxx.HTTP1 do
       # Test maximum number of headers is limited
       iex> "HTTP/1.1 204 No Content\r\n#{String.duplicate("foo: bar\r\n", 101)}"
       ...> |> Raxx.HTTP1.parse_response()
-      {:error, :header_count_exceeded}
+      {:error, {:header_count_exceeded, 100}}
 
       # Test maximum number of headers is limited
       iex> "HTTP/1.1 204 No Content\r\n#{String.duplicate("foo: bar\r\n", 2)}"
       ...> |> Raxx.HTTP1.parse_response(maximum_headers_count: 1)
-      {:error, :header_count_exceeded}
+      {:error, {:header_count_exceeded, 1}}
   """
   @spec parse_response(binary, [option]) ::
           {:ok, {Raxx.Response.t(), connection_status, body_read_state, binary}}

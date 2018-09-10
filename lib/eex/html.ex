@@ -59,9 +59,11 @@ defmodule EEx.HTML do
   end
 
   def raw(iodata) when is_list(iodata) do
-    # NOTE this check raises an argument error when a length cannot be calculated.
     _ = :erlang.iolist_size(iodata)
     %Safe{data: iodata}
+  catch
+    :error, :badarg ->
+      raise ArgumentError, "Invaild iodata, contains invalid terms such as integers or atoms."
   end
 
   def raw(term) do

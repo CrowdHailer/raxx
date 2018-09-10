@@ -17,8 +17,12 @@ defmodule EEx.HTMlTest do
   end
 
   test "raises ArgumentError when not an iolist" do
-    assert_raise(ArgumentError, fn ->
-      raw([:foo])
-    end)
+    assert_raise(
+      ArgumentError,
+      "Invaild iodata, contains invalid terms such as integers or atoms.",
+      fn ->
+        raw([:foo])
+      end
+    )
   end
 end

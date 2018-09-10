@@ -69,7 +69,7 @@ defmodule Raxx.ViewTest do
   end
 
   defp lines(text) do
-    String.split(text, ~r/\R/)
+    String.split("#{text}", ~r/\R/)
     |> Enum.reject(fn line -> line == "" end)
   end
 end

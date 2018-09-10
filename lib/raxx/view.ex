@@ -148,8 +148,7 @@ defmodule Raxx.View do
       def render(request, unquote_splicing(arguments)) do
         request
         |> Raxx.set_header("content-type", "text/html")
-        # FIXME when Raxx works through with iodata
-        |> Raxx.set_body("#{html(unquote_splicing(arguments)).data}")
+        |> Raxx.set_body(html(unquote_splicing(arguments)).data)
       end
 
       def html(unquote_splicing(arguments)) do

@@ -29,15 +29,15 @@ defmodule Raxx.NotFound do
       end
 
       def handle_head(request = %{body: true}, state) do
-        {[], {request, "", state}}
+        {[], {request, [], state}}
       end
 
       @impl Raxx.Server
-      def handle_data(data, {request, buffer, state}) do
-        buffer = buffer <> data
+      def handle_data(data, {request, iodata_buffer, state}) do
+        iodata_buffer = [data, iodata_buffer]
 
-        if :erlang.iolist_size(buffer) <= unquote(maximum_body_length) do
-          {[], {request, buffer, state}}
+        if :erlang.iolist_size(iodata_buffer) <= unquote(maximum_body_length) do
+          {[], {request, iodata_buffer, state}}
         else
           Raxx.response(:payload_too_large)
           |> Raxx.set_body("Payload Too Large")
@@ -45,7 +45,8 @@ defmodule Raxx.NotFound do
       end
 
       @impl Raxx.Server
-      def handle_tail([], {request, body, state}) do
+      def handle_tail([], {request, iodata_buffer, state}) do
+        body = :erlang.iolist_to_binary(Enum.reverse(iodata_buffer))
         response = handle_request(%{request | body: body}, state)
 
         case response do

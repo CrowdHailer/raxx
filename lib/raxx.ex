@@ -42,7 +42,7 @@ defmodule Raxx do
   - empty (`false`).
   - present but unknown (`true`).
   """
-  @type body :: boolean | binary
+  @type body :: boolean | iodata
 
   @typedoc """
   Either a `Raxx.Request.t` or a `Raxx.Response.t`

@@ -14,3 +14,17 @@ AS much as possible we adher to [RFC 7540] (https://tools.ietf.org/html/rfc7540#
    header field names MUST be converted to lowercase prior to their
    encoding in HTTP/2.  A request or response containing uppercase
    header field names MUST be treated as malformed (Section 8.1.2.6).
+
+### Why does Raxx not handle setting a Date header
+
+> An origin server MUST NOT send a Date header field if it does not
+  have a clock capable of providing a reasonable approximation of the
+  current instance in Coordinated Universal Time.  An origin server MAY
+  send a Date header field if the response is in the 1xx
+  (Informational) or 5xx (Server Error) class of status codes.  An
+  origin server MUST send a Date header field in all other cases.
+
+https://tools.ietf.org/html/rfc7231#section-7.1.1.2
+
+Any server may be incapable of providing accurate time and date information.
+For this reason Raxx delegates handling the `Date` header to the server underneath it.

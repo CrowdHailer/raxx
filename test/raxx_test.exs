@@ -28,6 +28,15 @@ defmodule RaxxTest do
                  end
   end
 
+  test "cannot set a connection header" do
+    assert_raise RuntimeError,
+                 "Cannot set a connection specific header, see documentation for details",
+                 fn ->
+                   Raxx.response(:ok)
+                   |> Raxx.set_header("connection", "keep-alive")
+                 end
+  end
+
   test "cannot set a header twice" do
     assert_raise RuntimeError, "Headers should not be duplicated", fn ->
       Raxx.response(:ok)

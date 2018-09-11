@@ -449,6 +449,40 @@ defmodule Raxx do
       ...> |> set_header("accept", "text/html")
       ...> |> Map.get(:headers)
       [{"referer", "example.com"}, {"accept", "text/html"}]
+
+  ## Connection specific headers
+
+  It is invalid to set a connection specific header on either a `Raxx.Request` or `Raxx.Response`.
+  The connection specific headers are:
+
+  - `connection`
+  - `keep-alive`
+  - `proxy-connection,`
+  - `transfer-encoding,`
+  - `upgrade`
+
+  Connection specific headers are not part of the end to end message,
+  even if in HTTP/1.1 they are encoded as just another header.
+
+  They cannot be set on messages because Raxx is protocol agnostic.
+  i.e. it can be used to construct messages that can be sent via HTTP/1.1 or HTTP/2.
+
+  > The "Connection" header field allows the sender to indicate desired
+    control options for the current connection.  In order to avoid
+    confusing downstream recipients, a proxy or gateway MUST remove or
+    replace any received connection options before forwarding the
+    message.
+
+  *https://tools.ietf.org/html/rfc7230#section-6.1*
+
+  > HTTP/2 does not use the Connection header field to indicate
+    connection-specific header fields; in this protocol, connection-
+    specific metadata is conveyed by other means.  An endpoint MUST NOT
+    generate an HTTP/2 message containing connection-specific header
+    fields; any message containing connection-specific header fields MUST
+    be treated as malformed (Section 8.1.2.6)
+
+  *https://tools.ietf.org/html/rfc7540#section-8.1.2.2*
   """
   @spec set_header(Raxx.Request.t(), String.t(), String.t()) :: Raxx.Request.t()
   @spec set_header(Raxx.Response.t(), String.t(), String.t()) :: Raxx.Response.t()
@@ -467,6 +501,10 @@ defmodule Raxx do
 
       :nomatch ->
         value
+    end
+
+    if name in ["connection", "keep-alive", "proxy-connection,", "transfer-encoding,", "upgrade"] do
+      raise "Cannot set a connection specific header, see documentation for details"
     end
 
     %{message | headers: headers ++ [{name, value}]}

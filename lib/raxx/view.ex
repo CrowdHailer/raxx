@@ -186,6 +186,8 @@ defmodule Raxx.View do
 
       def javascript_variables(variables) do
         variables = Enum.into(variables, %{})
+
+        # NOTE Jason does provide an ecode to iodata option, however escaping does not support that yet.
         {:ok, json} = Jason.encode(variables)
         encoded = EEx.HTML.escape(json)
 

@@ -308,6 +308,54 @@ defmodule Raxx do
   end
 
   @doc """
+  Request does not expect any state change on the server.
+
+  For full definition of safe methods see [RFC7231](https://tools.ietf.org/html/rfc7231#section-4.2.1)
+
+  ## Examples
+
+      iex> request(:GET, "/")
+      ...> |> safe?()
+      true
+
+      iex> request(:POST, "/")
+      ...> |> safe?()
+      false
+
+      iex> request(:PUT, "/")
+      ...> |> safe?()
+      false
+  """
+  @spec safe?(Raxx.Request.t()) :: boolean
+  def safe?(%{method: method}) do
+    Enum.member?([:GET, :HEAD, :OPTIONS, :TRACE], method)
+  end
+
+  @doc """
+  Effect of handling this request more than once should be identical to handling it once.
+
+  For full definition of idempotent methods see [RFC7231](https://tools.ietf.org/html/rfc7231#section-4.2.2)
+
+  ## Examples
+
+      iex> request(:GET, "/")
+      ...> |> idempotent?()
+      true
+
+      iex> request(:POST, "/")
+      ...> |> idempotent?()
+      false
+
+      iex> request(:PUT, "/")
+      ...> |> idempotent?()
+      true
+  """
+  @spec idempotent?(Raxx.Request.t()) :: boolean
+  def idempotent?(%{method: method}) do
+    Enum.member?([:GET, :HEAD, :OPTIONS, :TRACE, :PUT, :DELETE, :LINK, :UNLINK], method)
+  end
+
+  @doc """
   Return the host, without port, for a request.
 
   ## Examples
@@ -357,31 +405,38 @@ defmodule Raxx do
   end
 
   @doc """
-  Fetch the decoded query from a request
+  Return the decoded query from a request
 
   A map is always returned, even in the case of a request without a query string.
 
   ## Examples
 
       iex> request(:GET, "/")
-      ...> |> fetch_query()
-      {:ok, %{}}
+      ...> |> get_query()
+      %{}
 
       iex> request(:GET, "/?")
-      ...> |> fetch_query()
-      {:ok, %{}}
+      ...> |> get_query()
+      %{}
 
       iex> request(:GET, "/?foo=bar")
-      ...> |> fetch_query()
-      {:ok, %{"foo" => "bar"}}
+      ...> |> get_query()
+      %{"foo" => "bar"}
   """
-  @spec fetch_query(Raxx.Request.t()) :: {:ok, %{binary => binary}}
-  def fetch_query(%Raxx.Request{query: nil}) do
-    {:ok, %{}}
+  def get_query(%Raxx.Request{query: nil}) do
+    %{}
   end
 
-  def fetch_query(%Raxx.Request{query: query_string}) do
-    {:ok, URI.decode_query(query_string)}
+  def get_query(%Raxx.Request{query: query_string}) do
+    URI.decode_query(query_string)
+  end
+
+  @doc """
+  This function never returns an error use, `get_query/1` instead.
+  """
+  @spec fetch_query(Raxx.Request.t()) :: {:ok, %{binary => binary}}
+  def fetch_query(request) do
+    {:ok, get_query(request)}
   end
 
   @doc """

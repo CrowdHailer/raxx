@@ -28,7 +28,7 @@ defmodule Raxx.ViewTest do
   end
 
   test "Safe HTML content is not escaped" do
-    assert "<p>" = hd(lines("#{DefaultTemplate.html(EEx.HTML.raw("<p>"))}"))
+    assert "<p>" = hd(lines("#{DefaultTemplate.html(EExHTML.raw("<p>"))}"))
   end
 
   test "Render will set content-type and body" do

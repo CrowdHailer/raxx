@@ -58,7 +58,7 @@ defmodule Raxx.View do
       iex> Greet.html("<script>")
       # => "<h1>Greetings</h1>\n<p>Hello, &lt;script&gt;</p>"
 
-  Values in the template can be marked as secure using the `EEx.HTML.raw/1` function.
+  Values in the template can be marked as secure using the `EExHTML.raw/1` function.
   *raw is automatically imported to the template scope*.
 
       # greet.html.eex
@@ -106,17 +106,17 @@ defmodule Raxx.View do
 
     arguments = Enum.map(arguments, fn a when is_atom(a) -> {a, [line: 1], nil} end)
 
-    compiled_page = EEx.compile_file(page_template, engine: EEx.HTMLEngine)
+    compiled_page = EEx.compile_file(page_template, engine: EExHTML.Engine)
 
     # This step would not be necessary if the compiler could return a wrapped value.
     safe_compiled_page =
       quote do
-        EEx.HTML.raw(unquote(compiled_page))
+        EExHTML.raw(unquote(compiled_page))
       end
 
     compiled_layout =
       if layout_template do
-        EEx.compile_file(layout_template, engine: EEx.HTMLEngine)
+        EEx.compile_file(layout_template, engine: EExHTML.Engine)
       else
         {:__content__, [], nil}
       end
@@ -135,8 +135,7 @@ defmodule Raxx.View do
     end
 
     quote do
-      import EEx.HTML, only: [raw: 1]
-      import unquote(__MODULE__), only: [javascript_variables: 1]
+      import EExHTML
 
       if unquote(layout_template) do
         @external_resource unquote(layout_template)
@@ -152,7 +151,7 @@ defmodule Raxx.View do
       end
 
       def html(unquote_splicing(arguments)) do
-        EEx.HTML.raw(unquote(compiled))
+        EExHTML.raw(unquote(compiled))
       end
     end
   end
@@ -166,45 +165,5 @@ defmodule Raxx.View do
       _ ->
         raise "#{__MODULE__} needs to be used from a `.ex` or `.exs` file"
     end
-  end
-
-  @doc """
-  Safety inject server variables into a pages JavaScript.
-
-  ## Example
-
-  ```eex
-  <%= javascript_variables name: "Cynthia" %>
-  <script type="text/javascript">
-    console.log('Hello, ' + name)
-  </script>
-  ```
-  """
-  case Code.ensure_loaded(Jason) do
-    {:module, _} ->
-      @javascript_variables_template "<div style='display:none;'><%= encoded %></div><script>const{<%= key_string %>}=JSON.parse(document.currentScript.previousElementSibling.textContent)</script>"
-
-      def javascript_variables(variables) do
-        variables = Enum.into(variables, %{})
-
-        # NOTE Jason does provide an ecode to iodata option, however escaping does not support that yet.
-        {:ok, json} = Jason.encode(variables)
-        encoded = EEx.HTML.escape(json)
-
-        key_string =
-          variables
-          |> Map.keys()
-          |> Enum.map(&Atom.to_string/1)
-          |> Enum.join(", ")
-
-        EEx.HTML.raw(
-          unquote(EEx.compile_string(@javascript_variables_template, engine: EEx.HTMLEngine))
-        )
-      end
-
-    {:error, :nofile} ->
-      def javascript_variables(_variables) do
-        raise "`javascript_variables/1` requires the Jason encoder, add `{:jason, \"~> 1.0.0\"}` to `mix.exs`"
-      end
   end
 end

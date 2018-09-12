@@ -714,6 +714,7 @@ defmodule Raxx do
 
     iex> redirect("/foo")
     ...> |> Map.get(:body)
+    ...> |> String.Chars.to_string()
     ~s(<html><body>This resource has moved <a href="/foo">here</a>.</body></html>)
 
     iex> redirect("/foo")
@@ -742,7 +743,7 @@ defmodule Raxx do
     response(status)
     |> set_header("location", url)
     |> set_header("content-type", "text/html")
-    |> set_body(redirect_page(url))
+    |> set_body(redirect_page(url).data)
   end
 
   @doc """
@@ -800,8 +801,8 @@ defmodule Raxx do
   end
 
   defp redirect_page(url) do
-    html = EEx.HTML.escape_to_binary(url)
-    "<html><body>This resource has moved <a href=\"#{html}\">here</a>.</body></html>"
+    import EExHTML
+    ~E"<html><body>This resource has moved <a href=\"<%= url %>\">here</a>.</body></html>"
   end
 
   @doc """

@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- `~E` sigil for generating HTML safe content.
 - `:maximum_body_length` options when using `Raxx.Server` so protect against bad clients.
 - `Raxx.set_content_length/3` to set the content length of a request or response.
 - `Raxx.get_content_length/2` to get the integer value for the content length of a message.
@@ -21,7 +20,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `Raxx.set_body/2` will raise an exception for responses that cannot have a body.
 - `Raxx.set_body/2` automatically adds the "content-length" if it is able.
-- `EEx.HTML.raw/1` checks that terms are iodata or implement `String.Chars` protocol.
 - Requests and Responses now work with iodata.
   - `Raxx.body` spec changed to include iodata.
   - Improved error message when using invalid iolist in a view.
@@ -32,7 +30,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
-- `Raxx.html_escape/1` replaced by `EEx.HTML.escape_to_binary/1`.
+- `EEx.HTML` replaced by `EExHTML` from the `eex_html` hex package.
+- `Raxx.html_escape/1` replaced by `EExHTML.escape_to_binary/1`.
 
 ### Fixed
 

@@ -3,6 +3,30 @@ defmodule Raxx.ServerTest do
   doctest Raxx.Server
   import ExUnit.CaptureLog
 
+  defmodule EchoServer do
+    use Raxx.Server
+
+    def handle_request(%{body: body}, _) do
+      response(:ok)
+      |> set_body(inspect(body))
+    end
+  end
+
+  test "body is concatenated to single string" do
+    request =
+      Raxx.request(:POST, "/")
+      |> Raxx.set_body(true)
+
+    state = %{}
+
+    assert {[], state} = EchoServer.handle_head(request, state)
+    assert {[], state} = EchoServer.handle_data("a", state)
+    assert {[], state} = EchoServer.handle_data("b", state)
+    assert {[], state} = EchoServer.handle_data("c", state)
+    assert %{body: body} = EchoServer.handle_tail([], state)
+    assert "\"abc\"" == body
+  end
+
   defmodule DefaultServer do
     use Raxx.Server
   end

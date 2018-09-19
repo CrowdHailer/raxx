@@ -34,7 +34,7 @@ defmodule Raxx.NotFound do
 
       @impl Raxx.Server
       def handle_data(data, {request, iodata_buffer, state}) do
-        iodata_buffer = [data, iodata_buffer]
+        iodata_buffer = [data | iodata_buffer]
 
         if :erlang.iolist_size(iodata_buffer) <= unquote(maximum_body_length) do
           {[], {request, iodata_buffer, state}}

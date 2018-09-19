@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.16.1](https://github.com/CrowdHailer/raxx/tree/0.16.1) - 2018-09-19
+
+## Fixed
+
+- `Raxx.NotFound` was incorrectly building body for `handle_request` callback.
+
 ## [0.16.0](https://github.com/CrowdHailer/raxx/tree/0.16.0) - 2018-09-12
 
 ### Added

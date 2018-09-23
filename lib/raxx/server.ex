@@ -214,19 +214,21 @@ defmodule Raxx.Server do
     normalize_reaction(module.handle_info(other, state), state)
   end
 
-  defp normalize_reaction(response = %Raxx.Response{body: true}, _initial_state) do
+  @doc false
+  @spec normalize_reaction(next(), state()) :: {[Raxx.part()], state()} | no_return
+  def normalize_reaction(response = %Raxx.Response{body: true}, _initial_state) do
     raise %ReturnError{return: response}
   end
 
-  defp normalize_reaction(response = %Raxx.Response{}, initial_state) do
+  def normalize_reaction(response = %Raxx.Response{}, initial_state) do
     {[response], initial_state}
   end
 
-  defp normalize_reaction({parts, new_state}, _initial_state) when is_list(parts) do
+  def normalize_reaction({parts, new_state}, _initial_state) when is_list(parts) do
     {parts, new_state}
   end
 
-  defp normalize_reaction(other, _initial_state) do
+  def normalize_reaction(other, _initial_state) do
     raise %ReturnError{return: other}
   end
 

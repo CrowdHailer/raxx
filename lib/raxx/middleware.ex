@@ -98,7 +98,6 @@ defmodule Raxx.Middleware do
     {parts, new_state, rest_of_the_pipeline} =
       apply(middleware_module, function_name, [input, middleware_state, rest_of_the_pipeline])
 
-    middleware_module.handle_head(input, middleware_state, rest_of_the_pipeline)
     # TODO |> Middleware.normalize_reaction()
 
     {parts, [{middleware_module, new_state} | rest_of_the_pipeline]}

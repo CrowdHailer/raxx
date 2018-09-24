@@ -74,7 +74,45 @@ defmodule Raxx.MiddlewareTest do
 
     assert {[], pipeline} = Middleware.handle_head(request, pipeline)
     assert {[], pipeline} = Middleware.handle_data("abc", pipeline)
-    assert {[response], _pipeline} = Middleware.handle_tail([], pipeline)
-    assert %Raxx.Response{status: 200, body: "Home page"} = response
+
+    # middleware simplifies "compound" server responses
+    assert {[head, body, tail], _pipeline} = Middleware.handle_tail([], pipeline)
+    assert %Raxx.Response{status: 200, body: true} = head
+    assert %Raxx.Data{data: "Home page"} = body
+    assert %Raxx.Tail{headers: []} = tail
+  end
+
+  defmodule Meddler do
+    @behaviour Middleware
+    # :put request header, put
+    # :set_request_header, replace_body_characters, set_trailer
+    @impl Middleware
+    def handle_head(request, config, pipeline) do
+      request =
+        case Keyword.get(config, :set_request_header) do
+          nil -> request
+          value -> Raxx.set_header(request, value)
+        end
+      {next, pipeline} = Middleware.handle_head(request, pipeline)
+      {next, config, pipeline}
+    end
+
+    @impl Middleware
+    def handle_data(data, state, pipeline) do
+      {next, pipeline} = Middleware.handle_data(data, pipeline)
+      {next, state, pipeline}
+    end
+
+    @impl Middleware
+    def handle_tail(tail, state, pipeline) do
+      {next, pipeline} = Middleware.handle_tail(tail, pipeline)
+      {next, state, pipeline}
+    end
+
+    @impl Middleware
+    def handle_info(message, state, pipeline) do
+      {next, pipeline} = Middleware.handle_info(message, pipeline)
+      {next, state, pipeline}
+    end
   end
 end

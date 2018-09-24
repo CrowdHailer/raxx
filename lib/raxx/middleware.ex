@@ -16,8 +16,6 @@ defmodule Raxx.Middleware do
   # aliasing this to Server.state() to help the dialyzer in some cases
   @type state :: Server.state()
 
-  # TODO change it to something more relaxed this, when we have the normalization:
-  # @type next :: {[Raxx.part()], state} | Raxx.Response.t()
   @type next :: {[Raxx.part()], state, pipeline}
 
   @doc """
@@ -56,22 +54,22 @@ defmodule Raxx.Middleware do
   end
 
   # NOTE those 4 can be rewritten using macros instead of apply for a minor performance increase
-  @spec handle_head(Raxx.Request.t(), pipeline) :: {Server.next(), pipeline}
+  @spec handle_head(Raxx.Request.t(), pipeline) :: {[Raxx.part()], pipeline()}
   def handle_head(request, pipeline) do
     handle_anything(request, pipeline, :handle_head)
   end
 
-  @spec handle_data(binary(), pipeline) :: {Server.next(), pipeline}
+  @spec handle_data(binary(), pipeline) :: {[Raxx.part()], pipeline}
   def handle_data(data, pipeline) do
     handle_anything(data, pipeline, :handle_data)
   end
 
-  @spec handle_tail([{binary(), binary()}], pipeline) :: {Server.next(), pipeline}
+  @spec handle_tail([{binary(), binary()}], pipeline) :: {[Raxx.part()], pipeline}
   def handle_tail(tail, pipeline) do
     handle_anything(tail, pipeline, :handle_tail)
   end
 
-  @spec handle_info(any, pipeline) :: {Server.next(), pipeline}
+  @spec handle_info(any, pipeline) :: {[Raxx.part()], pipeline}
   def handle_info(message, pipeline) do
     handle_anything(message, pipeline, :handle_info)
   end
@@ -83,6 +81,8 @@ defmodule Raxx.Middleware do
     {parts, new_state} =
       apply(controller_module, function_name, [input, controller_state])
       |> Server.normalize_reaction(controller_state)
+
+    parts = Raxx.simplify_parts(parts)
 
     {parts, [{controller_module, new_state}]}
   end
@@ -98,9 +98,28 @@ defmodule Raxx.Middleware do
     {parts, new_state, rest_of_the_pipeline} =
       apply(middleware_module, function_name, [input, middleware_state, rest_of_the_pipeline])
 
-    # TODO |> Middleware.normalize_reaction()
+    # TODO discuss this
+    parts = Raxx.simplify_parts(parts)
 
     {parts, [{middleware_module, new_state} | rest_of_the_pipeline]}
+  end
+
+  @doc false
+  @spec normalize_reaction(next(), state()) :: {[Raxx.part()], state()} | no_return
+  def normalize_reaction(response = %Raxx.Response{body: true}, _initial_state) do
+    raise %ReturnError{return: response}
+  end
+
+  def normalize_reaction(response = %Raxx.Response{}, initial_state) do
+    {[response], initial_state}
+  end
+
+  def normalize_reaction({parts, new_state}, _initial_state) when is_list(parts) do
+    {parts, new_state}
+  end
+
+  def normalize_reaction(other, _initial_state) do
+    raise %ReturnError{return: other}
   end
 
   @doc false

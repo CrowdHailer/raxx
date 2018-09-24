@@ -964,6 +964,58 @@ defmodule Raxx do
     |> set_header("content-type", "text/plain")
     |> set_body(reason_phrase)
   end
+
+  @doc """
+  TODO
+  """
+  def simplify_parts(parts) when is_list(parts) do
+    Enum.flat_map(parts, &simplify_part/1)
+  end
+
+  defp simplify_part(part = %Raxx.Data{}) do
+    [part]
+  end
+
+  defp simplify_part(part = %Raxx.Tail{}) do
+    [part]
+  end
+
+  defp simplify_part(response_headers = %Raxx.Response{body: true}) do
+    [response_headers]
+  end
+
+  defp simplify_part(response = %Raxx.Response{body: false}) do
+    # NOTE I'm not sure about this one
+    [response, Raxx.tail([])]
+  end
+
+  defp simplify_part(response = %Raxx.Response{body: body}) when is_binary(body) do
+    headers = %Raxx.Response{response | body: true}
+    [
+      headers,
+      Raxx.data(body),
+      Raxx.tail([])
+    ]
+  end
+
+  defp simplify_part(request_headers = %Raxx.Request{body: true}) do
+    [request_headers]
+  end
+
+  defp simplify_part(request = %Raxx.Request{body: false}) do
+    # NOTE I'm not sure about this one either
+    [request, Raxx.tail([])]
+  end
+
+  defp simplify_part(response = %Raxx.Request{body: body}) when is_binary(body) do
+    headers = %Raxx.Request{response | body: true}
+    [
+      headers,
+      Raxx.data(body),
+      Raxx.tail([])
+    ]
+  end
+
 end
 
 defmodule :raxx do

@@ -39,6 +39,7 @@ defmodule Raxx.Middleware do
   """
   @callback handle_info(any(), state(), remaining_pipeline :: pipeline) :: next()
 
+  # TODO a better name for this
   @spec create_pipeline(pipeline(), module(), any()) :: pipeline
   def create_pipeline(configuration, controller_module, initial_state)
       when is_list(configuration) do

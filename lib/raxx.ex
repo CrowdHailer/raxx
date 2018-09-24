@@ -991,6 +991,7 @@ defmodule Raxx do
 
   defp simplify_part(response = %Raxx.Response{body: body}) when is_binary(body) do
     headers = %Raxx.Response{response | body: true}
+
     [
       headers,
       Raxx.data(body),
@@ -1009,13 +1010,13 @@ defmodule Raxx do
 
   defp simplify_part(response = %Raxx.Request{body: body}) when is_binary(body) do
     headers = %Raxx.Request{response | body: true}
+
     [
       headers,
       Raxx.data(body),
       Raxx.tail([])
     ]
   end
-
 end
 
 defmodule :raxx do

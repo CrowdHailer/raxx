@@ -43,8 +43,8 @@ defmodule Raxx.PipelineTest do
   end
 
   test "a couple of NoOp Middlewares don't modify the response of a simple controller" do
-    configs = [{NoOp, :irrelevant}, {NoOp, 42}]
-    pipeline = Pipeline.create(configs, HomePage, :controller_initial)
+    middlewares = [{NoOp, :irrelevant}, {NoOp, 42}]
+    pipeline = Pipeline.create(middlewares, HomePage, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
@@ -162,8 +162,8 @@ defmodule Raxx.PipelineTest do
   end
 
   test "middlewares can modify the request" do
-    configs = [{Meddler, [request_header: "foo"]}, {Meddler, [request_header: "bar"]}]
-    pipeline = Pipeline.create(configs, SpyServer, :controller_initial)
+    middlewares = [{Meddler, [request_header: "foo"]}, {Meddler, [request_header: "bar"]}]
+    pipeline = Pipeline.create(middlewares, SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
@@ -188,8 +188,8 @@ defmodule Raxx.PipelineTest do
   end
 
   test "middlewares can modify the response" do
-    configs = [{Meddler, [response_body: "foo"]}, {Meddler, [response_body: "bar"]}]
-    pipeline = Pipeline.create(configs, SpyServer, :controller_initial)
+    middlewares = [{Meddler, [response_body: "foo"]}, {Meddler, [response_body: "bar"]}]
+    pipeline = Pipeline.create(middlewares, SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
@@ -214,8 +214,8 @@ defmodule Raxx.PipelineTest do
   end
 
   test "middlewares' state is correctly updated" do
-    configs = [{Meddler, [response_body: "foo"]}, {NoOp, :config}]
-    pipeline = Pipeline.create(configs, SpyServer, :controller_initial)
+    middlewares = [{Meddler, [response_body: "foo"]}, {NoOp, :config}]
+    pipeline = Pipeline.create(middlewares, SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
@@ -289,8 +289,8 @@ defmodule Raxx.PipelineTest do
   end
 
   test "middlewares can \"short circuit\" processing (not call through)" do
-    configs = [{NoOp, nil}, {AlwaysForbidden, nil}]
-    pipeline = Pipeline.create(configs, SpyServer, :whatever)
+    middlewares = [{NoOp, nil}, {AlwaysForbidden, nil}]
+    pipeline = Pipeline.create(middlewares, SpyServer, :whatever)
     request = Raxx.request(:GET, "/")
 
     assert {[_head, data, _tail], _pipeline} = Pipeline.handle_head(request, pipeline)

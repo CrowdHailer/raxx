@@ -13,14 +13,14 @@ defmodule Raxx.Middleware do
 
   Original value is the argument passed in the pipeline setup.
   """
-  # aliasing this to Server.state() to help the dialyzer in some cases
   @type state :: Server.state()
+  # @type state :: any()
 
   @type next :: {[Raxx.part()], state, pipeline}
 
   @doc """
   """
-  @callback handle_head(Raxx.Request.t(), state(), remaing_pipeline :: pipeline) :: next()
+  @callback handle_head(Raxx.Request.t(), state(), remaining_pipeline :: pipeline) :: next()
 
   @doc """
   Called every time data from the request body is received

@@ -8,8 +8,8 @@ defmodule Raxx.Pipeline do
   A Pipeline is list of middlewares attached to a controller
   """
 
-  @spec create_pipeline([Middleware.t()], module(), any()) :: t()
-  def create_pipeline(configuration, controller_module, initial_state)
+  @spec create([Middleware.t()], module(), any()) :: t()
+  def create(configuration, controller_module, initial_state)
       when is_list(configuration) do
     true = Server.is_implemented?(controller_module)
 
@@ -42,6 +42,7 @@ defmodule Raxx.Pipeline do
   def handle_info(message, pipeline) do
     handle_anything(message, pipeline, :handle_info)
   end
+
 
   @spec handle_anything(any, t(), :handle_head | :handle_data | :handle_tail | :handle_info) ::
           {[Raxx.part()], t()}

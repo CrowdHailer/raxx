@@ -44,7 +44,7 @@ defmodule Raxx.PipelineTest do
 
   test "a couple of NoOp Middlewares don't modify the response of a simple controller" do
     configs = [{NoOp, :irrelevant}, {NoOp, 42}]
-    pipeline = Pipeline.create_pipeline(configs, HomePage, :controller_initial)
+    pipeline = Pipeline.create(configs, HomePage, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
@@ -154,7 +154,7 @@ defmodule Raxx.PipelineTest do
 
   test "middlewares can modify the request" do
     configs = [{Meddler, [request_header: "foo"]}, {Meddler, [request_header: "bar"]}]
-    pipeline = Pipeline.create_pipeline(configs, SpyServer, :controller_initial)
+    pipeline = Pipeline.create(configs, SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
@@ -180,7 +180,7 @@ defmodule Raxx.PipelineTest do
 
   test "middlewares can modify the response" do
     configs = [{Meddler, [response_body: "foo"]}, {Meddler, [response_body: "bar"]}]
-    pipeline = Pipeline.create_pipeline(configs, SpyServer, :controller_initial)
+    pipeline = Pipeline.create(configs, SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")

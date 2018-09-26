@@ -1,7 +1,8 @@
-defmodule Raxx.MiddlewareTest do
+defmodule Raxx.PipelineTest do
   use ExUnit.Case
 
   alias Raxx.Middleware
+  alias Raxx.Pipeline
 
   defmodule HomePage do
     use Raxx.Server
@@ -18,43 +19,43 @@ defmodule Raxx.MiddlewareTest do
 
     @impl Middleware
     def handle_head(request, config, pipeline) do
-      {parts, pipeline} = Middleware.handle_head(request, pipeline)
+      {parts, pipeline} = Pipeline.handle_head(request, pipeline)
       {parts, config, pipeline}
     end
 
     @impl Middleware
     def handle_data(data, state, pipeline) do
-      {parts, pipeline} = Middleware.handle_data(data, pipeline)
+      {parts, pipeline} = Pipeline.handle_data(data, pipeline)
       {parts, state, pipeline}
     end
 
     @impl Middleware
     def handle_tail(tail, state, pipeline) do
-      {parts, pipeline} = Middleware.handle_tail(tail, pipeline)
+      {parts, pipeline} = Pipeline.handle_tail(tail, pipeline)
       {parts, state, pipeline}
     end
 
     @impl Middleware
     def handle_info(message, state, pipeline) do
-      {parts, pipeline} = Middleware.handle_info(message, pipeline)
+      {parts, pipeline} = Pipeline.handle_info(message, pipeline)
       {parts, state, pipeline}
     end
   end
 
   test "a couple of NoOp Middlewares don't modify the response of a simple controller" do
     configs = [{NoOp, :irrelevant}, {NoOp, 42}]
-    pipeline = Middleware.create_pipeline(configs, HomePage, :controller_initial)
+    pipeline = Pipeline.create_pipeline(configs, HomePage, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
       |> Raxx.set_content_length(3)
       |> Raxx.set_body(true)
 
-    assert {[], pipeline} = Middleware.handle_head(request, pipeline)
-    assert {[], pipeline} = Middleware.handle_data("abc", pipeline)
+    assert {[], pipeline} = Pipeline.handle_head(request, pipeline)
+    assert {[], pipeline} = Pipeline.handle_data("abc", pipeline)
 
     # middleware simplifies "compound" server responses (full responses)
-    assert {[head, body, tail], _pipeline} = Middleware.handle_tail([], pipeline)
+    assert {[head, body, tail], _pipeline} = Pipeline.handle_tail([], pipeline)
     assert %Raxx.Response{status: 200, body: true} = head
     assert %Raxx.Data{data: "Home page"} = body
     assert %Raxx.Tail{headers: []} = tail
@@ -75,28 +76,28 @@ defmodule Raxx.MiddlewareTest do
             |> Raxx.set_header("x-request-header", value)
         end
 
-      {parts, pipeline} = Middleware.handle_head(request, pipeline)
+      {parts, pipeline} = Pipeline.handle_head(request, pipeline)
       parts = modify_parts(parts, config)
       {parts, config, pipeline}
     end
 
     @impl Middleware
     def handle_data(data, config, pipeline) do
-      {parts, pipeline} = Middleware.handle_data(data, pipeline)
+      {parts, pipeline} = Pipeline.handle_data(data, pipeline)
       parts = modify_parts(parts, config)
       {parts, config, pipeline}
     end
 
     @impl Middleware
     def handle_tail(tail, config, pipeline) do
-      {parts, pipeline} = Middleware.handle_tail(tail, pipeline)
+      {parts, pipeline} = Pipeline.handle_tail(tail, pipeline)
       parts = modify_parts(parts, config)
       {parts, config, pipeline}
     end
 
     @impl Middleware
     def handle_info(message, config, pipeline) do
-      {parts, pipeline} = Middleware.handle_info(message, pipeline)
+      {parts, pipeline} = Pipeline.handle_info(message, pipeline)
       parts = modify_parts(parts, config)
       {parts, config, pipeline}
     end
@@ -153,25 +154,25 @@ defmodule Raxx.MiddlewareTest do
 
   test "middlewares can modify the request" do
     configs = [{Meddler, [request_header: "foo"]}, {Meddler, [request_header: "bar"]}]
-    pipeline = Middleware.create_pipeline(configs, SpyServer, :controller_initial)
+    pipeline = Pipeline.create_pipeline(configs, SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
       |> Raxx.set_content_length(3)
       |> Raxx.set_body(true)
 
-    assert {[], pipeline} = Middleware.handle_head(request, pipeline)
+    assert {[], pipeline} = Pipeline.handle_head(request, pipeline)
 
     assert_receive {SpyServer, :handle_head, server_request, :controller_initial}
     assert %Raxx.Request{} = server_request
     assert "bar" == Raxx.get_header(server_request, "x-request-header")
     assert 3 == Raxx.get_content_length(server_request)
 
-    assert {[headers], pipeline} = Middleware.handle_data("abc", pipeline)
+    assert {[headers], pipeline} = Pipeline.handle_data("abc", pipeline)
     assert_receive {SpyServer, :handle_data, "abc", 1}
     assert %Raxx.Response{body: true, status: 200} = headers
 
-    assert {[data, tail], pipeline} = Middleware.handle_tail([], pipeline)
+    assert {[data, tail], pipeline} = Pipeline.handle_tail([], pipeline)
     assert_receive {SpyServer, :handle_tail, [], 2}
     assert %Raxx.Data{data: "spy server"} = data
     assert %Raxx.Tail{headers: [{"x-response-trailer", "spy-trailer"}]} == tail
@@ -179,25 +180,25 @@ defmodule Raxx.MiddlewareTest do
 
   test "middlewares can modify the response" do
     configs = [{Meddler, [response_body: "foo"]}, {Meddler, [response_body: "bar"]}]
-    pipeline = Middleware.create_pipeline(configs, SpyServer, :controller_initial)
+    pipeline = Pipeline.create_pipeline(configs, SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
       |> Raxx.set_content_length(3)
       |> Raxx.set_body(true)
 
-    assert {[], pipeline} = Middleware.handle_head(request, pipeline)
+    assert {[], pipeline} = Pipeline.handle_head(request, pipeline)
 
     assert_receive {SpyServer, :handle_head, server_request, :controller_initial}
     assert %Raxx.Request{} = server_request
     assert nil == Raxx.get_header(server_request, "x-request-header")
     assert 3 == Raxx.get_content_length(server_request)
 
-    assert {[headers], pipeline} = Middleware.handle_data("abc", pipeline)
+    assert {[headers], pipeline} = Pipeline.handle_data("abc", pipeline)
     assert_receive {SpyServer, :handle_data, "abc", 1}
     assert %Raxx.Response{body: true, status: 200} = headers
 
-    assert {[data, tail], pipeline} = Middleware.handle_tail([], pipeline)
+    assert {[data, tail], pipeline} = Pipeline.handle_tail([], pipeline)
     assert_receive {SpyServer, :handle_tail, [], 2}
     assert %Raxx.Data{data: "foofoofoof"} = data
     assert %Raxx.Tail{headers: [{"x-response-trailer", "spy-trailer"}]} == tail

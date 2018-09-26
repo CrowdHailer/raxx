@@ -20,25 +20,25 @@ defmodule Raxx.PipelineTest do
     @impl Middleware
     def handle_head(request, config, pipeline) do
       {parts, pipeline} = Pipeline.handle_head(request, pipeline)
-      {parts, config, pipeline}
+      {parts, {config, :head}, pipeline}
     end
 
     @impl Middleware
-    def handle_data(data, state, pipeline) do
+    def handle_data(data, {_, prev}, pipeline) do
       {parts, pipeline} = Pipeline.handle_data(data, pipeline)
-      {parts, state, pipeline}
+      {parts, {prev, :data}, pipeline}
     end
 
     @impl Middleware
-    def handle_tail(tail, state, pipeline) do
+    def handle_tail(tail, {_, prev}, pipeline) do
       {parts, pipeline} = Pipeline.handle_tail(tail, pipeline)
-      {parts, state, pipeline}
+      {parts, {prev, :tail}, pipeline}
     end
 
     @impl Middleware
-    def handle_info(message, state, pipeline) do
+    def handle_info(message, {_, prev}, pipeline) do
       {parts, pipeline} = Pipeline.handle_info(message, pipeline)
-      {parts, state, pipeline}
+      {parts, {prev, :info}, pipeline}
     end
   end
 
@@ -130,6 +130,15 @@ defmodule Raxx.PipelineTest do
     use Raxx.Server
     # this server is deliberately weird to trip up any assumptions
     @impl Raxx.Server
+    def handle_head(request = %{body: false}, state) do
+      send(self(), {__MODULE__, :handle_head, request, state})
+
+      response =
+        Raxx.response(:ok) |> Raxx.set_body("SpyServer responds to a request with no body")
+
+      {[response], state}
+    end
+
     def handle_head(request, state) do
       send(self(), {__MODULE__, :handle_head, request, state})
       {[], 1}
@@ -204,15 +213,96 @@ defmodule Raxx.PipelineTest do
     assert %Raxx.Tail{headers: [{"x-response-trailer", "spy-trailer"}]} == tail
   end
 
-  test "middlewares can \"short circuit\" processing (not call through)" do
-    flunk("TODO")
-  end
-
   test "middlewares' state is correctly updated" do
-    flunk("TODO")
+    configs = [{Meddler, [response_body: "foo"]}, {NoOp, :config}]
+    pipeline = Pipeline.create(configs, SpyServer, :controller_initial)
+
+    request =
+      Raxx.request(:POST, "/")
+      |> Raxx.set_content_length(3)
+      |> Raxx.set_body(true)
+
+    assert {_, pipeline} = Pipeline.handle_head(request, pipeline)
+    # NOTE this test breaks the encapsulation of the pipeline,
+    # but the alternative would be a bit convoluted
+    assert [{Meddler, [response_body: "foo"]}, {NoOp, {:config, :head}}, {SpyServer, 1}] ==
+             pipeline
+
+    {_, pipeline} = Pipeline.handle_data("z", pipeline)
+    assert [{Meddler, [response_body: "foo"]}, {NoOp, {:head, :data}}, {SpyServer, 2}] == pipeline
+
+    {_, pipeline} = Pipeline.handle_data("zz", pipeline)
+    assert [{Meddler, [response_body: "foo"]}, {NoOp, {:data, :data}}, {SpyServer, 3}] == pipeline
+
+    {_, pipeline} = Pipeline.handle_tail([{"x-foo", "bar"}], pipeline)
+
+    assert [{Meddler, _}, {NoOp, {:data, :tail}}, {SpyServer, -3}] = pipeline
   end
 
   test "a pipeline with no middlewares is functional" do
-    flunk("TODO")
+    pipeline = Pipeline.create([], SpyServer, :controller_initial)
+
+    request =
+      Raxx.request(:POST, "/")
+      |> Raxx.set_content_length(3)
+      |> Raxx.set_body(true)
+
+    {pipeline_result_1, pipeline} = Pipeline.handle_head(request, pipeline)
+    {pipeline_result_2, pipeline} = Pipeline.handle_data("xxx", pipeline)
+    {pipeline_result_3, _pipeline} = Pipeline.handle_tail([], pipeline)
+
+    {server_result_1, state} = SpyServer.handle_head(request, :controller_initial)
+    {server_result_2, state} = SpyServer.handle_data("xxx", state)
+    {server_result_3, _state} = SpyServer.handle_tail([], state)
+
+    assert pipeline_result_1 == server_result_1
+    assert pipeline_result_2 == server_result_2
+    assert pipeline_result_3 == server_result_3
+  end
+
+  defmodule AlwaysForbidden do
+    @behaviour Middleware
+
+    @impl Middleware
+    def handle_head(_request, _config, pipeline) do
+      response =
+        Raxx.response(:forbidden)
+        |> Raxx.set_body("Forbidden!")
+
+      {[response], nil, pipeline}
+    end
+
+    @impl Middleware
+    def handle_data(_data, _state, pipeline) do
+      {[], nil, pipeline}
+    end
+
+    @impl Middleware
+    def handle_tail(_tail, _state, pipeline) do
+      {[], nil, pipeline}
+    end
+
+    @impl Middleware
+    def handle_info(_message, _state, pipeline) do
+      {[], nil, pipeline}
+    end
+  end
+
+  test "middlewares can \"short circuit\" processing (not call through)" do
+    configs = [{NoOp, nil}, {AlwaysForbidden, nil}]
+    pipeline = Pipeline.create(configs, SpyServer, :whatever)
+    request = Raxx.request(:GET, "/")
+
+    assert {[_head, data, _tail], _pipeline} = Pipeline.handle_head(request, pipeline)
+    assert %Raxx.Data{data: "Forbidden!"} == data
+
+    refute_receive _
+
+    pipeline = Pipeline.create([{NoOp, nil}], SpyServer, :whatever)
+    assert {[_head, data, _tail], _pipeline} = Pipeline.handle_head(request, pipeline)
+
+    assert data.data =~ "SpyServer"
+
+    assert_receive {SpyServer, _, _, _}
   end
 end

@@ -11,6 +11,7 @@ defmodule Raxx.Pipeline do
   @spec create([Middleware.t()], module(), any()) :: t()
   def create(configuration, controller_module, initial_state)
       when is_list(configuration) do
+    # TODO change those no match errors into informative exceptions
     true = Server.is_implemented?(controller_module)
 
     true =
@@ -43,17 +44,15 @@ defmodule Raxx.Pipeline do
     handle_anything(message, pipeline, :handle_info)
   end
 
-
   @spec handle_anything(any, t(), :handle_head | :handle_data | :handle_tail | :handle_info) ::
           {[Raxx.part()], t()}
   defp handle_anything(input, [{controller_module, controller_state}], function_name)
        when is_atom(function_name) do
-    true = Server.is_implemented?(controller_module)
-
     {parts, new_state} =
       apply(controller_module, function_name, [input, controller_state])
       |> Server.normalize_reaction(controller_state)
 
+    true = is_list(parts)
     parts = Raxx.simplify_parts(parts)
 
     {parts, [{controller_module, new_state}]}
@@ -65,12 +64,11 @@ defmodule Raxx.Pipeline do
          function_name
        )
        when is_atom(function_name) do
-    true = Middleware.is_implemented?(middleware_module)
-
     {parts, new_state, rest_of_the_pipeline} =
       apply(middleware_module, function_name, [input, middleware_state, rest_of_the_pipeline])
 
     # TODO discuss this
+    true = is_list(parts)
     parts = Raxx.simplify_parts(parts)
 
     {parts, [{middleware_module, new_state} | rest_of_the_pipeline]}

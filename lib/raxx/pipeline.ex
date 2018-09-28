@@ -2,11 +2,21 @@ defmodule Raxx.Pipeline do
   alias Raxx.Server
   alias Raxx.Middleware
 
-  @opaque t :: [Middleware.t() | Server.t()]
-
   @moduledoc """
-  A Pipeline is list of middlewares attached to a controller
+  A Pipeline is sequence of middlewares attached to a controller
   """
+
+  @typedoc """
+  Container for a pipeline - a sequence of middlewares attached to a controller.
+
+  NOTE: Don't rely on the internal structure of this type. It can be modified
+  at an arbitrary moment to improve performance or capabilities.
+  """
+  # ...and it probably will. The way the pipelines are structured right now
+  # they append to the back of the middleware list, which is suboptimal, both when
+  # it comes to time and memory. They will probably get rewritten as a tuple
+  # (or a tagged tuple for easier debugging)
+  @opaque t :: [Middleware.t() | Server.t()]
 
   @spec create([Middleware.t()], module(), any()) :: t()
   def create(configuration, controller_module, initial_state)
@@ -53,7 +63,8 @@ defmodule Raxx.Pipeline do
       |> Server.normalize_reaction(controller_state)
 
     true = is_list(parts)
-    parts = Raxx.simplify_parts(parts)
+    # TODO discuss this
+    # parts = Raxx.simplify_parts(parts)
 
     {parts, [{controller_module, new_state}]}
   end
@@ -67,9 +78,9 @@ defmodule Raxx.Pipeline do
     {parts, new_state, rest_of_the_pipeline} =
       apply(middleware_module, function_name, [input, middleware_state, rest_of_the_pipeline])
 
-    # TODO discuss this
     true = is_list(parts)
-    parts = Raxx.simplify_parts(parts)
+    # TODO discuss this
+    # parts = Raxx.simplify_parts(parts)
 
     {parts, [{middleware_module, new_state} | rest_of_the_pipeline]}
   end

@@ -18,7 +18,8 @@ defmodule Raxx.Middleware do
 
   @doc """
   """
-  @callback handle_head(Raxx.Request.t(), state(), remaining_pipeline :: Raxx.Pipeline.t()) :: next()
+  @callback handle_head(Raxx.Request.t(), state(), remaining_pipeline :: Raxx.Pipeline.t()) ::
+              next()
 
   @doc """
   Called every time data from the request body is received
@@ -30,7 +31,8 @@ defmodule Raxx.Middleware do
 
   This will be called with an empty list of headers is request is completed without trailers.
   """
-  @callback handle_tail([{binary(), binary()}], state(), remaining_pipeline :: Raxx.Pipeline.t()) :: next()
+  @callback handle_tail([{binary(), binary()}], state(), remaining_pipeline :: Raxx.Pipeline.t()) ::
+              next()
 
   @doc """
   Called for all other messages the server may recieve

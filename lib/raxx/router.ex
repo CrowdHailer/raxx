@@ -28,7 +28,7 @@ defmodule Raxx.Router do
   """
 
   @doc false
-  defmacro __using__(actions) when is_list(actions) do
+  defmacro __using__(middlewares \\ [], actions) when is_list(middlewares) and is_list(actions) do
     routes =
       for {match, controller} <- actions do
         {resolved_module, []} = Module.eval_quoted(__CALLER__, controller)
@@ -60,8 +60,10 @@ defmodule Raxx.Router do
             Logger.metadata("raxx.action": unquote(controller_string))
             Logger.metadata("raxx.route": unquote(match_string))
 
-            {outbound, new_state} = Raxx.Server.handle({unquote(controller), state}, request)
-            {outbound, {unquote(controller), new_state}}
+            pipeline = Raxx.Pipeline.create(unquote(middlewares), unquote(controller), state)
+
+            {outbound, pipeline} = Raxx.Pipeline.handle_head(request, pipeline)
+            {outbound, pipeline}
           end
         end
       end
@@ -76,21 +78,16 @@ defmodule Raxx.Router do
       unquote(routes)
 
       @impl Raxx.Server
-      def handle_data(data, {controller, state}) do
-        {outbound, new_state} = Raxx.Server.handle({controller, state}, Raxx.data(data))
-        {outbound, {controller, new_state}}
+      def handle_data(data, pipeline) do
+        Raxx.Pipeline.handle_data(data, pipeline)
       end
 
-      @impl Raxx.Server
-      def handle_tail(trailers, {controller, state}) do
-        {outbound, new_state} = Raxx.Server.handle({controller, state}, Raxx.tail(trailers))
-        {outbound, {controller, new_state}}
+      def handle_tail(trailers, pipeline) do
+        Raxx.Pipeline.handle_tail(trailers, pipeline)
       end
 
-      @impl Raxx.Server
-      def handle_info(message, {controller, state}) do
-        {outbound, new_state} = Raxx.Server.handle({controller, state}, message)
-        {outbound, {controller, new_state}}
+      def handle_info(message, pipeline) do
+        Raxx.Pipeline.handle_info(message, pipeline)
       end
     end
   end

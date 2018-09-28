@@ -116,22 +116,31 @@ defmodule Raxx.PipelineTest do
     end
 
     defp modify_part(data = %Raxx.Data{data: contents}, config) do
-      case Keyword.get(config, :response_body) do
-        nil ->
-          data
+      new_contents = modify_contents(contents, config)
+      %Raxx.Data{data | data: new_contents}
+    end
 
-        replacement when is_binary(replacement) ->
-          new_contents =
-            String.replace(contents, ~r/./, replacement)
-            # make sure it's the same length
-            |> String.slice(0, String.length(contents))
-
-          %Raxx.Data{data: new_contents}
-      end
+    # NOTE this function head is necessary if Pipeline doesn't do Raxx.simplify_parts/1
+    defp modify_part(response = %Raxx.Response{body: contents}, config)
+         when is_binary(contents) do
+      new_contents = modify_contents(contents, config)
+      %Raxx.Response{response | body: new_contents}
     end
 
     defp modify_part(part, _state) do
       part
+    end
+
+    defp modify_contents(contents, config) do
+      case Keyword.get(config, :response_body) do
+        nil ->
+          contents
+
+        replacement when is_binary(replacement) ->
+          String.replace(contents, ~r/./, replacement)
+          # make sure it's the same length
+          |> String.slice(0, String.length(contents))
+      end
     end
   end
 

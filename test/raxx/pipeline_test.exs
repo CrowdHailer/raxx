@@ -54,11 +54,20 @@ defmodule Raxx.PipelineTest do
     assert {[], pipeline} = Pipeline.handle_head(request, pipeline)
     assert {[], pipeline} = Pipeline.handle_data("abc", pipeline)
 
+    assert {[response], _pipeline} = Pipeline.handle_tail([], pipeline)
+
+    assert %Raxx.Response{
+             body: "Home page",
+             headers: [{"content-length", "9"}],
+             status: 200
+           } = response
+
+    # NOTE these assertions work when Raxx.simplify_parts/1 is used
     # middleware simplifies "compound" server responses (full responses)
-    assert {[head, body, tail], _pipeline} = Pipeline.handle_tail([], pipeline)
-    assert %Raxx.Response{status: 200, body: true} = head
-    assert %Raxx.Data{data: "Home page"} = body
-    assert %Raxx.Tail{headers: []} = tail
+    # assert {[head, body, tail], _pipeline} = Pipeline.handle_tail([], pipeline)
+    # assert %Raxx.Response{status: 200, body: true} = head
+    # assert %Raxx.Data{data: "Home page"} = body
+    # assert %Raxx.Tail{headers: []} = tail
   end
 
   defmodule Meddler do
@@ -293,16 +302,27 @@ defmodule Raxx.PipelineTest do
     pipeline = Pipeline.create(middlewares, SpyServer, :whatever)
     request = Raxx.request(:GET, "/")
 
-    assert {[_head, data, _tail], _pipeline} = Pipeline.handle_head(request, pipeline)
-    assert %Raxx.Data{data: "Forbidden!"} == data
+    assert {[response], _pipeline} = Pipeline.handle_head(request, pipeline)
+    assert %Raxx.Response{body: "Forbidden!"} = response
 
     refute_receive _
 
     pipeline = Pipeline.create([{NoOp, nil}], SpyServer, :whatever)
-    assert {[_head, data, _tail], _pipeline} = Pipeline.handle_head(request, pipeline)
-
-    assert data.data =~ "SpyServer"
+    assert {[response], _pipeline} = Pipeline.handle_head(request, pipeline)
+    assert response.body =~ "SpyServer"
 
     assert_receive {SpyServer, _, _, _}
+
+    # NOTE these assertions work when Raxx.simplify_parts/1 is used
+    # assert {[_head, data, _tail], _pipeline} = Pipeline.handle_head(request, pipeline)
+    # assert %Raxx.Data{data: "Forbidden!"} == data
+
+    # refute_receive _
+
+    # pipeline = Pipeline.create([{NoOp, nil}], SpyServer, :whatever)
+    # assert {[_head, data, _tail], _pipeline} = Pipeline.handle_head(request, pipeline)
+    # assert data.data =~ "SpyServer"
+
+    # assert_receive {SpyServer, _, _, _}
   end
 end

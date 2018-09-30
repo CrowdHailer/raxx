@@ -28,6 +28,7 @@ defmodule Raxx.Mixfile do
       {:cookie, "~> 0.1.0"},
       {:eex_html, "~> 0.1.1"},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
+      {:benchee, "~> 0.13.2", only: :dev},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end

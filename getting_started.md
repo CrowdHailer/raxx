@@ -226,7 +226,206 @@ If our first endpoint is `myapp.com` this is the same `www.myapp.com`.
 Feel free to choose another name,
 another common namespace is `MyApp.API`.
 
-#### Routing
+## Middleware
+
+Middleware are a way to modify the behaviour or a Raxx server,
+they could also be called modifiers or decorators.
+
+Middleware allow separating reused functionality from the core server.
+They can be a source of indirection and their use should normally not be used for core business logic,
+logging and security are a good example of when to use middleware.
+
+### Modifying a server
+
+A server (consisting of server module and initial state) can be used by Ace to handle client requests.
+Adding a middleware to a server returns another server, that can replace the orginal server when starting an Ace service.
+
+```elixir
+server = {MyApp.WWW, initial_state}
+wrapped_server = Raxx.Middleware.Logger.wrap(server, level: "info")
+
+{:ok, pid} = Ace.HTTP.Service.start_link(wrapped_server, port: 8080, cleartext: true)
+```
+
+*call server something better, stack, app*
+
+#### How it works
+
+The `wrap` function returns another tuple of `{ServerModule, intitial_state}`.
+This looks exactly the same to Ace, but ServerModule is now `Raxx.Middleware.Logger`,
+and intial_state contains all the logger configuration and a reference to the original server.
+
+Note most middleware state consist of a two tuple. e.g. `{middleware_state, next_server}`,
+but they do not have to look like this, some don't need middleware_state.
+By using the wrap function this internal shape known only within the middleware module.
+
+This means that there is no such thing as a `Raxx.Middleware` behavior, it is just another kind of server and I think that makes sense from the point of view of Ace.
+
+### reusing middleware stacks
+
+A server (or controller/action of a router) might always be used with a certain set of middleware.
+This can simply be achieved with a function.
+
+```elixir
+defmodule MyApp.WWW do
+  def new(config) do
+    {__MODULE__, config}
+    |> Raxx.Middleware.MethodOverride.wrap()
+    |> Raxx.Middleware.Logger(level: "debug")
+  end
+end
+```
+
+A set of middleware migh want to be applied on several servers
+
+```elixir
+def browser_stack(server) do
+  server
+  |> Raxx.Middleware.Flash()
+  |> Raxx.Middleware.ProtectFromForgery()
+  |> Raxx.Middleware.Session(secret: "secret")
+end
+```
+
+### (compile/run)time config
+
+`Raxx.Static.wrap/2` takes two arguments, the first is a server and the second options.
+if the options is a keyword list including the dir for files then it is evaluated at runtime.
+However this module also exposes `setup/1` that takes the same list of options. This can be used at compile time if that is helpful.
+
+```elixir
+  # All the files etc in the format that is used by middleware
+  @static_config Raxx.Static.config(dir: static_dir)
+
+  def start_compiletime(intitial_state) do
+    {App, intitial_state}
+    |> Raxx.Static.wrap(@static_config)
+    |> Ace.HTTP.Service.start_link(port: 8080, cleartext: true)
+  end
+
+  def start_runtime(intitial_state) do
+    {App, intitial_state}
+    |> Raxx.Static.wrap(dir: intitial_state.public_dir)
+    |> Ace.HTTP.Service.start_link(port: 8080, cleartext: true)
+  end
+```
+
+#### Router and middleware
+
+A router is like anyother middleware, only instead of one possible stack.
+To work with pattern matches the router has to do some work at compiletime.
+Matches cannot be passed around at runtime.
+
+The current API take a module and assumes the stack is {Module, config}.
+This is does not have have enough flexibility to build a stack.
+If a stack needs to be built we need the option to pass runtime config to middleware
+
+```elixir
+defmodule MyRouter do
+  use Raxx.Router, [
+    # Just pass the module as is,
+    # this is equivalent to fn(s) -> {HomePage, c} end
+    {%{method: :GET, path: []}, HomePage},
+    # Add a one off middleware
+    {%{method: :GET, path: ["users", _id]}, fn(c) -> {UsersPage, c} |> Middleware.Head.wrap(),
+    # Use the server from module, may include middleware, can be wrapped in further middleware
+    {%{method: :GET, path: ["users"]}, &UsersPage.new/1},
+    # Make use of a helper function for middleware
+    {%{method: :POST, path: ["users"]}, &browser_middleware(CreateUser, &1)},
+    {_, NotFoundPage}
+  ]
+
+  def browser_middleware(action, config) do
+
+  end
+  def api_middleware(action, config) do
+
+  end
+end
+```
+
+### Example
+
+```elixir
+defmodule Raxx.Middleware.Logger do
+  @behavior Raxx.Server
+
+  defstruct [:level, :start, :method, :path, :next]
+  # Here middleware state is a struct not a tuple,
+  # however I think the tuple is nicer to separate mext from internal config
+
+  def wrap(next, options) do
+    state = %__MODULE__{
+      next: next
+      level: Keyword.get(options, :level, :info)
+    }
+    {__MODULE__, state}
+  end
+
+  def handle_head(request, state) do
+    state = %{
+      state |
+      start: System.monotonic_time(),
+      method: request.method,
+      path: request.raw_path}
+    Server.handle_head(state.next, request)
+    |> handle_response(state)
+  end
+
+  def handle_data(data, state) do
+    {parts, next} = Server.handle_data(state.next, data)
+    |> handle_response(state)
+  end
+
+  def handle_tail(tail, state) do
+    {parts, next} = Server.handle_tail(state.next, tail)
+    |> handle_response(state)
+  end
+
+  def handle_info(info, state) do
+    {parts, next} = Server.handle_info(state.next, info)
+    |> handle_response(state)
+  end
+
+  defp handle_response({parts, next}, state) do
+    state = %{state | next: next}
+    case parts do
+      [response = %Raxx.Response{} | _] ->
+        stop = System.monotonic_time()
+        diff = System.convert_time_unit(stop - start, :native, :microsecond)
+
+        Logger.log(state.level, fn() ->
+          "#{state.method} #{state.path} sent #{response.status} in #{formatted_diff(diff)}"
+        end)
+      _ ->
+
+    end
+    {parts, state}
+  end
+
+  defp formatted_diff(diff) when diff > 1000, do: [diff |> div(1000) |> Integer.to_string(), "ms"]
+  defp formatted_diff(diff), do: [Integer.to_string(diff), "µs"]
+end
+```
+
+### Middleware notes
+
+My philosophies on this:
+- A server that has a middleware applied to it is just another server,
+  I don't think that Ace should ever need to know it's calling a middleware.
+- Lets try and do everything at runtime, this is the best way to support runtime and compiletime config. In the second case a compile time value can just be used at runtime.
+
+Some outstanding issues.
+- The mixed nature of the `Raxx.Server` behaviour,
+  I think it is most likely that `handle_request` will be dropped.
+  I also think that in such cases a returned response should never have a body of true. So normalize_parts/normalize_reaction should handle this.
+  I also think this function belongs in `Raxx.Server`.
+- Naming things. What do we call the combo of {ServerModule, intitial_state}
+  sometimes I use app, sometimes I use server
+- Somethings are just good at compile time.
+  Like reading all the files in Raxx.Static, reading them at runtime means they need to live in the priv dir and be part of a release
+
+## Routing
 
 `Raxx.Router` is included in the core project.
 This uses the power of Elixir pattern matching to dispatch to action module.

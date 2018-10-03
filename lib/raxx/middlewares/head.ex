@@ -1,29 +1,36 @@
-defmodule Raxx.MethodOverride do
+defmodule Raxx.Head do
   @behaviour Raxx.Server
 
-  def wrap(next, _options) do
+  def wrap(next, _options \\ []) do
     {__MODULE__, {:unset, next}}
   end
 
   def handle_head(request, {:unset, next}) do
     switched = request.method == :HEAD
 
-    Server.handle_head(request, next)
+    request =
+      if switched do
+        %{request | method: :GET}
+      else
+        request
+      end
+
+    Raxx.Server.handle_head(next, request)
     |> handle_next(switched)
   end
 
-  def handle_data(data, next) do
-    Server.handle_data(data, next)
+  def handle_data(data, {switched, next}) do
+    Raxx.Server.handle_data(next, data)
     |> handle_next(switched)
   end
 
-  def handle_tail(tail, next) do
-    Server.handle_tail(tail, next)
+  def handle_tail(tail, {switched, next}) do
+    Raxx.Server.handle_tail(next, tail)
     |> handle_next(switched)
   end
 
-  def handle_info(info, next) do
-    Server.handle_info(info, next)
+  def handle_info(info, {switched, next}) do
+    Raxx.Server.handle_info(next, info)
     |> handle_next(switched)
   end
 
@@ -42,4 +49,7 @@ defmodule Raxx.MethodOverride do
   end
 
   # The worker should shutdown after seeing the last part so we should not see any other case here.
+  def handle_request(_, _) do
+    raise "Should not be here!"
+  end
 end

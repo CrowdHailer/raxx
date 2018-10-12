@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.16.1](https://github.com/CrowdHailer/raxx/tree/0.16.1) - 2018-09-19
 
-## Fixed
+### Fixed
 
 - `Raxx.NotFound` was incorrectly building body for `handle_request` callback.
 

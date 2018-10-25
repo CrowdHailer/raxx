@@ -712,6 +712,14 @@ defmodule Raxx do
 
   *https://tools.ietf.org/html/rfc7540#section-8.1.3*
 
+  Certain unusual usecases require a GET request with a body.
+  For example [elastic search](https://www.elastic.co/guide/en/elasticsearch/guide/current/_empty_search.html#get_vs_post)
+
+  Detailed discussion [here](https://stackoverflow.com/questions/978061/http-get-with-request-body).
+
+  In such cases it is always possible to directly add the body to a request struct.
+  Server implemenations should respect the provided body in such cases.
+
   Response with certain status codes never have a body.
 
   > All 1xx (Informational), 204 (No Content), and 304 (Not Modified)

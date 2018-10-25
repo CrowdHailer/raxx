@@ -61,6 +61,20 @@ defmodule RaxxTest do
     end
   end
 
+  test "Cannot set the body of a GET request" do
+    assert_raise ArgumentError, fn ->
+      Raxx.request(:GET, "raxx.dev")
+      |> Raxx.set_body("Hello, World!")
+    end
+  end
+
+  test "Cannot set the body of a HEAD request" do
+    assert_raise ArgumentError, fn ->
+      Raxx.request(:HEAD, "raxx.dev")
+      |> Raxx.set_body("Hello, World!")
+    end
+  end
+
   test "Cannot set the body of an informational (1xx) response" do
     assert_raise ArgumentError, fn ->
       Raxx.response(:continue)

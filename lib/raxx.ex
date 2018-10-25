@@ -450,16 +450,7 @@ defmodule Raxx do
       ...> |> Map.get(:headers)
       [{"referer", "example.com"}, {"accept", "text/html"}]
 
-  ## Connection specific headers
-
-  It is invalid to set a connection specific header on either a `Raxx.Request` or `Raxx.Response`.
-  The connection specific headers are:
-
-  - `connection`
-  - `keep-alive`
-  - `proxy-connection,`
-  - `transfer-encoding,`
-  - `upgrade`
+  ## Limitations
 
   Raxx is protocol agnostic, i.e. it can be used to construct HTTP/1.1 or HTTP/2 messages.
   This limits the heads that can (or should) be set on a message
@@ -480,6 +471,15 @@ defmodule Raxx do
     appear in requests.
 
   *https://tools.ietf.org/html/rfc7540#section-8.1.2.1*
+
+  It is invalid to set a connection specific header on either a `Raxx.Request` or `Raxx.Response`.
+  The connection specific headers are:
+
+  - `connection`
+  - `keep-alive`
+  - `proxy-connection,`
+  - `transfer-encoding,`
+  - `upgrade`
 
   Connection specific headers are not part of the end to end message,
   even if in HTTP/1.1 they are encoded as just another header.
@@ -687,25 +687,49 @@ defmodule Raxx do
 
   ## Examples
 
-      iex> request = request(:GET, "/")
+      iex> request = response(:ok)
       ...> |> set_body("Hello, World!")
       iex> request.body
       "Hello, World!"
       iex> Raxx.get_content_length(request)
       13
 
-      iex> request = request(:GET, "/")
+      iex> request = response(:ok)
       ...> |> set_body(true)
       iex> request.body
       true
       iex> Raxx.get_content_length(request)
       nil
+
+  ## Limitations
+
+  Requests using method `GET` or `HEAD` should not have a body.
+
+  > An HTTP GET request includes request header fields and no payload
+    body and is therefore transmitted as a single HEADERS frame, followed
+    by zero or more CONTINUATION frames containing the serialized block
+    of request header fields.
+
+  *https://tools.ietf.org/html/rfc7540#section-8.1.3*
+
+  Response with certain status codes never have a body.
+
+  > All 1xx (Informational), 204 (No Content), and 304 (Not Modified)
+    responses do not include a message body.  All other responses do
+    include a message body, although the body might be of zero length.
+
+  *https://tools.ietf.org/html/rfc7230#section-3.3*
   """
   @spec set_body(Raxx.Request.t(), body) :: Raxx.Request.t()
   @spec set_body(Raxx.Response.t(), body) :: Raxx.Response.t()
-  def set_body(%{status: status}, _body)
+  def set_body(%Raxx.Response{status: status}, _body)
       when status in 100..199 or status == 204 or status == 304 do
     raise ArgumentError, "Response with status `#{status}` cannot have a body, see documentation."
+  end
+
+  def set_body(%Raxx.Request{method: method}, _body) when method in [:GET, :HEAD] do
+    raise ArgumentError,
+          "Request with method `#{method}` should not have a body, see documentation."
   end
 
   def set_body(message = %{body: false}, true) do

@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- `Raxx.set_header/2` now raises when setting host headers.
+- `Raxx.set_header/2` raises an `ArgumentError` when setting host headers.
 - `ArgumentError` is raised instead of `RuntimeError` in cases of bad headers and body content.
+- `Raxx.set_body/2` raises an `ArgumentError` for GET and HEAD requests.
 
 ## [0.16.1](https://github.com/CrowdHailer/raxx/tree/0.16.1) - 2018-09-19
 

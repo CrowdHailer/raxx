@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Next
+
+### Changed
+
+- `Raxx.set_header/2` now raises when setting host headers.
+
 ## [0.16.1](https://github.com/CrowdHailer/raxx/tree/0.16.1) - 2018-09-19
 
 ### Fixed

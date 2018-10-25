@@ -28,6 +28,15 @@ defmodule RaxxTest do
                  end
   end
 
+  test "cannot set a host header" do
+    assert_raise RuntimeError,
+                 "Cannot set host header, see documentation for details",
+                 fn ->
+                   Raxx.response(:ok)
+                   |> Raxx.set_header("host", "raxx.dev")
+                 end
+  end
+
   test "cannot set a connection header" do
     assert_raise RuntimeError,
                  "Cannot set a connection specific header, see documentation for details",
@@ -46,6 +55,7 @@ defmodule RaxxTest do
   end
 
   test "cannot get an uppercase header" do
+    # TODO make this an argument error
     assert_raise RuntimeError, "Header keys must be lowercase", fn ->
       Raxx.response(:ok)
       |> Raxx.get_header("Foo")

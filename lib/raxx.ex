@@ -505,27 +505,28 @@ defmodule Raxx do
   @spec set_header(Raxx.Response.t(), String.t(), String.t()) :: Raxx.Response.t()
   def set_header(message = %{headers: headers}, name, value) do
     if String.downcase(name) != name do
-      raise "Header keys must be lowercase"
+      raise ArgumentError, "Header keys must be lowercase"
     end
 
     if :proplists.is_defined(name, headers) do
-      raise "Headers should not be duplicated"
+      raise ArgumentError, "Headers should not be duplicated"
     end
 
     case :binary.match(value, ["\n", "\r"]) do
       {_, _} ->
-        raise "Header values must not contain control feed (\\r) or newline (\\n)"
+        raise ArgumentError, "Header values must not contain control feed (\\r) or newline (\\n)"
 
       :nomatch ->
         value
     end
 
     if name in ["connection", "keep-alive", "proxy-connection,", "transfer-encoding,", "upgrade"] do
-      raise "Cannot set a connection specific header, see documentation for details"
+      raise ArgumentError,
+            "Cannot set a connection specific header, see documentation for details"
     end
 
     if name in ["host"] do
-      raise "Cannot set host header, see documentation for details"
+      raise ArgumentError, "Cannot set host header, see documentation for details"
     end
 
     %{message | headers: headers ++ [{name, value}]}
@@ -560,7 +561,7 @@ defmodule Raxx do
   @spec get_header(Raxx.Response.t(), String.t(), String.t() | nil) :: String.t() | nil
   def get_header(%{headers: headers}, name, fallback \\ nil) do
     if String.downcase(name) != name do
-      raise "Header keys must be lowercase"
+      raise ArgumentError, "Header keys must be lowercase"
     end
 
     case :proplists.get_all_values(name, headers) do
@@ -571,7 +572,7 @@ defmodule Raxx do
         value
 
       _ ->
-        raise "More than one header found for `#{name}`"
+        raise ArgumentError, "More than one header found for `#{name}`"
     end
   end
 

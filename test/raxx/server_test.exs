@@ -35,7 +35,7 @@ defmodule Raxx.ServerTest do
     request = Raxx.request(:GET, "/")
     response = DefaultServer.handle_request(request, :state)
     assert String.contains?("#{response.body}", "DefaultServer")
-    assert String.contains?("#{response.body}", "@impl Raxx.Server")
+    assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
     assert 404 = response.status
   end
 
@@ -48,7 +48,7 @@ defmodule Raxx.ServerTest do
     {[], state} = DefaultServer.handle_data("Hello, World!", state)
     response = DefaultServer.handle_tail([], state)
     assert String.contains?("#{response.body}", "DefaultServer")
-    assert String.contains?("#{response.body}", "@impl Raxx.Server")
+    assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
     assert 404 = response.status
   end
 

@@ -6,11 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Next
 
-Added `Raxx.SimpleServer` behaviour
-Changed Raxx.Server using, fixed logger router
+### Added
+
+- `Raxx.SimpleServer` behaviour for servers that only need a `handle_request/2` callback.
+  using `Raxx.SimpleServer` automatically implements `Raxx.Server` so the module can be used in a service.
 
 ### Changed
 
+- `use Raxx.Server` now requires a `:type` argument of `:simple` or `:streaming` this chooses which server behaviour the developer is expecting implemented
 - `Raxx.set_header/2` raises an `ArgumentError` when setting host headers.
 - `ArgumentError` is raised instead of `RuntimeError` in cases of bad headers and body content.
 - `Raxx.set_body/2` raises an `ArgumentError` for GET and HEAD requests.

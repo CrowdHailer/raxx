@@ -5,11 +5,6 @@ defmodule Raxx.LoggerTest do
   defmodule DefaultServer do
     use Raxx.Server, type: :simple
     use Raxx.Logger
-
-    @impl Raxx.SimpleServer
-    def handle_request(_, _) do
-      response(:not_found)
-    end
   end
 
   test "Request and response information is logged" do

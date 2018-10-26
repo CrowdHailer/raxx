@@ -11,12 +11,10 @@
 - [Documentation available on hexdoc](https://hexdocs.pm/raxx)
 - [Discuss on slack](https://elixir-lang.slack.com/messages/C56H3TBH8/)
 
-See [Raxx.Kit](https://github.com/CrowdHailer/raxx_kit) for a project generator that helps you set up 
+See [Raxx.Kit](https://github.com/CrowdHailer/raxx_kit) for a project generator that helps you set up
 a web project based on [Raxx](https://github.com/CrowdHailer/raxx)/[Ace](https://github.com/CrowdHailer/Ace).
 
-## Simple Client
-
-A very simple HTTP/1.1 client.
+## Simple client
 
 ```elixir
 request = Raxx.request(:GET, "http://example.com")
@@ -27,68 +25,74 @@ request = Raxx.request(:GET, "http://example.com")
 
 See `Raxx.SimpleClient` for full documentation.
 
-## Server Extensions
+## Simple server
 
-This project includes:
-
-- `Raxx.Router`
-- `Raxx.Logger`
-- `Raxx.BasicAuth`
-- `Raxx.Session.SignedCookie`
-- `Raxx.RequestID`
-
-Additional utilities that can be used in Raxx applications.
-
-- [Raxx.MethodOverride](https://github.com/CrowdHailer/raxx_method_override)
-- [Raxx.Static](https://github.com/CrowdHailer/raxx_static)
-- [Raxx.ApiBlueprint](https://github.com/CrowdHailer/raxx_api_blueprint)
-
-## Getting started
-
-HTTP is an exchange where a client sends a request to a server and expects a response.
-At its simplest this can be viewed as follows
-
-```txt
-Simple client server exchange.
-
-           request -->
-Client ============================================ Server
-                                   <-- response
-```
-
-#### Simple server
-
-The `HomePage` server implements the simplest HTTP message exchange.
-The complete response is constructed from the request.
+#### 1. Defining a server
 
 ```elixir
-defmodule HomePage do
-  use Raxx.Server
+defmodule MyServer do
+  use Raxx.Server, type: :simple
 
-  @impl Raxx.Server
+  @impl Raxx.SimpleServer
   def handle_request(%{method: :GET, path: []}, _state) do
     response(:ok)
     |> set_header("content-type", "text/plain")
     |> set_body("Hello, World!")
   end
+
+  def handle_request(%{method: :GET, path: _}, _state) do
+    response(:not_found)
+    |> set_header("content-type", "text/plain")
+    |> set_body("Oops! Nothing here.")
+  end
 end
 ```
-- *A request's path is split into segments, so the root "/" becomes `[]`.*
 
-#### Running a server
+- *A request's path is split into segments.
+  A request to `GET /` has path `[]`.*
 
-To start a web service a Raxx compatable server is needed.
-For example [Ace](https://github.com/crowdhailer/ace).
+#### 2. Running a server
+
+To start a Raxx server a compatible HTTP server is need.
+This example uses [Ace](https://github.com/crowdhailer/ace) that can serve both HTTP/1 and HTTP/2.
 
 ```elixir
-server = HomePage
-initial_state = %{}
-options = [port: 8080, cleartext: true]
+raxx_server = {MyServer, nil}
+http_options = [port: 8080, cleartext: true]
 
-{:ok, pid} = Ace.HTTP.Service.start_link({server, initial_state}, options)
+{:ok, pid} = Ace.HTTP.Service.start_link(raxx_server, http_options)
 ```
 
-Visit [http://localhost:8080](http://localhost:8080).
+- *The second element in the Raxx server tuple is passed as the second argument to the `handle_request/2` callback.
+  In this example it is unused and so set to nil.*
+
+Start your project and visit [http://localhost:8080](http://localhost:8080).
+
+## HTTP streaming
+
+An HTTP exchange involves a client sending data to a server receiving a response.
+A simple view is to model this as a single message sent in each direction.
+
+*Working with this model corresponds to `Raxx.SimpleServer` callbacks*
+
+```txt
+           request -->
+Client ============================================ Server
+                                   <-- response
+```
+
+When the simple model is insufficient Raxx exposes a lower model.
+This consists of a series of messages in each direction.
+
+*Working with this model corresponds to `Raxx.Server` callbacks*
+
+```txt
+           tail | data(1+) | head(request) -->
+Client ============================================ Server
+           <-- head(response) | data(1+) | tail
+```
+
+- *The body of a request or a response, is the combination of all data parts sent.*
 
 #### Stateful server
 
@@ -118,19 +122,9 @@ end
   and the new state of the server, in this case no change `state`.*
 - *The `initial_state` is configured when the server is started.*
 
-#### Streaming
 
-Any client server exchange is actually a stream of information in either direction.
-`Raxx.Server` provides callbacks to proccess parts of a stream as they are received.
 
-```txt
-Detailed view of client server exchange.
 
-           tail | data(1+) | head(request) -->
-Client ============================================ Server
-           <-- head(response) | data(1+) | tail
-```
-- *The body of a request or a response, is the combination of all data parts sent.*
 
 #### Server streaming
 

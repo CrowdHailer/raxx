@@ -2,9 +2,9 @@ defmodule Raxx.Server do
   @moduledoc """
   Interface to handle server side communication in an HTTP message exchange.
 
-  *Using `Raxx.Server` allows an application to be run on multiple adapters.
+  *A module implementing `Raxx.Server` is run by an HTTP server.
   For example [Ace](https://github.com/CrowdHailer/Ace)
-  has several adapters for different versions of the HTTP protocol, HTTP/1.x and HTTP/2*
+  can run such a module for both HTTP/1.x and HTTP/2 exchanges*
 
   ## Getting Started
 
@@ -22,7 +22,6 @@ defmodule Raxx.Server do
 
 
   **Send complete response as soon as request headers are received.**
-
 
       defmodule SimpleServer do
         use Raxx.Server
@@ -177,6 +176,8 @@ defmodule Raxx.Server do
     {options, []} = Module.eval_quoted(__CALLER__, options)
 
     case Keyword.pop(options, :type) do
+      # I think I would like to deprecate this way of doing things and encourage people to just do
+      # use Raxx.Server
       {:simple, options} ->
         quote do
           use Raxx.SimpleServer, unquote(options)
@@ -186,6 +187,34 @@ defmodule Raxx.Server do
         quote do
           @behaviour unquote(__MODULE__)
           import Raxx
+
+          @impl unquote(__MODULE__)
+          def handle_head(_request, _state) do
+            raise "`handle_head` must be implemented for streaming servers."
+          end
+
+          @impl unquote(__MODULE__)
+          def handle_data(data, state) do
+            import Logger
+            Logger.warn("Received unexpected data: #{inspect(data)}")
+            {[], state}
+          end
+
+          @impl unquote(__MODULE__)
+          def handle_tail(trailers, state) do
+            import Logger
+            Logger.warn("Received unexpected trailers: #{inspect(trailers)}")
+            {[], state}
+          end
+
+          @impl unquote(__MODULE__)
+          def handle_info(message, state) do
+            import Logger
+            Logger.warn("Received unexpected message: #{inspect(message)}")
+            {[], state}
+          end
+
+          defoverridable unquote(__MODULE__)
         end
 
       {_, _options} ->
@@ -240,8 +269,8 @@ defmodule Raxx.Server do
   ## Examples
 
       # Could just call verify
-      iex> Raxx.Server.verify_server({RaxxTest.ExampleServer, %{}})
-      {:ok, {RaxxTest.ExampleServer, %{}}}
+      iex> Raxx.Server.verify_server({Raxx.ServerTest.DefaultServer, %{}})
+      {:ok, {Raxx.ServerTest.DefaultServer, %{}}}
 
       iex> Raxx.Server.verify_server({GenServer, %{}})
       {:error, {:not_a_server_module, GenServer}}

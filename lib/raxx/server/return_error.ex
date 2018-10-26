@@ -4,8 +4,6 @@ defmodule ReturnError do
   """
 
   # DEBT could be improved by including server module in message and if it implements behaviour.
-  # TODO Remove or separate for simple vs streaming
-  # look at GenServer callback.
   defexception [:return]
 
   def message(%{return: return}) do

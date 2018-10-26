@@ -1,0 +1,21 @@
+<h1>Welcome to Raxx</h1>
+<p>Get started with your web application.</p>
+<pre>
+defmodule <%= Macro.to_string(module) %> do
+  use Raxx.SimpleServer
+
+  @impl Raxx.Server
+  def handle_request(%{method: :GET, path: []}, _state) do
+    Raxx.response(:ok)
+    |> Raxx.set_header("content-type", "text/html")
+    |> Raxx.set_body(<%= "<h1>Home Page</h1>" %>)
+  end
+
+  def handle_request(_request, _state) do
+    Raxx.response(:not_found)
+    |> Raxx.set_header("content-type", "text/html")
+    |> Raxx.set_body(<%= "<h1>Ooops! Page not found.</h1>" %>)
+  end
+end
+</pre>
+<p>See <a href="https://hexdocs.pm/raxx">documentation</a> for full details.</p>

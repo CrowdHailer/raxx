@@ -3,15 +3,6 @@ defmodule RaxxTest do
   import Raxx
   doctest Raxx
 
-  defmodule ExampleServer do
-    use Raxx.Server, type: :simple
-
-    @impl Raxx.SimpleServer
-    def handle_request(_, _) do
-      response(:ok)
-    end
-  end
-
   test "cannot set an uppercase header" do
     assert_raise ArgumentError, "Header keys must be lowercase", fn ->
       Raxx.response(:ok)

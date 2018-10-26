@@ -31,7 +31,7 @@ See `Raxx.SimpleClient` for full documentation.
 
 ```elixir
 defmodule MyServer do
-  use Raxx.Server, type: :simple
+  use Raxx.SimpleServer
 
   @impl Raxx.SimpleServer
   def handle_request(%{method: :GET, path: []}, _state) do
@@ -72,8 +72,7 @@ Start your project and visit [http://localhost:8080](http://localhost:8080).
 
 An HTTP exchange involves a client sending data to a server receiving a response.
 A simple view is to model this as a single message sent in each direction.
-
-*Working with this model corresponds to `Raxx.SimpleServer` callbacks*
+*Working with this model corresponds to `Raxx.SimpleServer` callbacks.*
 
 ```txt
            request -->
@@ -83,8 +82,7 @@ Client ============================================ Server
 
 When the simple model is insufficient Raxx exposes a lower model.
 This consists of a series of messages in each direction.
-
-*Working with this model corresponds to `Raxx.Server` callbacks*
+*Working with this model corresponds to `Raxx.Server` callbacks.*
 
 ```txt
            tail | data(1+) | head(request) -->
@@ -101,10 +99,10 @@ After receiving a complete request this server has to wait for extra input befor
 
 ```elixir
 defmodule LongPoll do
-  use Raxx.Server
+  use Raxx.Server, type: :streaming
 
   @impl Raxx.Server
-  def handle_request(%{method: :GET, path: ["slow"]}, state) do
+  def handle_head(%{method: :GET, path: ["slow"]}, state) do
     Process.send_after(self(), :reply, 30_000)
 
     {[], state}
@@ -135,7 +133,7 @@ The response is completed when the chatroom sends a `:closed` message.
 
 ```elixir
 defmodule SubscribeToMessages do
-  use Raxx.Server
+  use Raxx.Server, type: :streaming
 
   @impl Raxx.Server
   def handle_head(%{method: :GET, path: ["messages"]}, state) do
@@ -171,7 +169,7 @@ Only once the complete request has been received is a response sent.
 
 ```elixir
 defmodule Upload do
-  use Raxx.Server
+  use Raxx.Server, type: :streaming
 
   @impl Raxx.Server
   def handle_head(%{method: :PUT, path: ["upload"] body: true}, _state) do
@@ -202,7 +200,7 @@ The `Raxx.Router` can be used to match requests to specific server modules.
 
 ```elixir
 defmodule MyApp do
-  use Raxx.Server
+  use Raxx.Server, type: :streaming
 
   use Raxx.Router, [
     {%{method: :GET, path: []}, HomePage},

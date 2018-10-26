@@ -1,4 +1,28 @@
 defmodule Raxx.SimpleServer do
+  @moduledoc """
+  Server interface for simple `request -> response` interactions.
+
+  ## Example
+
+  Echo the body of a request to the client
+
+      defmodule EchoServer do
+        use Raxx.SimpleServer, maximum_body_length: 12 * 1024 * 1024
+
+        def handle_request(%Raxx.Request{method: :POST, path: [], body: body}, _state) do
+          response(:ok)
+          |> set_header("content-type", "text/plain")
+          |> set_body(body)
+        end
+      end
+
+  ## Options
+
+  - **maximum_body_length** (default 8MB) the maximum sized body that will be automatically buffered.
+    For large requests, e.g. file uploads, consider implementing a streaming server.
+
+  """
+
   @typedoc """
   State of application server.
 

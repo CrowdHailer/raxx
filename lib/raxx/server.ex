@@ -2,29 +2,18 @@ defmodule Raxx.Server do
   @moduledoc """
   Interface to handle server side communication in an HTTP message exchange.
 
+  If simple `request -> response` transformation is possible, try `Raxx.SimpleServer`
+
   *A module implementing `Raxx.Server` is run by an HTTP server.
   For example [Ace](https://github.com/CrowdHailer/Ace)
   can run such a module for both HTTP/1.x and HTTP/2 exchanges*
 
   ## Getting Started
 
-  **Send complete response after receiving complete request.**
-
-      defmodule EchoServer do
-        use Raxx.Server
-
-        def handle_request(%Raxx.Request{method: :POST, path: [], body: body}, _state) do
-          response(:ok)
-          |> set_header("content-type", "text/plain")
-          |> set_body(body)
-        end
-      end
-
-
   **Send complete response as soon as request headers are received.**
 
       defmodule SimpleServer do
-        use Raxx.Server
+        use Raxx.Server, type: :streaming
 
         def handle_head(%Raxx.Request{method: :GET, path: []}, _state) do
           response(:ok)
@@ -36,7 +25,7 @@ defmodule Raxx.Server do
   **Store data as it is available from a clients request**
 
       defmodule StreamingRequest do
-        use Raxx.Server
+        use Raxx.Server, type: :streaming
 
         def handle_head(%Raxx.Request{method: :PUT, body: true}, _state) do
           {:ok, io_device} = File.open("my/path")
@@ -57,7 +46,7 @@ defmodule Raxx.Server do
   **Subscribe server to event source and forward notifications to client.**
 
       defmodule SubscribeToMessages do
-        use Raxx.Server
+        use Raxx.Server, type: :streaming
 
         def handle_head(_request, _state) do
           {:ok, _} = ChatRoom.join()
@@ -70,11 +59,6 @@ defmodule Raxx.Server do
           {[body(data)], state}
         end
       end
-
-  ## Options
-
-  - **maximum_body_length** (default 8MB) the maximum sized body that will be automatically buffered.
-    For large requests, e.g. file uploads, consider implementing a streaming server.
 
   ### Notes
 
@@ -172,6 +156,8 @@ defmodule Raxx.Server do
   """
   @callback handle_info(any(), state()) :: next
 
+  use Raxx.View, template: "server.html.eex", arguments: [:module]
+
   defmacro __using__(options) do
     {options, []} = Module.eval_quoted(__CALLER__, options)
 
@@ -190,7 +176,8 @@ defmodule Raxx.Server do
 
           @impl unquote(__MODULE__)
           def handle_head(_request, _state) do
-            raise "`handle_head` must be implemented for streaming servers."
+            response(:not_found)
+            |> Raxx.Server.render(__MODULE__)
           end
 
           @impl unquote(__MODULE__)

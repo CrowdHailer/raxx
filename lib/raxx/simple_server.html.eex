@@ -4,7 +4,7 @@
 defmodule <%= Macro.to_string(module) %> do
   use Raxx.SimpleServer
 
-  @impl Raxx.Server
+  @impl Raxx.SimpleServer
   def handle_request(%{method: :GET, path: []}, _state) do
     Raxx.response(:ok)
     |> Raxx.set_header("content-type", "text/html")

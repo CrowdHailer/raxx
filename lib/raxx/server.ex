@@ -147,16 +147,6 @@ defmodule Raxx.Server do
   @type next :: {[Raxx.part()], state} | Raxx.Response.t()
 
   @doc """
-  Called with a complete request once all the data parts of a body are received.
-
-  Passed a `Raxx.Request` and server configuration.
-  Note the value of the request body will be a string.
-
-  This callback will never be called if handle_head/handle_data/handle_tail are overwritten.
-  """
-  @callback handle_request(Raxx.Request.t(), state()) :: next
-
-  @doc """
   Called once when a client starts a stream,
 
   Passed a `Raxx.Request` and server configuration.
@@ -184,13 +174,23 @@ defmodule Raxx.Server do
   @callback handle_info(any(), state()) :: next
 
   defmacro __using__(options) do
-    quote do
-      @behaviour unquote(__MODULE__)
+    {options, []} = Module.eval_quoted(__CALLER__, options)
 
-      use Raxx.NotFound, unquote(options)
+    case Keyword.pop(options, :type) do
+      {:simple, options} ->
+        quote do
+          use Raxx.SimpleServer, unquote(options)
+        end
 
-      import Raxx
-      alias Raxx.{Request, Response}
+      {:streaming, _options} ->
+        quote do
+          @behaviour unquote(__MODULE__)
+          import Raxx
+        end
+
+      {_, _options} ->
+        raise ArgumentError,
+              "`use #{inspect(__MODULE__)}` requires `type: :simple` or `type: :streaming`"
     end
   end
 
@@ -230,14 +230,63 @@ defmodule Raxx.Server do
     raise %ReturnError{return: other}
   end
 
+  @doc """
+  Verify server can be run?
+
+  A runnable server consists of a tuple of server module and initial state.
+  The server module must implement this modules behaviour.
+  The initial state can be any term
+
+  ## Examples
+
+      # Could just call verify
+      iex> Raxx.Server.verify_server({RaxxTest.ExampleServer, %{}})
+      {:ok, {RaxxTest.ExampleServer, %{}}}
+
+      iex> Raxx.Server.verify_server({GenServer, %{}})
+      {:error, {:not_a_server_module, GenServer}}
+
+      iex> Raxx.Server.verify_server({NotAModule, %{}})
+      {:error, {:not_a_module, NotAModule}}
+  """
+  def verify_server({module, term}) do
+    case verify_implementation(module) do
+      {:ok, _} ->
+        {:ok, {module, term}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   @doc false
-  def is_implemented?(module) when is_atom(module) do
-    if Code.ensure_compiled?(module) do
-      module.module_info[:attributes]
-      |> Keyword.get(:behaviour, [])
-      |> Enum.member?(__MODULE__)
-    else
-      false
+  def verify_implementation(module) do
+    case fetch_behaviours(module) do
+      {:ok, behaviours} ->
+        if Enum.member?(behaviours, __MODULE__) do
+          {:ok, module}
+        else
+          {:error, {:not_a_server_module, module}}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp fetch_behaviours(module) do
+    case Code.ensure_compiled?(module) do
+      true ->
+        behaviours =
+          module.module_info[:attributes]
+          |> Keyword.take([:behaviour])
+          |> Keyword.values()
+          |> List.flatten()
+
+        {:ok, behaviours}
+
+      false ->
+        {:error, {:not_a_module, module}}
     end
   end
 end

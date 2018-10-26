@@ -33,22 +33,15 @@ defmodule Raxx.Router do
       for {match, controller} <- actions do
         {resolved_module, []} = Module.eval_quoted(__CALLER__, controller)
 
-        case Code.ensure_compiled(resolved_module) do
-          {:module, ^resolved_module} ->
-            behaviours =
-              resolved_module.module_info[:attributes]
-              |> Keyword.get(:behaviour, [])
+        case Raxx.Server.verify_implementation(resolved_module) do
+          {:ok, _} ->
+            :no_op
 
-            case Enum.member?(behaviours, Raxx.Server) do
-              true ->
-                :no_op
+          {:error, {:not_a_server_module, module}} ->
+            raise ArgumentError, "module `#{module}` does not implement `Raxx.Server` behaviour."
 
-              false ->
-                raise "module #{Macro.to_string(resolved_module)} should implement behaviour Raxx.Server"
-            end
-
-          {:error, :nofile} ->
-            raise "module #{Macro.to_string(resolved_module)} is not loaded"
+          {:error, {:not_a_module, module}} ->
+            raise ArgumentError, "module `#{module}` could not be loaded."
         end
 
         # NOTE use resolved module to include any aliasing
@@ -68,15 +61,11 @@ defmodule Raxx.Router do
 
     quote location: :keep do
       @impl Raxx.Server
-      def handle_request(_request, _state) do
-        raise "This callback should never be called in a on #{__MODULE__}."
-      end
-
-      @impl Raxx.Server
       unquote(routes)
 
       @impl Raxx.Server
       def handle_data(data, {controller, state}) do
+        # TODO add handle_data etc functions from my middleware branch
         {outbound, new_state} = Raxx.Server.handle({controller, state}, Raxx.data(data))
         {outbound, {controller, new_state}}
       end

@@ -3,8 +3,13 @@ defmodule Raxx.LoggerTest do
   import ExUnit.CaptureLog
 
   defmodule DefaultServer do
-    use Raxx.Server
+    use Raxx.Server, type: :simple
     use Raxx.Logger
+
+    @impl Raxx.SimpleServer
+    def handle_request(_, _) do
+      response(:not_found)
+    end
   end
 
   test "Request and response information is logged" do

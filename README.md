@@ -53,7 +53,7 @@ end
 
 #### 2. Running a server
 
-To start a Raxx server a compatible HTTP server is need.
+To start a Raxx server a compatible HTTP server is needed.
 This example uses [Ace](https://github.com/crowdhailer/ace) that can serve both HTTP/1 and HTTP/2.
 
 ```elixir
@@ -99,7 +99,7 @@ After receiving a complete request this server has to wait for extra input befor
 
 ```elixir
 defmodule LongPoll do
-  use Raxx.Server, type: :streaming
+  use Raxx.Server
 
   @impl Raxx.Server
   def handle_head(%{method: :GET, path: ["slow"]}, state) do
@@ -133,7 +133,7 @@ The response is completed when the chatroom sends a `:closed` message.
 
 ```elixir
 defmodule SubscribeToMessages do
-  use Raxx.Server, type: :streaming
+  use Raxx.Server
 
   @impl Raxx.Server
   def handle_head(%{method: :GET, path: ["messages"]}, state) do
@@ -169,7 +169,7 @@ Only once the complete request has been received is a response sent.
 
 ```elixir
 defmodule Upload do
-  use Raxx.Server, type: :streaming
+  use Raxx.Server
 
   @impl Raxx.Server
   def handle_head(%{method: :PUT, path: ["upload"] body: true}, _state) do
@@ -200,7 +200,7 @@ The `Raxx.Router` can be used to match requests to specific server modules.
 
 ```elixir
 defmodule MyApp do
-  use Raxx.Server, type: :streaming
+  use Raxx.Server
 
   use Raxx.Router, [
     {%{method: :GET, path: []}, HomePage},

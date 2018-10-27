@@ -2,6 +2,9 @@ defmodule Raxx.SimpleServer do
   @moduledoc """
   Server interface for simple `request -> response` interactions.
 
+  *Modules that use Raxx.SimpleServer implement the Raxx.Server behaviour.
+  Default implementations are provided for the streaming interface to buffer the request before a single call to `handle_request/2`.*
+
   ## Example
 
   Echo the body of a request to the client

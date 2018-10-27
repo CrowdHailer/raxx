@@ -2,7 +2,7 @@
 <p>Get started with your web application.</p>
 <pre>
 defmodule <%= Macro.to_string(module) %> do
-  use Raxx.Server, type: :streaming
+  use Raxx.Server
 
   @impl Raxx.Server
   def handle_head(%{method: :GET, path: ["slow"]}, state) do

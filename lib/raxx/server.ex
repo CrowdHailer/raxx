@@ -13,7 +13,7 @@ defmodule Raxx.Server do
   **Send complete response as soon as request headers are received.**
 
       defmodule SimpleServer do
-        use Raxx.Server, type: :streaming
+        use Raxx.Server
 
         def handle_head(%Raxx.Request{method: :GET, path: []}, _state) do
           response(:ok)
@@ -25,7 +25,7 @@ defmodule Raxx.Server do
   **Store data as it is available from a clients request**
 
       defmodule StreamingRequest do
-        use Raxx.Server, type: :streaming
+        use Raxx.Server
 
         def handle_head(%Raxx.Request{method: :PUT, body: true}, _state) do
           {:ok, io_device} = File.open("my/path")
@@ -46,7 +46,7 @@ defmodule Raxx.Server do
   **Subscribe server to event source and forward notifications to client.**
 
       defmodule SubscribeToMessages do
-        use Raxx.Server, type: :streaming
+        use Raxx.Server
 
         def handle_head(_request, _state) do
           {:ok, _} = ChatRoom.join()
@@ -158,55 +158,63 @@ defmodule Raxx.Server do
 
   use Raxx.View, template: "server.html.eex", arguments: [:module]
 
-  defmacro __using__(options) do
-    {options, []} = Module.eval_quoted(__CALLER__, options)
+  defmacro __using__(_options) do
+    quote do
+      @behaviour unquote(__MODULE__)
+      import Raxx
 
-    case Keyword.pop(options, :type) do
-      # I think I would like to deprecate this way of doing things and encourage people to just do
-      # use Raxx.Server
-      {:simple, options} ->
-        quote do
-          use Raxx.SimpleServer, unquote(options)
+      @impl unquote(__MODULE__)
+      def handle_head(_request, _state) do
+        response(:not_found)
+        |> Raxx.Server.render(__MODULE__)
+      end
+
+      @impl unquote(__MODULE__)
+      def handle_data(data, state) do
+        import Logger
+        Logger.warn("Received unexpected data: #{inspect(data)}")
+        {[], state}
+      end
+
+      @impl unquote(__MODULE__)
+      def handle_tail(trailers, state) do
+        import Logger
+        Logger.warn("Received unexpected trailers: #{inspect(trailers)}")
+        {[], state}
+      end
+
+      @impl unquote(__MODULE__)
+      def handle_info(message, state) do
+        import Logger
+        Logger.warn("Received unexpected message: #{inspect(message)}")
+        {[], state}
+      end
+
+      defoverridable unquote(__MODULE__)
+      @before_compile unquote(__MODULE__)
+    end
+  end
+
+  # DEBT Remove this for 1.0 release
+  defmacro __before_compile__(_env) do
+    quote do
+      try do
+        defoverridable handle_request: 2
+
+        if !Module.get_attribute(__MODULE__, :raxx_safe_server) do
+          %{file: file, line: line} = __ENV__
+
+          :elixir_errors.warn(__ENV__.line, __ENV__.file, """
+          The server `#{inspect(__MODULE__)}` implements `handle_request/2.
+              In place of `use Raxx.Server` try `use Raxx.SimpleServer.`
+              The behaviour Raxx.Server changes in release 0.17.0, see CHANGELOG for details.
+          """)
         end
-
-      {:streaming, _options} ->
-        quote do
-          @behaviour unquote(__MODULE__)
-          import Raxx
-
-          @impl unquote(__MODULE__)
-          def handle_head(_request, _state) do
-            response(:not_found)
-            |> Raxx.Server.render(__MODULE__)
-          end
-
-          @impl unquote(__MODULE__)
-          def handle_data(data, state) do
-            import Logger
-            Logger.warn("Received unexpected data: #{inspect(data)}")
-            {[], state}
-          end
-
-          @impl unquote(__MODULE__)
-          def handle_tail(trailers, state) do
-            import Logger
-            Logger.warn("Received unexpected trailers: #{inspect(trailers)}")
-            {[], state}
-          end
-
-          @impl unquote(__MODULE__)
-          def handle_info(message, state) do
-            import Logger
-            Logger.warn("Received unexpected message: #{inspect(message)}")
-            {[], state}
-          end
-
-          defoverridable unquote(__MODULE__)
-        end
-
-      {_, _options} ->
-        raise ArgumentError,
-              "`use #{inspect(__MODULE__)}` requires `type: :simple` or `type: :streaming`"
+      rescue
+        ArgumentError ->
+          # Do nothing handle_request has not been defined
+          :ok
+      end
     end
   end
 

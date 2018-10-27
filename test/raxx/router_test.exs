@@ -2,7 +2,7 @@ defmodule Raxx.RouterTest do
   use ExUnit.Case
 
   defmodule HomePage do
-    use Raxx.Server, type: :simple
+    use Raxx.SimpleServer
 
     @impl Raxx.SimpleServer
     def handle_request(_request, _state) do
@@ -12,7 +12,7 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule UsersPage do
-    use Raxx.Server, type: :simple
+    use Raxx.SimpleServer
 
     @impl Raxx.SimpleServer
     def handle_request(_request, _state) do
@@ -22,7 +22,7 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule UserPage do
-    use Raxx.Server, type: :simple
+    use Raxx.SimpleServer
 
     @impl Raxx.SimpleServer
     def handle_request(%{path: ["users", id]}, _state) do
@@ -32,7 +32,7 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule CreateUser do
-    use Raxx.Server, type: :simple
+    use Raxx.SimpleServer
 
     @impl Raxx.SimpleServer
     def handle_request(%{body: body}, _state) do
@@ -42,7 +42,7 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule NotFoundPage do
-    use Raxx.Server, type: :simple
+    use Raxx.SimpleServer
 
     @impl Raxx.SimpleServer
     def handle_request(_request, _state) do
@@ -52,7 +52,7 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule InvalidReturn do
-    use Raxx.Server, type: :simple
+    use Raxx.SimpleServer
 
     @impl Raxx.SimpleServer
     def handle_request(_request, _state) do
@@ -61,7 +61,7 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule MyRouter do
-    use Raxx.Server, type: :streaming
+    use Raxx.Server
 
     use Raxx.Router, [
       {%{method: :GET, path: []}, HomePage},

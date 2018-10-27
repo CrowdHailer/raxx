@@ -4,7 +4,7 @@ defmodule Raxx.ServerTest do
   import ExUnit.CaptureLog
 
   defmodule EchoServer do
-    use Raxx.Server, type: :simple
+    use Raxx.SimpleServer
 
     def handle_request(%{body: body}, _) do
       response(:ok)
@@ -28,7 +28,7 @@ defmodule Raxx.ServerTest do
   end
 
   defmodule DefaultServer do
-    use Raxx.Server, type: :simple
+    use Raxx.SimpleServer
   end
 
   test "default response is returned for the root page" do
@@ -77,7 +77,7 @@ defmodule Raxx.ServerTest do
   end
 
   defmodule BigServer do
-    use Raxx.Server, type: :simple, maximum_body_length: 12 * 1024 * 1024
+    use Raxx.SimpleServer, maximum_body_length: 12 * 1024 * 1024
   end
 
   test "Server max body size can be configured" do

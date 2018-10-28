@@ -1,11 +1,10 @@
 defmodule Raxx.Stack do
   alias Raxx.Server
   alias Raxx.Middleware
-  alias Raxx.Middleware.Pipeline
 
   @behaviour Server
 
-  @enforce_keys [:pipeline, :server]
+  @enforce_keys [:middlewares, :server]
   defstruct @enforce_keys
 
   @moduledoc """
@@ -21,16 +20,16 @@ defmodule Raxx.Stack do
   """
   # DEBT: compare struct t() performance to a (tagged) tuple implementation
   @opaque t :: %__MODULE__{
-            pipeline: Pipeline.t(),
+            middlewares: [Middleware.t()],
             server: Server.t()
           }
 
   @type server :: {__MODULE__, t()}
 
-  @spec new(Pipeline.t(), Server.t()) :: t()
-  def new(pipeline \\ [], server) when is_list(pipeline) do
+  @spec new([Middleware.t()], Server.t()) :: t()
+  def new(middlewares \\ [], server) when is_list(middlewares) do
     %__MODULE__{
-      pipeline: pipeline,
+      middlewares: middlewares,
       server: server
     }
   end
@@ -39,9 +38,9 @@ defmodule Raxx.Stack do
     {__MODULE__, stack}
   end
 
-  @spec set_pipeline(t(), Pipeline.t()) :: t()
-  def set_pipeline(stack = %__MODULE__{}, pipeline) when is_list(pipeline) do
-    %__MODULE__{stack | pipeline: pipeline}
+  @spec set_middlewares(t(), [Middleware.t()]) :: t()
+  def set_middlewares(stack = %__MODULE__{}, middlewares) when is_list(middlewares) do
+    %__MODULE__{stack | middlewares: middlewares}
   end
 
   @spec set_server(t(), Server.t()) :: t()
@@ -54,26 +53,26 @@ defmodule Raxx.Stack do
     server
   end
 
-  @spec get_pipeline(t()) :: Pipeline.t()
-  def get_pipeline(%__MODULE__{pipeline: pipeline}) do
-    pipeline
+  @spec get_middlewares(t()) :: [Middleware.t()]
+  def get_middlewares(%__MODULE__{middlewares: middlewares}) do
+    middlewares
   end
 
   @spec push_middleware(t(), Middleware.t()) :: t()
   def push_middleware(stack, middleware) do
-    pipeline = get_pipeline(stack)
+    middlewares = get_middlewares(stack)
 
-    set_pipeline(stack, [middleware | pipeline])
+    set_middlewares(stack, [middleware | middlewares])
   end
 
   @spec pop_middleware(t()) :: {Middleware.t() | nil, t()}
   def pop_middleware(stack) do
-    case get_pipeline(stack) do
+    case get_middlewares(stack) do
       [] ->
         {nil, stack}
 
       [topmost | rest] ->
-        new_stack = set_pipeline(stack, rest)
+        new_stack = set_middlewares(stack, rest)
         {topmost, new_stack}
     end
   end

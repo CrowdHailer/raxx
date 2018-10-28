@@ -238,7 +238,7 @@ defmodule Raxx.StackTest do
     assert {Stack, stack} = stack_server
 
     assert [{Meddler, [response_body: "foo"]}, {NoOp, {:config, :head}}] ==
-             Stack.get_pipeline(stack)
+             Stack.get_middlewares(stack)
 
     assert {SpyServer, 1} == Stack.get_server(stack)
 
@@ -246,7 +246,7 @@ defmodule Raxx.StackTest do
     assert {Stack, stack} = stack_server
 
     assert [{Meddler, [response_body: "foo"]}, {NoOp, {:head, :data}}] ==
-             Stack.get_pipeline(stack)
+             Stack.get_middlewares(stack)
 
     assert {SpyServer, 2} == Stack.get_server(stack)
 
@@ -254,13 +254,13 @@ defmodule Raxx.StackTest do
     assert {Stack, stack} = stack_server
 
     assert [{Meddler, [response_body: "foo"]}, {NoOp, {:data, :data}}] ==
-             Stack.get_pipeline(stack)
+             Stack.get_middlewares(stack)
 
     assert {SpyServer, 3} == Stack.get_server(stack)
 
     {_parts, stack_server} = Server.handle_tail(stack_server, [{"x-foo", "bar"}])
     assert {Stack, stack} = stack_server
-    assert [{Meddler, _}, {NoOp, {:data, :tail}}] = Stack.get_pipeline(stack)
+    assert [{Meddler, _}, {NoOp, {:data, :tail}}] = Stack.get_middlewares(stack)
     assert {SpyServer, -3} == Stack.get_server(stack)
   end
 

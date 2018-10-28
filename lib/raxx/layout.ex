@@ -32,7 +32,7 @@ defmodule Raxx.Layout do
 
       # www/show_user.ex
       defmodule WWW.ShowUser do
-        use Raxx.Server
+        use Raxx.SimpleServer
         use WWW.Layout,
           template: "show_user.html.eex",
           arguments: [:user]

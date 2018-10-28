@@ -198,22 +198,18 @@ defmodule Raxx.Server do
   # DEBT Remove this for 1.0 release
   defmacro __before_compile__(_env) do
     quote do
-      try do
-        defoverridable handle_request: 2
+      # If handle_request is implemented the module may have been created with raxx < 0.17.0
+      # In this case a warning is emitted suggesting using Raxx.SimpleServer instead.
+      # This warning can be disabled by adding @raxx_safe_server to the module.
+      if Module.defines?(__MODULE__, {:handle_request, 2}) and
+           !Module.get_attribute(__MODULE__, :raxx_safe_server) do
+        %{file: file, line: line} = __ENV__
 
-        if !Module.get_attribute(__MODULE__, :raxx_safe_server) do
-          %{file: file, line: line} = __ENV__
-
-          :elixir_errors.warn(__ENV__.line, __ENV__.file, """
-          The server `#{inspect(__MODULE__)}` implements `handle_request/2.
-              In place of `use Raxx.Server` try `use Raxx.SimpleServer.`
-              The behaviour Raxx.Server changes in release 0.17.0, see CHANGELOG for details.
-          """)
-        end
-      rescue
-        ArgumentError ->
-          # Do nothing handle_request has not been defined
-          :ok
+        :elixir_errors.warn(__ENV__.line, __ENV__.file, """
+        The server `#{inspect(__MODULE__)}` implements `handle_request/2.
+            In place of `use Raxx.Server` try `use Raxx.SimpleServer.`
+            The behaviour Raxx.Server changes in release 0.17.0, see CHANGELOG for details.
+        """)
       end
     end
   end

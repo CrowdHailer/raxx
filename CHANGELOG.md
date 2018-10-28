@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Next
+## [0.17.0](https://github.com/CrowdHailer/raxx/tree/0.17.0) - 2018-10-28
 
 ### Added
 
@@ -21,9 +21,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
-- `Raxx.is_application?` use `Raxx.Server.verify_server`.
-- `Raxx.verify_application` use `Raxx.Server.verify_server`.
-- `Raxx.Server.is_implemented?` use `Raxx.Server.verify_server`.
+- `Raxx.is_application?`, use `Raxx.Server.verify_server` instead.
+- `Raxx.verify_application`, use `Raxx.Server.verify_server` instead.
+- `Raxx.Server.is_implemented?`, use `Raxx.Server.verify_server` instead.
 
 ## [0.16.1](https://github.com/CrowdHailer/raxx/tree/0.16.1) - 2018-09-19
 

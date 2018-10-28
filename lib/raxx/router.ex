@@ -47,10 +47,9 @@ defmodule Raxx.Router do
             # TODO get the middlewares from the outside
             middlewares = []
             stack = Raxx.Stack.new(middlewares, {unquote(controller), state})
-            stack_server = Raxx.Stack.server(stack)
 
-            {outbound, stack_server} = Raxx.Server.handle_head(stack_server, request)
-            {outbound, stack_server}
+            {outbound, stack} = Raxx.Server.handle_head(stack, request)
+            {outbound, stack}
           end
         end
       end
@@ -60,16 +59,16 @@ defmodule Raxx.Router do
       unquote(routes)
 
       @impl Raxx.Server
-      def handle_data(data, stack_server) do
-        Raxx.Server.handle_data(stack_server, data)
+      def handle_data(data, stack) do
+        Raxx.Server.handle_data(stack, data)
       end
 
-      def handle_tail(trailers, stack_server) do
-        Raxx.Server.handle_tail(stack_server, trailers)
+      def handle_tail(trailers, stack) do
+        Raxx.Server.handle_tail(stack, trailers)
       end
 
-      def handle_info(message, stack_server) do
-        Raxx.Server.handle_info(stack_server, message)
+      def handle_info(message, stack) do
+        Raxx.Server.handle_info(stack, message)
       end
     end
   end

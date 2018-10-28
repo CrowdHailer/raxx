@@ -4,14 +4,14 @@ defmodule RaxxTest do
   doctest Raxx
 
   test "cannot set an uppercase header" do
-    assert_raise RuntimeError, "Header keys must be lowercase", fn ->
+    assert_raise ArgumentError, "Header keys must be lowercase", fn ->
       Raxx.response(:ok)
       |> Raxx.set_header("Foo", "Bar")
     end
   end
 
   test "header values cannot contain control feed charachter" do
-    assert_raise RuntimeError,
+    assert_raise ArgumentError,
                  "Header values must not contain control feed (\\r) or newline (\\n)",
                  fn ->
                    Raxx.response(:ok)
@@ -20,7 +20,7 @@ defmodule RaxxTest do
   end
 
   test "header values cannot contain newline charachter" do
-    assert_raise RuntimeError,
+    assert_raise ArgumentError,
                  "Header values must not contain control feed (\\r) or newline (\\n)",
                  fn ->
                    Raxx.response(:ok)
@@ -28,8 +28,17 @@ defmodule RaxxTest do
                  end
   end
 
+  test "cannot set a host header" do
+    assert_raise ArgumentError,
+                 "Cannot set host header, see documentation for details",
+                 fn ->
+                   Raxx.response(:ok)
+                   |> Raxx.set_header("host", "raxx.dev")
+                 end
+  end
+
   test "cannot set a connection header" do
-    assert_raise RuntimeError,
+    assert_raise ArgumentError,
                  "Cannot set a connection specific header, see documentation for details",
                  fn ->
                    Raxx.response(:ok)
@@ -38,7 +47,7 @@ defmodule RaxxTest do
   end
 
   test "cannot set a header twice" do
-    assert_raise RuntimeError, "Headers should not be duplicated", fn ->
+    assert_raise ArgumentError, "Headers should not be duplicated", fn ->
       Raxx.response(:ok)
       |> Raxx.set_header("x-foo", "one")
       |> Raxx.set_header("x-foo", "two")
@@ -46,9 +55,23 @@ defmodule RaxxTest do
   end
 
   test "cannot get an uppercase header" do
-    assert_raise RuntimeError, "Header keys must be lowercase", fn ->
+    assert_raise ArgumentError, "Header keys must be lowercase", fn ->
       Raxx.response(:ok)
       |> Raxx.get_header("Foo")
+    end
+  end
+
+  test "Cannot set the body of a GET request" do
+    assert_raise ArgumentError, fn ->
+      Raxx.request(:GET, "raxx.dev")
+      |> Raxx.set_body("Hello, World!")
+    end
+  end
+
+  test "Cannot set the body of a HEAD request" do
+    assert_raise ArgumentError, fn ->
+      Raxx.request(:HEAD, "raxx.dev")
+      |> Raxx.set_body("Hello, World!")
     end
   end
 

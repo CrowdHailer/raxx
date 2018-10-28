@@ -450,7 +450,27 @@ defmodule Raxx do
       ...> |> Map.get(:headers)
       [{"referer", "example.com"}, {"accept", "text/html"}]
 
-  ## Connection specific headers
+  ## Limitations
+
+  Raxx is protocol agnostic, i.e. it can be used to construct HTTP/1.1 or HTTP/2 messages.
+  This limits the heads that can (or should) be set on a message
+
+  The host header should not be set, this information is encoded in the authority key of a request struct.
+  This header is forbidden on a response.
+
+  > A server MUST respond with a 400 (Bad Request) status code to any
+    HTTP/1.1 request message that lacks a Host header field and to any
+    request message that contains more than one Host header field or a
+    Host header field with an invalid field-value.
+
+  *https://tools.ietf.org/html/rfc7230#section-5.4*
+
+  > Pseudo-header fields are only valid in the context in which they are
+    defined.  Pseudo-header fields defined for requests MUST NOT appear
+    in responses; pseudo-header fields defined for responses MUST NOT
+    appear in requests.
+
+  *https://tools.ietf.org/html/rfc7540#section-8.1.2.1*
 
   It is invalid to set a connection specific header on either a `Raxx.Request` or `Raxx.Response`.
   The connection specific headers are:
@@ -463,9 +483,6 @@ defmodule Raxx do
 
   Connection specific headers are not part of the end to end message,
   even if in HTTP/1.1 they are encoded as just another header.
-
-  They cannot be set on messages because Raxx is protocol agnostic.
-  i.e. it can be used to construct messages that can be sent via HTTP/1.1 or HTTP/2.
 
   > The "Connection" header field allows the sender to indicate desired
     control options for the current connection.  In order to avoid
@@ -488,23 +505,28 @@ defmodule Raxx do
   @spec set_header(Raxx.Response.t(), String.t(), String.t()) :: Raxx.Response.t()
   def set_header(message = %{headers: headers}, name, value) do
     if String.downcase(name) != name do
-      raise "Header keys must be lowercase"
+      raise ArgumentError, "Header keys must be lowercase"
     end
 
     if :proplists.is_defined(name, headers) do
-      raise "Headers should not be duplicated"
+      raise ArgumentError, "Headers should not be duplicated"
     end
 
     case :binary.match(value, ["\n", "\r"]) do
       {_, _} ->
-        raise "Header values must not contain control feed (\\r) or newline (\\n)"
+        raise ArgumentError, "Header values must not contain control feed (\\r) or newline (\\n)"
 
       :nomatch ->
         value
     end
 
     if name in ["connection", "keep-alive", "proxy-connection,", "transfer-encoding,", "upgrade"] do
-      raise "Cannot set a connection specific header, see documentation for details"
+      raise ArgumentError,
+            "Cannot set a connection specific header, see documentation for details"
+    end
+
+    if name in ["host"] do
+      raise ArgumentError, "Cannot set host header, see documentation for details"
     end
 
     %{message | headers: headers ++ [{name, value}]}
@@ -539,7 +561,7 @@ defmodule Raxx do
   @spec get_header(Raxx.Response.t(), String.t(), String.t() | nil) :: String.t() | nil
   def get_header(%{headers: headers}, name, fallback \\ nil) do
     if String.downcase(name) != name do
-      raise "Header keys must be lowercase"
+      raise ArgumentError, "Header keys must be lowercase"
     end
 
     case :proplists.get_all_values(name, headers) do
@@ -550,7 +572,7 @@ defmodule Raxx do
         value
 
       _ ->
-        raise "More than one header found for `#{name}`"
+        raise ArgumentError, "More than one header found for `#{name}`"
     end
   end
 
@@ -665,25 +687,57 @@ defmodule Raxx do
 
   ## Examples
 
-      iex> request = request(:GET, "/")
+      iex> request = response(:ok)
       ...> |> set_body("Hello, World!")
       iex> request.body
       "Hello, World!"
       iex> Raxx.get_content_length(request)
       13
 
-      iex> request = request(:GET, "/")
+      iex> request = response(:ok)
       ...> |> set_body(true)
       iex> request.body
       true
       iex> Raxx.get_content_length(request)
       nil
+
+  ## Limitations
+
+  Requests using method `GET` or `HEAD` should not have a body.
+
+  > An HTTP GET request includes request header fields and no payload
+    body and is therefore transmitted as a single HEADERS frame, followed
+    by zero or more CONTINUATION frames containing the serialized block
+    of request header fields.
+
+  *https://tools.ietf.org/html/rfc7540#section-8.1.3*
+
+  Certain unusual usecases require a GET request with a body.
+  For example [elastic search](https://www.elastic.co/guide/en/elasticsearch/guide/current/_empty_search.html#get_vs_post)
+
+  Detailed discussion [here](https://stackoverflow.com/questions/978061/http-get-with-request-body).
+
+  In such cases it is always possible to directly add the body to a request struct.
+  Server implemenations should respect the provided body in such cases.
+
+  Response with certain status codes never have a body.
+
+  > All 1xx (Informational), 204 (No Content), and 304 (Not Modified)
+    responses do not include a message body.  All other responses do
+    include a message body, although the body might be of zero length.
+
+  *https://tools.ietf.org/html/rfc7230#section-3.3*
   """
   @spec set_body(Raxx.Request.t(), body) :: Raxx.Request.t()
   @spec set_body(Raxx.Response.t(), body) :: Raxx.Response.t()
-  def set_body(%{status: status}, _body)
+  def set_body(%Raxx.Response{status: status}, _body)
       when status in 100..199 or status == 204 or status == 304 do
     raise ArgumentError, "Response with status `#{status}` cannot have a body, see documentation."
+  end
+
+  def set_body(%Raxx.Request{method: method}, _body) when method in [:GET, :HEAD] do
+    raise ArgumentError,
+          "Request with method `#{method}` should not have a body, see documentation."
   end
 
   def set_body(message = %{body: false}, true) do

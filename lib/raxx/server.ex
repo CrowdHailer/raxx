@@ -214,6 +214,29 @@ defmodule Raxx.Server do
     normalize_reaction(module.handle_info(other, state), state)
   end
 
+  # Note handle_* different to the handle function,
+  # handle_* is given a server and returns a server, handle is given a server and returns a server state
+  # handle uses the data structures sent from Ace but handle_* uses the data in shape defined my callback
+  def handle_head({module, state}, request = %Raxx.Request{}) do
+    {parts, new_state} = normalize_reaction(module.handle_head(request, state), state)
+    {parts, {module, new_state}}
+  end
+
+  def handle_data({module, state}, data) do
+    {parts, new_state} = normalize_reaction(module.handle_data(data, state), state)
+    {parts, {module, new_state}}
+  end
+
+  def handle_tail({module, state}, tail) do
+    {parts, new_state} = normalize_reaction(module.handle_tail(tail, state), state)
+    {parts, {module, new_state}}
+  end
+
+  def handle_info({module, state}, info) do
+    {parts, new_state} = normalize_reaction(module.handle_info(info, state), state)
+    {parts, {module, new_state}}
+  end
+
   @doc false
   @spec normalize_reaction(next(), state()) :: {[Raxx.part()], state()} | no_return
   def normalize_reaction(response = %Raxx.Response{body: true}, _initial_state) do

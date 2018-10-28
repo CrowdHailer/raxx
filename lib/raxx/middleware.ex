@@ -8,36 +8,31 @@ defmodule Raxx.Middleware do
 
   @typedoc """
   State of middleware.
-
-  Original value is the argument passed in the pipeline setup.
   """
   @type state :: Server.state()
-  # @type state :: any()
 
-  @type next :: {[Raxx.part()], state, Raxx.Pipeline.t()}
+  @type next :: {[Raxx.part()], state, Server.t()}
 
   @doc """
   """
-  @callback handle_head(Raxx.Request.t(), state(), remaining_pipeline :: Raxx.Pipeline.t()) ::
-              next()
+  @callback process_head(Raxx.Request.t(), state(), inner_server :: Server.t()) :: next()
 
   @doc """
   Called every time data from the request body is received
   """
-  @callback handle_data(binary(), state(), remaining_pipeline :: Raxx.Pipeline.t()) :: next()
+  @callback process_data(binary(), state(), inner_server :: Server.t()) :: next()
 
   @doc """
   Called once when a request finishes.
 
   This will be called with an empty list of headers is request is completed without trailers.
   """
-  @callback handle_tail([{binary(), binary()}], state(), remaining_pipeline :: Raxx.Pipeline.t()) ::
-              next()
+  @callback process_tail([{binary(), binary()}], state(), inner_server :: Server.t()) :: next()
 
   @doc """
   Called for all other messages the server may recieve
   """
-  @callback handle_info(any(), state(), remaining_pipeline :: Raxx.Pipeline.t()) :: next()
+  @callback process_info(any(), state(), inner_server :: Server.t()) :: next()
 
   @doc false
   @spec is_implemented?(module) :: boolean

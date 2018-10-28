@@ -3,45 +3,45 @@ defmodule Raxx.Middleware.Head do
   An example router that allows you to handle HEAD requests with GET handlers
   """
 
+  alias Raxx.Server
   alias Raxx.Middleware
-  alias Raxx.Pipeline
 
   @behaviour Middleware
 
   @impl Middleware
-  def handle_head(request = %{method: :HEAD}, _config, pipeline) do
+  def process_head(request = %{method: :HEAD}, _config, inner_server) do
     request = %{request | method: :HEAD}
     state = :engage
-    {parts, pipeline} = Pipeline.handle_head(request, pipeline)
+    {parts, inner_server} = Server.handle_head(inner_server, request)
 
     parts = modify_response_parts(parts, state)
-    {parts, state, pipeline}
+    {parts, state, inner_server}
   end
 
-  def handle_head(request = %{method: _}, _config, pipeline) do
-    {parts, pipeline} = Pipeline.handle_head(request, pipeline)
-    {parts, :disengage, pipeline}
-  end
-
-  @impl Middleware
-  def handle_data(data, state, pipeline) do
-    {parts, pipeline} = Pipeline.handle_data(data, pipeline)
-    parts = modify_response_parts(parts, state)
-    {parts, state, pipeline}
+  def process_head(request = %{method: _}, _config, inner_server) do
+    {parts, inner_server} = Server.handle_head(inner_server, request)
+    {parts, :disengage, inner_server}
   end
 
   @impl Middleware
-  def handle_tail(tail, state, pipeline) do
-    {parts, pipeline} = Pipeline.handle_tail(tail, pipeline)
+  def process_data(data, state, inner_server) do
+    {parts, inner_server} = Server.handle_data(inner_server, data)
     parts = modify_response_parts(parts, state)
-    {parts, state, pipeline}
+    {parts, state, inner_server}
   end
 
   @impl Middleware
-  def handle_info(info, state, pipeline) do
-    {parts, pipeline} = Pipeline.handle_info(info, pipeline)
+  def process_tail(tail, state, inner_server) do
+    {parts, inner_server} = Server.handle_tail(inner_server, tail)
     parts = modify_response_parts(parts, state)
-    {parts, state, pipeline}
+    {parts, state, inner_server}
+  end
+
+  @impl Middleware
+  def process_info(info, state, inner_server) do
+    {parts, inner_server} = Server.handle_info(inner_server, info)
+    parts = modify_response_parts(parts, state)
+    {parts, state, inner_server}
   end
 
   defp modify_response_parts(parts, :disengage) do

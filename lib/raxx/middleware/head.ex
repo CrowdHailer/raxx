@@ -10,7 +10,7 @@ defmodule Raxx.Middleware.Head do
 
   @impl Middleware
   def process_head(request = %{method: :HEAD}, _config, inner_server) do
-    request = %{request | method: :HEAD}
+    request = %{request | method: :GET}
     state = :engage
     {parts, inner_server} = Server.handle_head(inner_server, request)
 

@@ -33,16 +33,7 @@ defmodule Raxx.Router do
       for {match, controller} <- actions do
         {resolved_module, []} = Module.eval_quoted(__CALLER__, controller)
 
-        case Raxx.Server.verify_implementation(resolved_module) do
-          {:ok, _} ->
-            :no_op
-
-          {:error, {:not_a_server_module, module}} ->
-            raise ArgumentError, "module `#{module}` does not implement `Raxx.Server` behaviour."
-
-          {:error, {:not_a_module, module}} ->
-            raise ArgumentError, "module `#{module}` could not be loaded."
-        end
+        Raxx.Server.verify_implementation!(resolved_module)
 
         # NOTE use resolved module to include any aliasing
         controller_string = inspect(resolved_module)

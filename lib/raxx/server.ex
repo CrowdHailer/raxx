@@ -280,6 +280,20 @@ defmodule Raxx.Server do
   end
 
   @doc false
+  def verify_implementation!(module) do
+    case Raxx.Server.verify_implementation(module) do
+      {:ok, _} ->
+        :no_op
+
+      {:error, {:not_a_server_module, module}} ->
+        raise ArgumentError, "module `#{module}` does not implement `Raxx.Server` behaviour."
+
+      {:error, {:not_a_module, module}} ->
+        raise ArgumentError, "module `#{module}` could not be loaded."
+    end
+  end
+
+  @doc false
   def verify_implementation(module) do
     case fetch_behaviours(module) do
       {:ok, behaviours} ->

@@ -6,9 +6,9 @@ defmodule Raxx.StackTest do
   alias Raxx.Server
 
   defmodule HomePage do
-    use Raxx.Server
+    use Raxx.SimpleServer
 
-    @impl Raxx.Server
+    @impl Raxx.SimpleServer
     def handle_request(_request, _state) do
       response(:ok)
       |> set_body("Home page")

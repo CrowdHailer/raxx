@@ -4,13 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Next
+## [0.17.0](https://github.com/CrowdHailer/raxx/tree/0.17.0) - 2018-10-28
+
+### Added
+
+- `Raxx.SimpleServer` behaviour for servers that only need a `handle_request/2` callback.
+  using `Raxx.SimpleServer` automatically implements `Raxx.Server` so the module can be used in a service.
 
 ### Changed
 
+- `use Raxx.Server` issues a warning if the module implements `handle_request/2`,
+  it is expected that such servers will make use of the new `Raxx.SimpleServer`.
 - `Raxx.set_header/2` raises an `ArgumentError` when setting host headers.
 - `ArgumentError` is raised instead of `RuntimeError` in cases of bad headers and body content.
 - `Raxx.set_body/2` raises an `ArgumentError` for GET and HEAD requests.
+
+### Removed
+
+- `Raxx.is_application?`, use `Raxx.Server.verify_server` instead.
+- `Raxx.verify_application`, use `Raxx.Server.verify_server` instead.
+- `Raxx.Server.is_implemented?`, use `Raxx.Server.verify_server` instead.
 
 ## [0.16.1](https://github.com/CrowdHailer/raxx/tree/0.16.1) - 2018-09-19
 

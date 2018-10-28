@@ -78,11 +78,6 @@ defmodule Raxx.Stack do
     end
   end
 
-  @impl Server
-  def handle_request(_, _) do
-    raise "does not make sense in the context of Stack/Middlewares"
-  end
-
   # NOTE those 4 can be rewritten using macros instead of apply for a minor performance increase
   @impl Server
   def handle_head(request, stack) do

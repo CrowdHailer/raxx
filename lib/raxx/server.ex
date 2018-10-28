@@ -2,27 +2,15 @@ defmodule Raxx.Server do
   @moduledoc """
   Interface to handle server side communication in an HTTP message exchange.
 
-  *Using `Raxx.Server` allows an application to be run on multiple adapters.
+  If simple `request -> response` transformation is possible, try `Raxx.SimpleServer`
+
+  *A module implementing `Raxx.Server` is run by an HTTP server.
   For example [Ace](https://github.com/CrowdHailer/Ace)
-  has several adapters for different versions of the HTTP protocol, HTTP/1.x and HTTP/2*
+  can run such a module for both HTTP/1.x and HTTP/2 exchanges*
 
   ## Getting Started
 
-  **Send complete response after receiving complete request.**
-
-      defmodule EchoServer do
-        use Raxx.Server
-
-        def handle_request(%Raxx.Request{method: :POST, path: [], body: body}, _state) do
-          response(:ok)
-          |> set_header("content-type", "text/plain")
-          |> set_body(body)
-        end
-      end
-
-
   **Send complete response as soon as request headers are received.**
-
 
       defmodule SimpleServer do
         use Raxx.Server
@@ -71,11 +59,6 @@ defmodule Raxx.Server do
           {[body(data)], state}
         end
       end
-
-  ## Options
-
-  - **maximum_body_length** (default 8MB) the maximum sized body that will be automatically buffered.
-    For large requests, e.g. file uploads, consider implementing a streaming server.
 
   ### Notes
 
@@ -147,16 +130,6 @@ defmodule Raxx.Server do
   @type next :: {[Raxx.part()], state} | Raxx.Response.t()
 
   @doc """
-  Called with a complete request once all the data parts of a body are received.
-
-  Passed a `Raxx.Request` and server configuration.
-  Note the value of the request body will be a string.
-
-  This callback will never be called if handle_head/handle_data/handle_tail are overwritten.
-  """
-  @callback handle_request(Raxx.Request.t(), state()) :: next
-
-  @doc """
   Called once when a client starts a stream,
 
   Passed a `Raxx.Request` and server configuration.
@@ -183,14 +156,61 @@ defmodule Raxx.Server do
   """
   @callback handle_info(any(), state()) :: next
 
-  defmacro __using__(options) do
+  use Raxx.View, template: "server.html.eex", arguments: [:module]
+
+  defmacro __using__(_options) do
     quote do
       @behaviour unquote(__MODULE__)
-
-      use Raxx.NotFound, unquote(options)
-
       import Raxx
-      alias Raxx.{Request, Response}
+
+      @impl unquote(__MODULE__)
+      def handle_head(_request, _state) do
+        response(:not_found)
+        |> Raxx.Server.render(__MODULE__)
+      end
+
+      @impl unquote(__MODULE__)
+      def handle_data(data, state) do
+        import Logger
+        Logger.warn("Received unexpected data: #{inspect(data)}")
+        {[], state}
+      end
+
+      @impl unquote(__MODULE__)
+      def handle_tail(trailers, state) do
+        import Logger
+        Logger.warn("Received unexpected trailers: #{inspect(trailers)}")
+        {[], state}
+      end
+
+      @impl unquote(__MODULE__)
+      def handle_info(message, state) do
+        import Logger
+        Logger.warn("Received unexpected message: #{inspect(message)}")
+        {[], state}
+      end
+
+      defoverridable unquote(__MODULE__)
+      @before_compile unquote(__MODULE__)
+    end
+  end
+
+  # DEBT Remove this for 1.0 release
+  defmacro __before_compile__(_env) do
+    quote do
+      # If handle_request is implemented the module may have been created with raxx < 0.17.0
+      # In this case a warning is emitted suggesting using Raxx.SimpleServer instead.
+      # This warning can be disabled by adding @raxx_safe_server to the module.
+      if Module.defines?(__MODULE__, {:handle_request, 2}) and
+           !Module.get_attribute(__MODULE__, :raxx_safe_server) do
+        %{file: file, line: line} = __ENV__
+
+        :elixir_errors.warn(__ENV__.line, __ENV__.file, """
+        The server `#{inspect(__MODULE__)}` implements `handle_request/2.
+            In place of `use Raxx.Server` try `use Raxx.SimpleServer.`
+            The behaviour Raxx.Server changes in release 0.17.0, see CHANGELOG for details.
+        """)
+      end
     end
   end
 
@@ -255,14 +275,77 @@ defmodule Raxx.Server do
     raise %ReturnError{return: other}
   end
 
+  @doc """
+  Verify server can be run?
+
+  A runnable server consists of a tuple of server module and initial state.
+  The server module must implement this modules behaviour.
+  The initial state can be any term
+
+  ## Examples
+
+      # Could just call verify
+      iex> Raxx.Server.verify_server({Raxx.ServerTest.DefaultServer, %{}})
+      {:ok, {Raxx.ServerTest.DefaultServer, %{}}}
+
+      iex> Raxx.Server.verify_server({GenServer, %{}})
+      {:error, {:not_a_server_module, GenServer}}
+
+      iex> Raxx.Server.verify_server({NotAModule, %{}})
+      {:error, {:not_a_module, NotAModule}}
+  """
+  def verify_server({module, term}) do
+    case verify_implementation(module) do
+      {:ok, _} ->
+        {:ok, {module, term}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   @doc false
-  def is_implemented?(module) when is_atom(module) do
-    if Code.ensure_compiled?(module) do
-      module.module_info[:attributes]
-      |> Keyword.get(:behaviour, [])
-      |> Enum.member?(__MODULE__)
-    else
-      false
+  def verify_implementation!(module) do
+    case Raxx.Server.verify_implementation(module) do
+      {:ok, _} ->
+        :no_op
+
+      {:error, {:not_a_server_module, module}} ->
+        raise ArgumentError, "module `#{module}` does not implement `Raxx.Server` behaviour."
+
+      {:error, {:not_a_module, module}} ->
+        raise ArgumentError, "module `#{module}` could not be loaded."
+    end
+  end
+
+  @doc false
+  def verify_implementation(module) do
+    case fetch_behaviours(module) do
+      {:ok, behaviours} ->
+        if Enum.member?(behaviours, __MODULE__) do
+          {:ok, module}
+        else
+          {:error, {:not_a_server_module, module}}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp fetch_behaviours(module) do
+    case Code.ensure_compiled?(module) do
+      true ->
+        behaviours =
+          module.module_info[:attributes]
+          |> Keyword.take([:behaviour])
+          |> Keyword.values()
+          |> List.flatten()
+
+        {:ok, behaviours}
+
+      false ->
+        {:error, {:not_a_module, module}}
     end
   end
 end

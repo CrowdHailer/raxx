@@ -33,23 +33,7 @@ defmodule Raxx.Router do
       for {match, controller} <- actions do
         {resolved_module, []} = Module.eval_quoted(__CALLER__, controller)
 
-        case Code.ensure_compiled(resolved_module) do
-          {:module, ^resolved_module} ->
-            behaviours =
-              resolved_module.module_info[:attributes]
-              |> Keyword.get(:behaviour, [])
-
-            case Enum.member?(behaviours, Raxx.Server) do
-              true ->
-                :no_op
-
-              false ->
-                raise "module #{Macro.to_string(resolved_module)} should implement behaviour Raxx.Server"
-            end
-
-          {:error, :nofile} ->
-            raise "module #{Macro.to_string(resolved_module)} is not loaded"
-        end
+        Raxx.Server.verify_implementation!(resolved_module)
 
         # NOTE use resolved module to include any aliasing
         controller_string = inspect(resolved_module)
@@ -72,11 +56,6 @@ defmodule Raxx.Router do
       end
 
     quote location: :keep do
-      @impl Raxx.Server
-      def handle_request(_request, _state) do
-        raise "This callback should never be called in a on #{__MODULE__}."
-      end
-
       @impl Raxx.Server
       unquote(routes)
 

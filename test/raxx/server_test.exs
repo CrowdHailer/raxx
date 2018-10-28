@@ -4,7 +4,7 @@ defmodule Raxx.ServerTest do
   import ExUnit.CaptureLog
 
   defmodule EchoServer do
-    use Raxx.Server
+    use Raxx.SimpleServer
 
     def handle_request(%{body: body}, _) do
       response(:ok)
@@ -28,15 +28,14 @@ defmodule Raxx.ServerTest do
   end
 
   defmodule DefaultServer do
-    use Raxx.Server
+    use Raxx.SimpleServer
   end
 
   test "default response is returned for the root page" do
     request = Raxx.request(:GET, "/")
     response = DefaultServer.handle_request(request, :state)
-
-    assert String.contains?(response.body, "DefaultServer")
-    assert String.contains?(response.body, "@impl Raxx.Server")
+    assert String.contains?("#{response.body}", "DefaultServer")
+    assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
     assert 404 = response.status
   end
 
@@ -48,9 +47,8 @@ defmodule Raxx.ServerTest do
     {[], state} = DefaultServer.handle_head(request, :state)
     {[], state} = DefaultServer.handle_data("Hello, World!", state)
     response = DefaultServer.handle_tail([], state)
-
-    assert String.contains?(response.body, "DefaultServer")
-    assert String.contains?(response.body, "@impl Raxx.Server")
+    assert String.contains?("#{response.body}", "DefaultServer")
+    assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
     assert 404 = response.status
   end
 
@@ -79,7 +77,7 @@ defmodule Raxx.ServerTest do
   end
 
   defmodule BigServer do
-    use Raxx.Server, maximum_body_length: 12 * 1024 * 1024
+    use Raxx.SimpleServer, maximum_body_length: 12 * 1024 * 1024
   end
 
   test "Server max body size can be configured" do

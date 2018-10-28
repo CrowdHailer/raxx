@@ -3,7 +3,7 @@ defmodule Raxx.LoggerTest do
   import ExUnit.CaptureLog
 
   defmodule DefaultServer do
-    use Raxx.Server
+    use Raxx.SimpleServer
     use Raxx.Logger
   end
 

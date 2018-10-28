@@ -9,12 +9,17 @@ defmodule Raxx.Stack do
   defstruct @enforce_keys
 
   @moduledoc """
-  A `Raxx.Stack` represents a pipeline of middlewares attached to a server.
-
   `Raxx.Stack` implements `Raxx.Server` behaviour that works with
   `t:Raxx.Stack.t/0` as its state.
   """
 
+  @typedoc """
+  A `t:Raxx.Stack.t/0` represents a pipeline of middlewares attached to a server.
+
+  NOTE: Don't rely on the internal structure of this type. It can be modified
+  at an arbitrary moment to improve performance or capabilities.
+  """
+  # DEBT: compare struct t() performance to a (tagged) tuple implementation
   @opaque t :: %__MODULE__{
             pipeline: Pipeline.t(),
             server: Server.t()
@@ -49,19 +54,19 @@ defmodule Raxx.Stack do
     server
   end
 
-  @spec get_server(t()) :: Pipeline.t()
+  @spec get_pipeline(t()) :: Pipeline.t()
   def get_pipeline(%__MODULE__{pipeline: pipeline}) do
     pipeline
   end
 
-  @spec push_middleware(t(), Middeware.t()) :: t()
+  @spec push_middleware(t(), Middleware.t()) :: t()
   def push_middleware(stack, middleware) do
     pipeline = get_pipeline(stack)
 
     set_pipeline(stack, [middleware | pipeline])
   end
 
-  @spec pop_middleware(t()) :: {Middleware.t() | nil, Stack.t()}
+  @spec pop_middleware(t()) :: {Middleware.t() | nil, t()}
   def pop_middleware(stack) do
     case get_pipeline(stack) do
       [] ->

@@ -175,25 +175,25 @@ defmodule Raxx.StackTest do
 
   test "middlewares can modify the request" do
     middlewares = [{Meddler, [request_header: "foo"]}, {Meddler, [request_header: "bar"]}]
-    stack = make_stack_server(middlewares, SpyServer, :controller_initial)
+    stack_server = make_stack_server(middlewares, SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
       |> Raxx.set_content_length(3)
       |> Raxx.set_body(true)
 
-    assert {[], stack} = Server.handle_head(stack, request)
+    assert {[], stack_server} = Server.handle_head(stack_server, request)
 
     assert_receive {SpyServer, :handle_head, server_request, :controller_initial}
     assert %Raxx.Request{} = server_request
     assert "bar" == Raxx.get_header(server_request, "x-request-header")
     assert 3 == Raxx.get_content_length(server_request)
 
-    assert {[headers], stack} = Server.handle_data(stack, "abc")
+    assert {[headers], stack_server} = Server.handle_data(stack_server, "abc")
     assert_receive {SpyServer, :handle_data, "abc", 1}
     assert %Raxx.Response{body: true, status: 200} = headers
 
-    assert {[data, tail], stack} = Server.handle_tail(stack, [])
+    assert {[data, tail], stack_server} = Server.handle_tail(stack_server, [])
     assert_receive {SpyServer, :handle_tail, [], 2}
     assert %Raxx.Data{data: "spy server"} = data
     assert %Raxx.Tail{headers: [{"x-response-trailer", "spy-trailer"}]} == tail
@@ -201,25 +201,25 @@ defmodule Raxx.StackTest do
 
   test "middlewares can modify the response" do
     middlewares = [{Meddler, [response_body: "foo"]}, {Meddler, [response_body: "bar"]}]
-    stack = make_stack_server(middlewares, SpyServer, :controller_initial)
+    stack_server = make_stack_server(middlewares, SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
       |> Raxx.set_content_length(3)
       |> Raxx.set_body(true)
 
-    assert {[], stack} = Server.handle_head(stack, request)
+    assert {[], stack_server} = Server.handle_head(stack_server, request)
 
     assert_receive {SpyServer, :handle_head, server_request, :controller_initial}
     assert %Raxx.Request{} = server_request
     assert nil == Raxx.get_header(server_request, "x-request-header")
     assert 3 == Raxx.get_content_length(server_request)
 
-    assert {[headers], stack} = Server.handle_data(stack, "abc")
+    assert {[headers], stack_server} = Server.handle_data(stack_server, "abc")
     assert_receive {SpyServer, :handle_data, "abc", 1}
     assert %Raxx.Response{body: true, status: 200} = headers
 
-    assert {[data, tail], stack} = Server.handle_tail(stack, [])
+    assert {[data, tail], stack_server} = Server.handle_tail(stack_server, [])
     assert_receive {SpyServer, :handle_tail, [], 2}
     assert %Raxx.Data{data: "foofoofoof"} = data
     assert %Raxx.Tail{headers: [{"x-response-trailer", "spy-trailer"}]} == tail
@@ -265,16 +265,16 @@ defmodule Raxx.StackTest do
   end
 
   test "a stack with no middlewares is functional" do
-    stack = make_stack_server([], SpyServer, :controller_initial)
+    stack_server = make_stack_server([], SpyServer, :controller_initial)
 
     request =
       Raxx.request(:POST, "/")
       |> Raxx.set_content_length(3)
       |> Raxx.set_body(true)
 
-    {stack_result_1, stack} = Server.handle_head(stack, request)
-    {stack_result_2, stack} = Server.handle_data(stack, "xxx")
-    {stack_result_3, _stack} = Server.handle_tail(stack, [])
+    {stack_result_1, stack_server} = Server.handle_head(stack_server, request)
+    {stack_result_2, stack_server} = Server.handle_data(stack_server, "xxx")
+    {stack_result_3, _stack_server} = Server.handle_tail(stack_server, [])
 
     {server_result_1, state} = SpyServer.handle_head(request, :controller_initial)
     {server_result_2, state} = SpyServer.handle_data("xxx", state)
@@ -289,42 +289,42 @@ defmodule Raxx.StackTest do
     @behaviour Middleware
 
     @impl Middleware
-    def process_head(_request, _config, stack) do
+    def process_head(_request, _config, inner_server) do
       response =
         Raxx.response(:forbidden)
         |> Raxx.set_body("Forbidden!")
 
-      {[response], nil, stack}
+      {[response], nil, inner_server}
     end
 
     @impl Middleware
-    def process_data(_data, _state, stack) do
-      {[], nil, stack}
+    def process_data(_data, _state, inner_server) do
+      {[], nil, inner_server}
     end
 
     @impl Middleware
-    def process_tail(_tail, _state, stack) do
-      {[], nil, stack}
+    def process_tail(_tail, _state, inner_server) do
+      {[], nil, inner_server}
     end
 
     @impl Middleware
-    def process_info(_message, _state, stack) do
-      {[], nil, stack}
+    def process_info(_message, _state, inner_server) do
+      {[], nil, inner_server}
     end
   end
 
   test "middlewares can \"short circuit\" processing (not call through)" do
     middlewares = [{NoOp, nil}, {AlwaysForbidden, nil}]
-    stack = make_stack_server(middlewares, SpyServer, :whatever)
+    stack_server = make_stack_server(middlewares, SpyServer, :whatever)
     request = Raxx.request(:GET, "/")
 
-    assert {[response], _stack} = Server.handle_head(stack, request)
+    assert {[response], _stack_server} = Server.handle_head(stack_server, request)
     assert %Raxx.Response{body: "Forbidden!"} = response
 
     refute_receive _
 
-    stack = make_stack_server([{NoOp, nil}], SpyServer, :whatever)
-    assert {[response], _stack} = Server.handle_head(stack, request)
+    stack_server = make_stack_server([{NoOp, nil}], SpyServer, :whatever)
+    assert {[response], _stack_server} = Server.handle_head(stack_server, request)
     assert response.body =~ "SpyServer"
 
     assert_receive {SpyServer, _, _, _}

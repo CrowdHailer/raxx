@@ -1,0 +1,24 @@
+<h1>Welcome to Raxx</h1>
+<p>Get started with your web application.</p>
+<pre>
+defmodule <%= Macro.to_string(module) %> do
+  use Raxx.Server
+
+  @impl Raxx.Server
+  def handle_head(%{method: :GET, path: ["slow"]}, state) do
+    Process.send_after(self(), :reply, 30_000)
+
+    {[], state}
+  end
+
+  # additional callbacks handle_data and handle_tail exist for requests with bodies.
+
+  @impl Raxx.Server
+  def handle_info(:reply, _state) do
+    response(:ok)
+    |> set_header("content-type", "text/plain")
+    |> set_body(<%= "<h1>Hello, Thanks for waiting.</h1>" %>)
+  end
+end
+</pre>
+<p>See <a href="https://hexdocs.pm/raxx">documentation</a> for full details.</p>

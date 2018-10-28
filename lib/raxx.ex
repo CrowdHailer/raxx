@@ -887,62 +887,6 @@ defmodule Raxx do
     "/" <> Enum.join(request.path, "/") <> query_string
   end
 
-  @doc """
-  Can application be run by compatable server?
-
-  ## Examples
-
-      iex> is_application?({Raxx.ServerTest.DefaultServer, %{}})
-      true
-
-      iex> is_application?({GenServer, %{}})
-      false
-
-      iex> is_application?({NotAModule, %{}})
-      false
-  """
-  @spec is_application?({module(), any()}) :: boolean()
-  def is_application?({module, _initial_state}) do
-    Raxx.Server.is_implemented?(module)
-  end
-
-  @doc """
-  Verify application can be run by compatable server?
-
-  ## Examples
-
-      iex> verify_application({Raxx.ServerTest.DefaultServer, %{}})
-      {:ok, {Raxx.ServerTest.DefaultServer, %{}}}
-
-      iex> verify_application({GenServer, %{}})
-      {:error, "module `GenServer` does not implement `Raxx.Server` behaviour."}
-
-      iex> verify_application({NotAModule, %{}})
-      {:error, "module `NotAModule` is not available."}
-  """
-  @spec verify_application({module(), any()}) :: {:ok, {module(), any()}} | {:error, String.t()}
-  def verify_application({module, initial_state}) do
-    case Code.ensure_compiled?(module) do
-      true ->
-        module.module_info[:attributes]
-        |> Keyword.get(:behaviour, [])
-        |> Enum.member?(Raxx.Server)
-        |> case do
-          true ->
-            {:ok, {module, initial_state}}
-
-          false ->
-            {
-              :error,
-              "module `#{Macro.to_string(module)}` does not implement `Raxx.Server` behaviour."
-            }
-        end
-
-      false ->
-        {:error, "module `#{Macro.to_string(module)}` is not available."}
-    end
-  end
-
   @doc false
   # Use to turn errors into a standard reponse format.
   # In the future could be replaced with a protocol,

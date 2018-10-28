@@ -2,9 +2,9 @@ defmodule Raxx.RouterTest do
   use ExUnit.Case
 
   defmodule HomePage do
-    use Raxx.Server
+    use Raxx.SimpleServer
 
-    @impl Raxx.Server
+    @impl Raxx.SimpleServer
     def handle_request(_request, _state) do
       response(:ok)
       |> set_body("Home page")
@@ -12,9 +12,9 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule UsersPage do
-    use Raxx.Server
+    use Raxx.SimpleServer
 
-    @impl Raxx.Server
+    @impl Raxx.SimpleServer
     def handle_request(_request, _state) do
       response(:ok)
       |> set_body("Users page")
@@ -22,9 +22,9 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule UserPage do
-    use Raxx.Server
+    use Raxx.SimpleServer
 
-    @impl Raxx.Server
+    @impl Raxx.SimpleServer
     def handle_request(%{path: ["users", id]}, _state) do
       response(:ok)
       |> set_body("User page #{id}")
@@ -32,9 +32,9 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule CreateUser do
-    use Raxx.Server
+    use Raxx.SimpleServer
 
-    @impl Raxx.Server
+    @impl Raxx.SimpleServer
     def handle_request(%{body: body}, _state) do
       response(:created)
       |> set_body("User created #{body}")
@@ -42,9 +42,9 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule NotFoundPage do
-    use Raxx.Server
+    use Raxx.SimpleServer
 
-    @impl Raxx.Server
+    @impl Raxx.SimpleServer
     def handle_request(_request, _state) do
       response(:not_found)
       |> set_body("Not found")
@@ -52,9 +52,9 @@ defmodule Raxx.RouterTest do
   end
 
   defmodule InvalidReturn do
-    use Raxx.Server
+    use Raxx.SimpleServer
 
-    @impl Raxx.Server
+    @impl Raxx.SimpleServer
     def handle_request(_request, _state) do
       :foo
     end

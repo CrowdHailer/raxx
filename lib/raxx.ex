@@ -447,8 +447,10 @@ defmodule Raxx do
       iex> request(:GET, "/")
       ...> |> set_header("referer", "example.com")
       ...> |> set_header("accept", "text/html")
+      ...> |> set_header("set-cookie", "foo=bar")
+      ...> |> set_header("set-cookie", "baz=boom")
       ...> |> Map.get(:headers)
-      [{"referer", "example.com"}, {"accept", "text/html"}]
+      [{"referer", "example.com"}, {"accept", "text/html"}, {"set-cookie", "foo=bar"}, {"set-cookie", "baz=boom"}]
 
   ## Limitations
 
@@ -508,10 +510,6 @@ defmodule Raxx do
       raise ArgumentError, "Header keys must be lowercase"
     end
 
-    if :proplists.is_defined(name, headers) do
-      raise ArgumentError, "Headers should not be duplicated"
-    end
-
     case :binary.match(value, ["\n", "\r"]) do
       {_, _} ->
         raise ArgumentError, "Header values must not contain control feed (\\r) or newline (\\n)"
@@ -556,6 +554,12 @@ defmodule Raxx do
       ...> |> set_header("content-type", "text/html")
       ...> |> get_header("location", "/")
       "/"
+
+      iex> response(:ok)
+      ...> |> set_header("set-cookie", "foo=bar")
+      ...> |> set_header("set-cookie", "baz=boom")
+      ...> |> get_header("set-cookie")
+      "foo=bar,baz=boom"
   """
   @spec get_header(Raxx.Request.t(), String.t(), String.t() | nil) :: String.t() | nil
   @spec get_header(Raxx.Response.t(), String.t(), String.t() | nil) :: String.t() | nil
@@ -571,8 +575,8 @@ defmodule Raxx do
       [value] ->
         value
 
-      _ ->
-        raise ArgumentError, "More than one header found for `#{name}`"
+      values ->
+        Enum.join(values, ",")
     end
   end
 

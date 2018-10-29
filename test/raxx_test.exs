@@ -46,12 +46,22 @@ defmodule RaxxTest do
                  end
   end
 
-  test "cannot set a header twice" do
-    assert_raise ArgumentError, "Headers should not be duplicated", fn ->
+  test "can set duplicate headers" do
+    response =
       Raxx.response(:ok)
       |> Raxx.set_header("x-foo", "one")
       |> Raxx.set_header("x-foo", "two")
-    end
+
+    assert [{"x-foo", "one"}, {"x-foo", "two"}] == response.headers
+  end
+
+  test "can get duplicate headers" do
+    response =
+      Raxx.response(:ok)
+      |> Raxx.set_header("x-foo", "one")
+      |> Raxx.set_header("x-foo", "two")
+
+    assert "one,two" == Raxx.get_header(response, "x-foo")
   end
 
   test "cannot get an uppercase header" do

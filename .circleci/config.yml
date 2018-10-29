@@ -1,0 +1,149 @@
+defaults: &defaults
+  shell: /bin/sh
+  working_directory: /home/circleci/raxx
+  docker:
+    - image: circleci/elixir
+      environment:
+        MIX_ENV: test
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - restore_cache:
+          keys:
+            - deps-cache-{{ checksum "mix.lock" }}
+            - build-cache-{{ checksum "mix.lock" }}
+      - run: mix do deps.get, deps.compile
+      - run: mix compile --warnings-as-errors
+      - save_cache:
+          key: deps-cache-{{ checksum "mix.lock" }}
+          paths: "deps"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - _build
+            - deps
+
+  lint:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - attach_workspace:
+          at: /home/circleci/raxx
+      - run: mix credo -a || true
+
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - attach_workspace:
+          at: /home/circleci/ace
+      - run:
+          name: Test Coverage
+          command: mix coveralls.html
+      - store_artifacts:
+          path: cover/excoveralls.html
+      - store_test_results:
+          path: _build/test/junit
+
+  docs:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - attach_workspace:
+          at: /home/circleci/raxx
+      - run:
+          name: Build Docs
+          command: mix docs
+      - store_artifacts:
+          path: doc
+
+  format:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - attach_workspace:
+          at: /home/circleci/raxx
+      - run:
+          name: Formatter
+          command: mix format --check-formatted
+
+  outdated:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - attach_workspace:
+          at: /home/circleci/raxx
+      - run:
+          name: Check for outdated dependenciesa
+          command: mix hex.outdated
+
+  dialyzer:
+    <<: *defaults
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - attach_workspace:
+          at: /home/circleci/raxx
+      - run:
+          name: Dialyzer
+          command: mix dialyzer --halt-exit-status
+      - save_cache:
+          key: build-cache-{{ checksum "mix.lock" }}
+          paths: "_build"
+
+  xref:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - attach_workspace:
+          at: /home/circleci/ace
+      - run:
+          name: Xref
+          command: mix compile.xref --warnings-as-errors
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+      - lint:
+          requires:
+            - build
+      - docs:
+          requires:
+            - build
+      - test:
+          requires:
+            - build
+      - format:
+          requires:
+            - build
+      - outdated:
+          requires:
+            - build
+      - dialyzer:
+          requires:
+            - build
+      - xref:
+          requires:
+            - build

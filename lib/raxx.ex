@@ -964,8 +964,28 @@ defmodule Raxx do
   end
 
   @doc """
-  TODO
+  Helper function simplifying a list of `t:Raxx.part/0` parts.
+
+  Simplifying in this context means breaking down Request/Response objects
+  containing binary `body` values into their head, data and tail parts.
+
+  ## Examples
+      iex> response = response(:ok)
+      iex> response.body
+      false
+      iex> [response] == simplify_parts([response])
+      true
+
+      iex> response_with_body = response(:ok) |> set_body("some body")
+      iex> [head, data, tail] = simplify_parts([response_with_body])
+      iex> head
+      %Raxx.Response{status: 200, body: true, headers: [{"content-length", "9"}]}
+      iex> data
+      %Raxx.Data{data: "some body"}
+      iex> tail
+      %Raxx.Tail{headers: []}
   """
+  @spec simplify_parts([Raxx.part()]) :: [Raxx.part()]
   def simplify_parts(parts) when is_list(parts) do
     Enum.flat_map(parts, &simplify_part/1)
   end
@@ -983,8 +1003,7 @@ defmodule Raxx do
   end
 
   defp simplify_part(response = %Raxx.Response{body: false}) do
-    # NOTE I'm not sure about this one
-    [response, Raxx.tail([])]
+    [response]
   end
 
   defp simplify_part(response = %Raxx.Response{body: body}) when is_binary(body) do
@@ -1002,8 +1021,7 @@ defmodule Raxx do
   end
 
   defp simplify_part(request = %Raxx.Request{body: false}) do
-    # NOTE I'm not sure about this one either
-    [request, Raxx.tail([])]
+    [request]
   end
 
   defp simplify_part(response = %Raxx.Request{body: body}) when is_binary(body) do
@@ -1014,6 +1032,11 @@ defmodule Raxx do
       Raxx.data(body),
       Raxx.tail([])
     ]
+  end
+
+  defp simplify_part(other) do
+    # allowing for custom/special meaning parts
+    [other]
   end
 end
 

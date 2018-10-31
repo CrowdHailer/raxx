@@ -370,17 +370,21 @@ defmodule Raxx.StackTest do
     end
 
     defp process_parts(parts) do
-      Enum.flat_map(parts, &process_part/1)
+      parts
+      |> Raxx.simplify_parts()
+      |> Enum.map(&process_part/1)
     end
 
     defp process_part(:response) do
-      [
-        %Raxx.Response{
-          body: "custom",
-          headers: [{"content-length", "6"}],
-          status: 200
-        }
-      ]
+      %Raxx.Response{
+        body: "custom",
+        headers: [{"content-length", "6"}],
+        status: 200
+      }
+    end
+
+    defp process_part(other) do
+      other
     end
   end
 

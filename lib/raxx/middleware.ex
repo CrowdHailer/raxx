@@ -18,7 +18,7 @@ defmodule Raxx.Middleware do
   CSRF protection, logging, error handling, and many more. This example shows
   a middleware that given a HEAD request "translates" it to a GET one, hands
   it over to the controller and strips the response body transforms the
-  response according to the [RFC](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.13)
+  response according to [RFC 2616](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.13)
 
   This way the controller doesn't heed to handle the HEAD case at all.
 
@@ -122,7 +122,8 @@ defmodule Raxx.Middleware do
 
   This callback can be relied upon to execute before any other callbacks
   """
-  @callback process_head(request :: Raxx.Request.t(), state(), inner_server :: Server.t()) :: next()
+  @callback process_head(request :: Raxx.Request.t(), state(), inner_server :: Server.t()) ::
+              next()
 
   @doc """
   Called every time data from the request body is received.
@@ -136,7 +137,8 @@ defmodule Raxx.Middleware do
 
   Will not be called at all if the `t:Raxx.Request.t/0` passed to `c:process_head/3` had `body: false`.
   """
-  @callback process_tail(trailers :: [{binary(), binary()}], state(), inner_server :: Server.t()) :: next()
+  @callback process_tail(trailers :: [{binary(), binary()}], state(), inner_server :: Server.t()) ::
+              next()
 
   @doc """
   Called for all other messages the middleware may recieve.

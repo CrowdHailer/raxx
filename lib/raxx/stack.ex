@@ -5,7 +5,9 @@ defmodule Raxx.Stack do
   @behaviour Server
 
   @moduledoc """
-  TODO
+  A `Raxx.Stack` is a list of `Raxx.Middleware`s attached to a `Raxx.Server`.
+  It implements the `Raxx.Server` interface itself so it can be used anywhere
+  "normal" server can be.
   """
 
   defmodule State do
@@ -60,35 +62,57 @@ defmodule Raxx.Stack do
     end
   end
 
+  @typedoc """
+  The internal state of the `Raxx.Stack`.
+
+  Its structure shouldn't be relied on, it is subject to change without warning.
+  """
   @opaque state :: State.t()
 
   @typedoc """
-  A `t:Raxx.Stack.t/0` represents a pipeline of middlewares attached to a server.
+  Represents a pipeline of middlewares attached to a server.
+
+  Can be used exactly as any `t:Raxx.Server.t/0` could be.
   """
   @type t :: {__MODULE__, state()}
 
   ## Public API
 
+  @doc """
+  Creates a new stack from a list of middlewares and a server.
+  """
   @spec new([Middleware.t()], Server.t()) :: t()
   def new(middlewares \\ [], server) when is_list(middlewares) do
     {__MODULE__, State.new(middlewares, server)}
   end
 
+  @doc """
+  Replaces the server in the stack.
+  """
   @spec set_server(t(), Server.t()) :: t()
   def set_server({__MODULE__, state}, server) do
     {__MODULE__, State.set_server(state, server)}
   end
 
+  @doc """
+  Returns the server contained in the stack.
+  """
   @spec get_server(t()) :: Server.t()
   def get_server({__MODULE__, state}) do
     State.get_server(state)
   end
 
+  @doc """
+  Replaces the middlewares in the stack.
+  """
   @spec set_middlewares(t(), [Middleware.t()]) :: t()
   def set_middlewares({__MODULE__, state}, middlewares) do
     {__MODULE__, State.set_middlewares(state, middlewares)}
   end
 
+  @doc """
+  Returns the server contained in the stack.
+  """
   @spec get_middlewares(t()) :: [Middleware.t()]
   def get_middlewares({__MODULE__, state}) do
     State.get_middlewares(state)

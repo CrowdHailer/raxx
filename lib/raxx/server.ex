@@ -148,6 +148,8 @@ defmodule Raxx.Server do
   Called once when a request finishes.
 
   This will be called with an empty list of headers is request is completed without trailers.
+
+  Will not be called at all if the `t:Raxx.Request.t/0` struct passed to `c:handle_head/2` had `body: false`.
   """
   @callback handle_tail([{binary(), binary()}], state()) :: next
 

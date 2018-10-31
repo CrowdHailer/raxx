@@ -13,7 +13,7 @@ defmodule Raxx.Mixfile do
         warnings_as_errors: true
       ],
       description: description(),
-      docs: [extras: ["README.md"], main: "readme"],
+      docs: [extras: ["README.md"], main: "readme", assets: ["assets"]],
       package: package()
     ]
   end

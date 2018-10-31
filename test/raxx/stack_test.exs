@@ -326,6 +326,71 @@ defmodule Raxx.StackTest do
     assert_receive {SpyServer, _, _, _}
   end
 
+  defmodule CustomReturn do
+    use Raxx.Server
+    @impl Raxx.Server
+    def handle_head(_request, state) do
+      {[:response], state}
+    end
+
+    def handle_data(_data, state) do
+      {[], state}
+    end
+
+    def handle_tail(_tail, state) do
+      {[], state}
+    end
+  end
+
+  defmodule CustomReturnMiddleware do
+    @behaviour Middleware
+
+    @impl Middleware
+    def process_head(request, _config, inner_server) do
+      {parts, inner_server} = Server.handle_head(inner_server, request)
+      {process_parts(parts), nil, inner_server}
+    end
+
+    @impl Middleware
+    def process_data(data, _state, inner_server) do
+      {parts, inner_server} = Server.handle_data(inner_server, data)
+      {process_parts(parts), nil, inner_server}
+    end
+
+    @impl Middleware
+    def process_tail(tail, _state, inner_server) do
+      {parts, inner_server} = Server.handle_tail(inner_server, tail)
+      {process_parts(parts), nil, inner_server}
+    end
+
+    @impl Middleware
+    def process_info(message, _state, inner_server) do
+      {parts, inner_server} = Server.handle_info(inner_server, message)
+      {process_parts(parts), nil, inner_server}
+    end
+
+    defp process_parts(parts) do
+      Enum.flat_map(parts, &process_part/1)
+    end
+
+    defp process_part(:response) do
+      [
+        %Raxx.Response{
+          body: "custom",
+          headers: [{"content-length", "6"}],
+          status: 200
+        }
+      ]
+    end
+  end
+
+  test "servers can, in principle, return custom values to the middleware" do
+    stack = make_stack([{CustomReturnMiddleware, nil}], CustomReturn, nil)
+    request = Raxx.request(:GET, "/")
+    assert {response, _stack} = Server.handle_head(stack, request)
+    assert [%Raxx.Response{body: "custom"}] = response
+  end
+
   defp make_stack(middlewares, server_module, server_state) do
     Stack.new(middlewares, {server_module, server_state})
   end

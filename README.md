@@ -120,10 +120,6 @@ end
   and the new state of the server, in this case no change `state`.*
 - *The `initial_state` is configured when the server is started.*
 
-
-
-
-
 #### Server streaming
 
 The `SubscribeToMessages` server streams its response.
@@ -193,6 +189,26 @@ end
 - *A body may arrive split by packets, chunks or frames.
   `handle_data` will be invoked as each part arrives.
   An application should never assume how a body will be broken into data parts.*
+
+#### Request/Response flow
+
+It is worth noting what guarantees are given on the request parts passed to the
+Server's `handle_*` functions. It depends on the Server type,
+`Raxx.Server` vs `Raxx.SimpleServer`:
+
+<!-- NOTE: diagram svg files contain the source diagram and can be edited using draw.io -->
+![request flow](assets/request_flow.svg)
+
+So, for example, after a `%Raxx.Request{body: false}` is passed to a Server's `c:Raxx.Server.handle_head/2`
+callback, no further request parts will be passed to to the server (`c:Raxx.Server.handle_info/2`
+messages might be, though).
+
+Similarly, these are the valid sequences of the response parts returned from the Servers:
+
+<!-- NOTE: diagram svg files contain the source diagram and can be edited using draw.io -->
+![response flow](assets/response_flow.svg)
+
+Any `Raxx.Middleware`s should follow the same logic.
 
 #### Router
 

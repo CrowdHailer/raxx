@@ -44,8 +44,11 @@ defmodule Raxx.Router do
             Logger.metadata("raxx.action": unquote(controller_string))
             Logger.metadata("raxx.route": unquote(match_string))
 
-            {outbound, new_state} = Raxx.Server.handle({unquote(controller), state}, request)
-            {outbound, {unquote(controller), new_state}}
+            middlewares = []
+            stack = Raxx.Stack.new(middlewares, {unquote(controller), state})
+
+            {outbound, stack} = Raxx.Server.handle_head(stack, request)
+            {outbound, stack}
           end
         end
       end
@@ -55,22 +58,16 @@ defmodule Raxx.Router do
       unquote(routes)
 
       @impl Raxx.Server
-      def handle_data(data, {controller, state}) do
-        # TODO add handle_data etc functions from my middleware branch
-        {outbound, new_state} = Raxx.Server.handle({controller, state}, Raxx.data(data))
-        {outbound, {controller, new_state}}
+      def handle_data(data, stack) do
+        Raxx.Server.handle_data(stack, data)
       end
 
-      @impl Raxx.Server
-      def handle_tail(trailers, {controller, state}) do
-        {outbound, new_state} = Raxx.Server.handle({controller, state}, Raxx.tail(trailers))
-        {outbound, {controller, new_state}}
+      def handle_tail(trailers, stack) do
+        Raxx.Server.handle_tail(stack, trailers)
       end
 
-      @impl Raxx.Server
-      def handle_info(message, {controller, state}) do
-        {outbound, new_state} = Raxx.Server.handle({controller, state}, message)
-        {outbound, {controller, new_state}}
+      def handle_info(message, stack) do
+        Raxx.Server.handle_info(stack, message)
       end
     end
   end

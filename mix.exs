@@ -13,7 +13,7 @@ defmodule Raxx.Mixfile do
         warnings_as_errors: true
       ],
       description: description(),
-      docs: [extras: ["README.md"], main: "readme"],
+      docs: [extras: ["README.md"], main: "readme", assets: ["assets"]],
       package: package()
     ]
   end
@@ -28,8 +28,8 @@ defmodule Raxx.Mixfile do
       {:cookie, "~> 0.1.0"},
       {:eex_html, "~> 0.1.1"},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
-      {:benchee, "~> 0.13.2", only: :dev},
-      {:ex_doc, ">= 0.0.0", only: :dev}
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:benchee, "~> 0.13.2", only: [:dev, :test]}
     ]
   end
 

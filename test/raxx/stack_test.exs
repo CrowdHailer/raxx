@@ -114,7 +114,6 @@ defmodule Raxx.StackTest do
       %Raxx.Data{data | data: new_contents}
     end
 
-    # NOTE this function head is necessary if Stack doesn't do Raxx.simplify_parts/1
     defp modify_part(response = %Raxx.Response{body: contents}, config)
          when is_binary(contents) do
       new_contents = modify_contents(contents, config)
@@ -371,7 +370,7 @@ defmodule Raxx.StackTest do
 
     defp process_parts(parts) do
       parts
-      |> Raxx.simplify_parts()
+      |> Raxx.separate_parts()
       |> Enum.map(&process_part/1)
     end
 

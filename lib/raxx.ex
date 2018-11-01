@@ -964,20 +964,21 @@ defmodule Raxx do
   end
 
   @doc """
-  Helper function simplifying a list of `t:Raxx.part/0` parts.
+  Helper function that takes a list of `t:Raxx.part/0` parts and breaks
+  down Request/Response objects containing binary `body` values
+  into their head, data and tail parts.
 
-  Simplifying in this context means breaking down Request/Response objects
-  containing binary `body` values into their head, data and tail parts.
+  All other parts get left untouched.
 
   ## Examples
       iex> response = response(:ok)
       iex> response.body
       false
-      iex> [response] == simplify_parts([response])
+      iex> [response] == separate_parts([response])
       true
 
       iex> response_with_body = response(:ok) |> set_body("some body")
-      iex> [head, data, tail] = simplify_parts([response_with_body])
+      iex> [head, data, tail] = separate_parts([response_with_body])
       iex> head
       %Raxx.Response{status: 200, body: true, headers: [{"content-length", "9"}]}
       iex> data
@@ -985,28 +986,28 @@ defmodule Raxx do
       iex> tail
       %Raxx.Tail{headers: []}
   """
-  @spec simplify_parts([Raxx.part()]) :: [Raxx.part()]
-  def simplify_parts(parts) when is_list(parts) do
-    Enum.flat_map(parts, &simplify_part/1)
+  @spec separate_parts([Raxx.part()]) :: [Raxx.part()]
+  def separate_parts(parts) when is_list(parts) do
+    Enum.flat_map(parts, &separate_part/1)
   end
 
-  defp simplify_part(part = %Raxx.Data{}) do
+  defp separate_part(part = %Raxx.Data{}) do
     [part]
   end
 
-  defp simplify_part(part = %Raxx.Tail{}) do
+  defp separate_part(part = %Raxx.Tail{}) do
     [part]
   end
 
-  defp simplify_part(response_headers = %Raxx.Response{body: true}) do
+  defp separate_part(response_headers = %Raxx.Response{body: true}) do
     [response_headers]
   end
 
-  defp simplify_part(response = %Raxx.Response{body: false}) do
+  defp separate_part(response = %Raxx.Response{body: false}) do
     [response]
   end
 
-  defp simplify_part(response = %Raxx.Response{body: body}) when is_binary(body) do
+  defp separate_part(response = %Raxx.Response{body: body}) when is_binary(body) do
     headers = %Raxx.Response{response | body: true}
 
     [
@@ -1016,15 +1017,15 @@ defmodule Raxx do
     ]
   end
 
-  defp simplify_part(request_headers = %Raxx.Request{body: true}) do
+  defp separate_part(request_headers = %Raxx.Request{body: true}) do
     [request_headers]
   end
 
-  defp simplify_part(request = %Raxx.Request{body: false}) do
+  defp separate_part(request = %Raxx.Request{body: false}) do
     [request]
   end
 
-  defp simplify_part(response = %Raxx.Request{body: body}) when is_binary(body) do
+  defp separate_part(response = %Raxx.Request{body: body}) when is_binary(body) do
     headers = %Raxx.Request{response | body: true}
 
     [
@@ -1034,7 +1035,7 @@ defmodule Raxx do
     ]
   end
 
-  defp simplify_part(other) do
+  defp separate_part(other) do
     # allowing for custom/special meaning parts
     [other]
   end

@@ -44,7 +44,6 @@ defmodule Raxx.Router do
             Logger.metadata("raxx.action": unquote(controller_string))
             Logger.metadata("raxx.route": unquote(match_string))
 
-            # TODO get the middlewares from the outside
             middlewares = []
             stack = Raxx.Stack.new(middlewares, {unquote(controller), state})
 

@@ -219,7 +219,7 @@ defmodule Raxx.Server do
   @doc """
   Execute a server module and current state in response to a new message
   """
-  @spec handle(t, term) :: {[Raxx.part()], t}
+  @spec handle(t, term) :: {[Raxx.part()], state()}
   def handle({module, state}, request = %Raxx.Request{}) do
     normalize_reaction(module.handle_head(request, state), state)
   end
@@ -236,31 +236,65 @@ defmodule Raxx.Server do
     normalize_reaction(module.handle_info(other, state), state)
   end
 
-  # Note handle_* different to the handle function,
-  # handle_* is given a server and returns a server, handle is given a server and returns a server state
-  # handle uses the data structures sent from Ace but handle_* uses the data in shape defined my callback
+  @doc """
+  Similar to `Raxx.Server.handle/2`, except it only accepts `t:Raxx.Request.t/0`
+  and returns the whole server, not just its state.
+
+  `Raxx.Server.handle/2` uses the data structures sent from the http server,
+  whereas `Raxx.Server.handle_*` use the "unpacked" data, in the shape defined
+  by callbacks.
+  """
+  @spec handle_head(t(), Raxx.Request.t()) :: {[Raxx.part()], t()}
   def handle_head({module, state}, request = %Raxx.Request{}) do
     {parts, new_state} = normalize_reaction(module.handle_head(request, state), state)
     {parts, {module, new_state}}
   end
 
+  @doc """
+  Similar to `Raxx.Server.handle/2`, except it only accepts the "unpacked", binary data
+  and returns the whole server, not just its state.
+
+  `Raxx.Server.handle/2` uses the data structures sent from the http server,
+  whereas `Raxx.Server.handle_*` use the "unpacked" data, in the shape defined
+  by callbacks.
+  """
+  @spec handle_data(t(), binary()) :: {[Raxx.part()], t()}
   def handle_data({module, state}, data) do
     {parts, new_state} = normalize_reaction(module.handle_data(data, state), state)
     {parts, {module, new_state}}
   end
 
+  @doc """
+  Similar to `Raxx.Server.handle/2`, except it only accepts the "unpacked", trailers
+  and returns the whole server, not just its state.
+
+  `Raxx.Server.handle/2` uses the data structures sent from the http server,
+  whereas `Raxx.Server.handle_*` use the "unpacked" data, in the shape defined
+  by callbacks.
+  """
+  @spec handle_data(t(), [{binary(), binary()}]) :: {[Raxx.part()], t()}
   def handle_tail({module, state}, tail) do
     {parts, new_state} = normalize_reaction(module.handle_tail(tail, state), state)
     {parts, {module, new_state}}
   end
 
+  @doc """
+  Similar to `Raxx.Server.handle/2`, except it only accepts the "unpacked", trailers
+  and returns the whole server, not just its state.
+
+  `Raxx.Server.handle/2` uses the data structures sent from the http server,
+  whereas `Raxx.Server.handle_*` use the "unpacked" data, in the shape defined
+  by callbacks.
+  """
+  @spec handle_info(t(), any()) :: {[Raxx.part()], t()}
   def handle_info({module, state}, info) do
     {parts, new_state} = normalize_reaction(module.handle_info(info, state), state)
     {parts, {module, new_state}}
   end
 
   @doc false
-  @spec normalize_reaction(next(), state()) :: {[Raxx.part()], state()} | no_return
+  @spec normalize_reaction(next(), state() | module()) ::
+          {[Raxx.part()], state() | module()} | no_return
   def normalize_reaction(response = %Raxx.Response{body: true}, _initial_state) do
     raise %ReturnError{return: response}
   end

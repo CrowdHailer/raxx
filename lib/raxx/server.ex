@@ -272,7 +272,7 @@ defmodule Raxx.Server do
   whereas `Raxx.Server.handle_*` use the "unpacked" data, in the shape defined
   by callbacks.
   """
-  @spec handle_data(t(), [{binary(), binary()}]) :: {[Raxx.part()], t()}
+  @spec handle_tail(t(), [{binary(), binary()}]) :: {[Raxx.part()], t()}
   def handle_tail({module, state}, tail) do
     {parts, new_state} = normalize_reaction(module.handle_tail(tail, state), state)
     {parts, {module, new_state}}

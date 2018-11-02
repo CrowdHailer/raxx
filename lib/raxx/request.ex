@@ -21,7 +21,7 @@ defmodule Raxx.Request do
   | **path** | The remainder of the request URL's “path”, split into segments. It designates the virtual “location” of the request's target within the application. This may be an empty array, if the requested URL targets the application root. |
   | **raw_path** | The request URL's "path" |
   | **query** | the URL query string. |
-  | **headers** | The headers from the HTTP request as a map of strings. Note all headers will be downcased, e.g. `%{"content-type" => "text/plain"}` |
+  | **headers** | The headers from the HTTP request as a proplist of strings. Note all headers will be downcased, e.g. `[{"content-type", "text/plain"}]` |
   | **body** | The body content sent with the request |
 
   """

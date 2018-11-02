@@ -4,12 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.18.0](https://github.com/CrowdHailer/raxx/tree/0.18.0) - 2018-10-30
+## [0.18.0](https://github.com/CrowdHailer/raxx/tree/0.18.0) - 2018-11-02
 
 ### Changed
 
 - `Raxx.set_header/2` now allows duplicate headers
 - `Raxx.get_header/3` converts duplicate header values into a comma-separated list a la RFC7230 3.2.2 
+
+## [0.17.1](https://github.com/CrowdHailer/raxx/tree/0.17.1) - 2018-11-01
+
+### Added
+
+- `Raxx.Middleware` to develop composable components for common server functionality.
+- `Raxx.Stack` module to combine middlewares are server modules.
 
 ## [0.17.0](https://github.com/CrowdHailer/raxx/tree/0.17.0) - 2018-10-28
 

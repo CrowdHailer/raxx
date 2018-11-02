@@ -966,6 +966,83 @@ defmodule Raxx do
     |> set_header("content-type", "text/plain")
     |> set_body(reason_phrase)
   end
+
+  @doc """
+  Helper function that takes a list of `t:Raxx.part/0` parts and breaks
+  down Request/Response objects containing binary `body` values
+  into their head, data and tail parts.
+
+  All other parts get left untouched.
+
+  ## Examples
+      iex> response = response(:ok)
+      iex> response.body
+      false
+      iex> [response] == separate_parts([response])
+      true
+
+      iex> response_with_body = response(:ok) |> set_body("some body")
+      iex> [head, data, tail] = separate_parts([response_with_body])
+      iex> head
+      %Raxx.Response{status: 200, body: true, headers: [{"content-length", "9"}]}
+      iex> data
+      %Raxx.Data{data: "some body"}
+      iex> tail
+      %Raxx.Tail{headers: []}
+  """
+  @spec separate_parts([Raxx.part()]) :: [Raxx.part()]
+  def separate_parts(parts) when is_list(parts) do
+    Enum.flat_map(parts, &separate_part/1)
+  end
+
+  defp separate_part(part = %Raxx.Data{}) do
+    [part]
+  end
+
+  defp separate_part(part = %Raxx.Tail{}) do
+    [part]
+  end
+
+  defp separate_part(response_headers = %Raxx.Response{body: true}) do
+    [response_headers]
+  end
+
+  defp separate_part(response = %Raxx.Response{body: false}) do
+    [response]
+  end
+
+  defp separate_part(response = %Raxx.Response{body: body}) when is_binary(body) do
+    headers = %Raxx.Response{response | body: true}
+
+    [
+      headers,
+      Raxx.data(body),
+      Raxx.tail([])
+    ]
+  end
+
+  defp separate_part(request_headers = %Raxx.Request{body: true}) do
+    [request_headers]
+  end
+
+  defp separate_part(request = %Raxx.Request{body: false}) do
+    [request]
+  end
+
+  defp separate_part(response = %Raxx.Request{body: body}) when is_binary(body) do
+    headers = %Raxx.Request{response | body: true}
+
+    [
+      headers,
+      Raxx.data(body),
+      Raxx.tail([])
+    ]
+  end
+
+  defp separate_part(other) do
+    # allowing for custom/special meaning parts
+    [other]
+  end
 end
 
 defmodule :raxx do

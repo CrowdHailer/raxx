@@ -43,8 +43,12 @@ defmodule Raxx.StackTest do
     end
   end
 
+  defmodule DefaultMiddleware do
+    use Middleware
+  end
+
   test "a couple of NoOp Middlewares don't modify the response of a simple controller" do
-    middlewares = [{NoOp, :irrelevant}, {NoOp, 42}]
+    middlewares = [{NoOp, :irrelevant}, {NoOp, 42}, {DefaultMiddleware, :nothing}]
     stack = make_stack(middlewares, HomePage, :controller_initial)
 
     request =

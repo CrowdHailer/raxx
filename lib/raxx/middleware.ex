@@ -147,6 +147,36 @@ defmodule Raxx.Middleware do
   """
   @callback process_info(any(), state(), inner_server :: Server.t()) :: next()
 
+  defmacro __using__(_options) do
+    quote do
+      @behaviour unquote(__MODULE__)
+
+      @impl unquote(__MODULE__)
+      def process_head(request, state, inner_server) do
+        {parts, inner_server} = Server.handle_head(inner_server, request)
+        {parts, state, inner_server}
+      end
+
+      @impl unquote(__MODULE__)
+      def process_data(data, state, inner_server) do
+        {parts, inner_server} = Server.handle_data(inner_server, data)
+        {parts, state, inner_server}
+      end
+
+      @impl unquote(__MODULE__)
+      def process_tail(tail, state, inner_server) do
+        {parts, inner_server} = Server.handle_tail(inner_server, tail)
+        {parts, state, inner_server}
+      end
+
+      @impl unquote(__MODULE__)
+      def process_info(message, state, inner_server) do
+        {parts, inner_server} = Server.handle_info(inner_server, message)
+        {parts, state, inner_server}
+      end
+    end
+  end
+
   @doc false
   @spec is_implemented?(module) :: boolean
   def is_implemented?(module) when is_atom(module) do

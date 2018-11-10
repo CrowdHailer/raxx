@@ -6,12 +6,7 @@ otp_release:
   - 21.0
 env:
   - MIX_ENV=test
-before_install:
-  - sudo apt-get install -y tree
 before_script:
-  - ls -alh
-  # checking if the cache gets brought back.
-  - tree _build
   - mix local.hex --force && mix deps.get
 script:
   - mix test
@@ -24,4 +19,3 @@ before_cache:
   # should only keep the dialyzer artifacts
   - mix clean
   - mix deps.clean --all
-  - tree _build

@@ -17,7 +17,8 @@ script:
   - mix format --check-formatted
   - mix dialyzer --halt-exit-status
 cache:
-  - _build
+  directories:
+    - _build
 before_cache:
   # should only keep the dialyzer artifacts
   - mix clean

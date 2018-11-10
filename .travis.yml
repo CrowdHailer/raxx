@@ -10,6 +10,7 @@ before_install:
   - sudo apt-get install -y tree
 before_script:
   - ls -alh
+  # checking if the cache gets brought back.
   - tree _build
   - mix local.hex --force && mix deps.get
 script:

@@ -18,4 +18,4 @@ before_cache:
   # should only keep the dialyzer artifacts
   - mix clean
   - mix deps.clean --all
-  # - tree _build
+  - tree _build

@@ -12,3 +12,10 @@ script:
   - mix test
   - mix format --check-formatted
   - mix dialyzer --halt-exit-status
+cache:
+  directories:
+    - _build
+before_cache:
+  # should only keep the dialyzer artifacts
+  - mix clean
+  - mix deps.clean --all

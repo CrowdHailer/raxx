@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.17.2](https://github.com/CrowdHailer/raxx/tree/0.17.2) - 2018-11-13
+
+### Added
+
+- Support `eex_html` versions `0.1.x` and `0.2.x`.
+
 ## [0.17.1](https://github.com/CrowdHailer/raxx/tree/0.17.1) - 2018-11-01
 
 ### Added

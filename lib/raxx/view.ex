@@ -151,6 +151,7 @@ defmodule Raxx.View do
       end
 
       def html(unquote_splicing(arguments)) do
+        # NOTE from eex_html >= 0.2.0 the content will already be wrapped as safe.
         EExHTML.raw(unquote(compiled))
       end
     end

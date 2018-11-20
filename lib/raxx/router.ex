@@ -40,22 +40,24 @@ defmodule Raxx.Router do
         match_string = Macro.to_string(match)
 
         quote do
-          def handle_head(request = unquote(match), state) do
+          def route(request = unquote(match), state) do
             Logger.metadata("raxx.action": unquote(controller_string))
             Logger.metadata("raxx.route": unquote(match_string))
 
             middlewares = []
-            stack = Raxx.Stack.new(middlewares, {unquote(controller), state})
-
-            {outbound, stack} = Raxx.Server.handle_head(stack, request)
-            {outbound, stack}
+            Raxx.Stack.new(middlewares, {unquote(controller), state})
           end
         end
       end
 
     quote location: :keep do
-      @impl Raxx.Server
       unquote(routes)
+
+      @impl Raxx.Server
+      def handle_head(request, state) do
+        stack = route(request, state)
+        Raxx.Server.handle_head(stack, request)
+      end
 
       @impl Raxx.Server
       def handle_data(data, stack) do

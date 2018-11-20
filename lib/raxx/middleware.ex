@@ -174,6 +174,8 @@ defmodule Raxx.Middleware do
         {parts, inner_server} = Server.handle_info(inner_server, message)
         {parts, state, inner_server}
       end
+
+      defoverridable unquote(__MODULE__)
     end
   end
 

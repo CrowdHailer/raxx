@@ -30,7 +30,16 @@ defmodule Raxx.Router do
   @doc false
   defmacro __using__(actions) when is_list(actions) do
     routes =
-      for {match, controller} <- actions do
+      for action <- actions do
+        {match, controller, stack_function} =
+          case action do
+            {match, controller} ->
+              {match, controller, nil}
+
+            {:{}, _env, [match, controller, stack_function]} ->
+              {match, controller, stack_function}
+          end
+
         {resolved_module, []} = Module.eval_quoted(__CALLER__, controller)
 
         Raxx.Server.verify_implementation!(resolved_module)
@@ -39,13 +48,21 @@ defmodule Raxx.Router do
         controller_string = inspect(resolved_module)
         match_string = Macro.to_string(match)
 
-        quote do
-          def route(request = unquote(match), state) do
+        state = quote do: state
+
+        middlewares =
+          if stack_function do
+            quote do: unquote(stack_function)(unquote(state))
+          else
+            quote do: []
+          end
+
+        quote location: :keep do
+          def route(request = unquote(match), unquote(state)) do
             Logger.metadata("raxx.action": unquote(controller_string))
             Logger.metadata("raxx.route": unquote(match_string))
 
-            middlewares = []
-            Raxx.Stack.new(middlewares, {unquote(controller), state})
+            Raxx.Stack.new(unquote(middlewares), {unquote(controller), unquote(state)})
           end
         end
       end

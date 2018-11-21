@@ -13,6 +13,7 @@ defmodule Raxx.Router do
 
 
   ## Examples
+  ### Original API
 
       defmodule MyRouter do
         use Raxx.Server
@@ -25,7 +26,37 @@ defmodule Raxx.Router do
           {_, NotFoundPage}
         ]
       end
+
+  ### Sections based API
+  *The original API is kept for backwards compatibility.*
+
+      defmodule MyRouter do
+        use Raxx.Server
+
+        use Raxx.Router
+
+        section [{Raxx.Logger, level: :debug}], [
+          {%{method: :GET, path: ["ping"]}, Ping},
+        ]
+
+        section &web/1, [
+          {%{method: :GET, path: []}, HomePage},
+          {%{method: :GET, path: ["users"]}, UsersPage},
+          {%{method: :GET, path: ["users", _id]}, UserPage},
+          {%{method: :POST, path: ["users"]}, CreateUser},
+          {_, NotFoundPage}
+        ]
+
+        def web(state) do
+          [
+            {Raxx.Logger, level: state.log_level},
+            {MyMiddleware, foo: state.foo}
+          ]
+        end
+      end
   """
+
+  @callback route(Raxx.Request.t(), term) :: Raxx.Stack.t()
 
   @doc false
   defmacro __using__(actions) when is_list(actions) do
@@ -51,6 +82,13 @@ defmodule Raxx.Router do
       end
 
     quote location: :keep do
+      if !Enum.member?(Module.get_attribute(__MODULE__, :behaviour), Raxx.Server) do
+        @behaviour Raxx.Server
+      end
+
+      import unquote(__MODULE__)
+      @behaviour unquote(__MODULE__)
+
       unquote(routes)
 
       @impl Raxx.Server
@@ -64,12 +102,45 @@ defmodule Raxx.Router do
         Raxx.Server.handle_data(stack, data)
       end
 
+      @impl Raxx.Server
       def handle_tail(trailers, stack) do
         Raxx.Server.handle_tail(stack, trailers)
       end
 
+      @impl Raxx.Server
       def handle_info(message, stack) do
         Raxx.Server.handle_info(stack, message)
+      end
+    end
+  end
+
+  @doc """
+  Define a set of routes with a common set of middlewares applied to them.
+
+  The first argument may be a list of middlewares;
+  or a function that accepts one argument, the initial state, and returns a list of middleware.
+
+  If all settings for a middleware can be decided at compile-time then a list is preferable.
+  """
+  defmacro section(stack, routes) do
+    state = quote do: state
+
+    middlewares =
+      quote do
+        case unquote(stack) do
+          middlewares when is_list(middlewares) ->
+            middlewares
+
+          stack_function when is_function(stack_function, 1) ->
+            stack_function.(unquote(state))
+        end
+      end
+
+    for {match, action} <- routes do
+      quote do
+        def route(unquote(match), unquote(state)) do
+          Raxx.Stack.new(unquote(middlewares), {unquote(action), unquote(state)})
+        end
       end
     end
   end

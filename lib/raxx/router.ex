@@ -48,6 +48,7 @@ defmodule Raxx.Router do
 
   @doc false
   defmacro __using__(actions) when is_list(actions) do
+    # DEBT Remove this for 1.0 release
     if actions != [] do
       :elixir_errors.warn(__ENV__.line, __ENV__.file, """
       Routes should not be passed as arguments to `use Raxx.Router`.

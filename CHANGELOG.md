@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- `Raxx.Router.section/2` for defining routes that have a middleware stack.
 - Using macro for `Raxx.Middleware` that adds default implementations for each callback.
 
 ## [0.17.2](https://github.com/CrowdHailer/raxx/tree/0.17.2) - 2018-11-13

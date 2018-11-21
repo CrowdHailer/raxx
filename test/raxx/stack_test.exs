@@ -15,7 +15,7 @@ defmodule Raxx.StackTest do
     end
   end
 
-  defmodule NoOp do
+  defmodule TrackStages do
     @behaviour Middleware
 
     @impl Middleware
@@ -43,8 +43,12 @@ defmodule Raxx.StackTest do
     end
   end
 
-  test "a couple of NoOp Middlewares don't modify the response of a simple controller" do
-    middlewares = [{NoOp, :irrelevant}, {NoOp, 42}]
+  defmodule DefaultMiddleware do
+    use Middleware
+  end
+
+  test "Default middleware callbacks leave the request and response unmodified" do
+    middlewares = [{DefaultMiddleware, :irrelevant}, {DefaultMiddleware, 42}]
     stack = make_stack(middlewares, HomePage, :controller_initial)
 
     request =
@@ -225,7 +229,7 @@ defmodule Raxx.StackTest do
   end
 
   test "middlewares' state is correctly updated" do
-    middlewares = [{Meddler, [response_body: "foo"]}, {NoOp, :config}]
+    middlewares = [{Meddler, [response_body: "foo"]}, {TrackStages, :config}]
     stack = make_stack(middlewares, SpyServer, :controller_initial)
 
     request =
@@ -235,27 +239,27 @@ defmodule Raxx.StackTest do
 
     assert {_parts, stack} = Server.handle_head(stack, request)
 
-    assert [{Meddler, [response_body: "foo"]}, {NoOp, {:config, :head}}] ==
+    assert [{Meddler, [response_body: "foo"]}, {TrackStages, {:config, :head}}] ==
              Stack.get_middlewares(stack)
 
     assert {SpyServer, 1} == Stack.get_server(stack)
 
     {_parts, stack} = Server.handle_data(stack, "z")
 
-    assert [{Meddler, [response_body: "foo"]}, {NoOp, {:head, :data}}] ==
+    assert [{Meddler, [response_body: "foo"]}, {TrackStages, {:head, :data}}] ==
              Stack.get_middlewares(stack)
 
     assert {SpyServer, 2} == Stack.get_server(stack)
 
     {_parts, stack} = Server.handle_data(stack, "zz")
 
-    assert [{Meddler, [response_body: "foo"]}, {NoOp, {:data, :data}}] ==
+    assert [{Meddler, [response_body: "foo"]}, {TrackStages, {:data, :data}}] ==
              Stack.get_middlewares(stack)
 
     assert {SpyServer, 3} == Stack.get_server(stack)
 
     {_parts, stack} = Server.handle_tail(stack, [{"x-foo", "bar"}])
-    assert [{Meddler, _}, {NoOp, {:data, :tail}}] = Stack.get_middlewares(stack)
+    assert [{Meddler, _}, {TrackStages, {:data, :tail}}] = Stack.get_middlewares(stack)
     assert {SpyServer, -3} == Stack.get_server(stack)
   end
 
@@ -281,7 +285,7 @@ defmodule Raxx.StackTest do
   end
 
   defmodule AlwaysForbidden do
-    @behaviour Middleware
+    use Middleware
 
     @impl Middleware
     def process_head(_request, _config, inner_server) do
@@ -291,25 +295,11 @@ defmodule Raxx.StackTest do
 
       {[response], nil, inner_server}
     end
-
-    @impl Middleware
-    def process_data(_data, _state, inner_server) do
-      {[], nil, inner_server}
-    end
-
-    @impl Middleware
-    def process_tail(_tail, _state, inner_server) do
-      {[], nil, inner_server}
-    end
-
-    @impl Middleware
-    def process_info(_message, _state, inner_server) do
-      {[], nil, inner_server}
-    end
   end
 
+  # This test also checks that the default callbacks from `use` macro can be overridden.
   test "middlewares can \"short circuit\" processing (not call through)" do
-    middlewares = [{NoOp, nil}, {AlwaysForbidden, nil}]
+    middlewares = [{TrackStages, nil}, {AlwaysForbidden, nil}]
     stack = make_stack(middlewares, SpyServer, :whatever)
     request = Raxx.request(:GET, "/")
 
@@ -318,7 +308,7 @@ defmodule Raxx.StackTest do
 
     refute_receive _
 
-    stack = make_stack([{NoOp, nil}], SpyServer, :whatever)
+    stack = make_stack([{TrackStages, nil}], SpyServer, :whatever)
     assert {[response], _stack} = Server.handle_head(stack, request)
     assert response.body =~ "SpyServer"
 

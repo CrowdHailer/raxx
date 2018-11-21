@@ -64,7 +64,7 @@ defmodule Raxx.RouterTest do
     use Raxx.Server
 
     use Raxx.Router, [
-      {%{method: :GET, path: []}, HomePage, :api},
+      {%{method: :GET, path: []}, HomePage},
       {%{method: :GET, path: ["users"]}, UsersPage},
       {%{method: :GET, path: ["users", _id]}, UserPage},
       {%{method: :POST, path: ["users"]}, CreateUser},
@@ -72,10 +72,6 @@ defmodule Raxx.RouterTest do
       {%{method: :POST, path: ["invalid"]}, InvalidReturn},
       {_, NotFoundPage}
     ]
-
-    defp api(_config) do
-      []
-    end
   end
 
   test "will route to homepage" do

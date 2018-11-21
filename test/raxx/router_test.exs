@@ -60,105 +60,168 @@ defmodule Raxx.RouterTest do
     end
   end
 
-  defmodule OriginalRouter do
-    use Raxx.Server
+  describe "original routing API" do
+    defmodule OriginalRouter do
+      use Raxx.Server
 
-    use Raxx.Router, [
-      {%{method: :GET, path: []}, HomePage},
-      {%{method: :GET, path: ["users"]}, UsersPage},
-      {%{method: :GET, path: ["users", _id]}, UserPage},
-      {%{method: :POST, path: ["users"]}, CreateUser},
-      {%{method: :GET, path: ["invalid"]}, InvalidReturn},
-      {%{method: :POST, path: ["invalid"]}, InvalidReturn},
-      {_, NotFoundPage}
-    ]
-  end
+      use Raxx.Router, [
+        {%{method: :GET, path: []}, HomePage},
+        {%{method: :GET, path: ["users"]}, UsersPage},
+        {%{method: :GET, path: ["users", _id]}, UserPage},
+        {%{method: :POST, path: ["users"]}, CreateUser},
+        {%{method: :GET, path: ["invalid"]}, InvalidReturn},
+        {%{method: :POST, path: ["invalid"]}, InvalidReturn},
+        {_, NotFoundPage}
+      ]
+    end
 
-  test "will route to homepage" do
-    request = Raxx.request(:GET, "/")
-    {[response], _state} = OriginalRouter.handle_head(request, :state)
-    assert "Home page" == response.body
-  end
+    test "will route to homepage" do
+      request = Raxx.request(:GET, "/")
+      {[response], _state} = OriginalRouter.handle_head(request, :state)
+      assert "Home page" == response.body
+    end
 
-  test "will route to fixed segment" do
-    request = Raxx.request(:GET, "/users")
-    {[response], _state} = OriginalRouter.handle_head(request, :state)
-    assert "Users page" == response.body
-  end
+    test "will route to fixed segment" do
+      request = Raxx.request(:GET, "/users")
+      {[response], _state} = OriginalRouter.handle_head(request, :state)
+      assert "Users page" == response.body
+    end
 
-  test "will route to variable segment path" do
-    request = Raxx.request(:GET, "/users/34")
-    {[response], _state} = OriginalRouter.handle_head(request, :state)
-    assert "User page 34" == response.body
-  end
+    test "will route to variable segment path" do
+      request = Raxx.request(:GET, "/users/34")
+      {[response], _state} = OriginalRouter.handle_head(request, :state)
+      assert "User page 34" == response.body
+    end
 
-  test "will route on method" do
-    request = Raxx.request(:POST, "/users")
-    {[response], _state} = OriginalRouter.handle_head(request, :state)
-    assert "User created " == response.body
-  end
+    test "will route on method" do
+      request = Raxx.request(:POST, "/users")
+      {[response], _state} = OriginalRouter.handle_head(request, :state)
+      assert "User created " == response.body
+    end
 
-  test "will forward whole request to controller" do
-    request =
-      Raxx.request(:POST, "/users")
-      |> Raxx.set_body(true)
+    test "will forward whole request to controller" do
+      request =
+        Raxx.request(:POST, "/users")
+        |> Raxx.set_body(true)
 
-    {[], state} = OriginalRouter.handle_head(request, :state)
-    {[], state} = OriginalRouter.handle_data("Bob", state)
-    {[response], _state} = OriginalRouter.handle_tail([], state)
-    assert "User created Bob" == response.body
-  end
+      {[], state} = OriginalRouter.handle_head(request, :state)
+      {[], state} = OriginalRouter.handle_data("Bob", state)
+      {[response], _state} = OriginalRouter.handle_tail([], state)
+      assert "User created Bob" == response.body
+    end
 
-  test "will route on catch all" do
-    request = Raxx.request(:GET, "/random")
-    {[response], _state} = OriginalRouter.handle_head(request, :state)
-    assert "Not found" == response.body
-  end
+    test "will route on catch all" do
+      request = Raxx.request(:GET, "/random")
+      {[response], _state} = OriginalRouter.handle_head(request, :state)
+      assert "Not found" == response.body
+    end
 
-  test "adds the action module to logger metadata" do
-    request = Raxx.request(:GET, "/")
-    _ = OriginalRouter.handle_head(request, :state)
-    metadata = Logger.metadata()
-    assert "Raxx.RouterTest.HomePage" = Keyword.get(metadata, :"raxx.action")
-    assert "%{method: :GET, path: []}" = Keyword.get(metadata, :"raxx.route")
-  end
+    test "adds the action module to logger metadata" do
+      request = Raxx.request(:GET, "/")
+      _ = OriginalRouter.handle_head(request, :state)
+      metadata = Logger.metadata()
+      assert "Raxx.RouterTest.HomePage" = Keyword.get(metadata, :"raxx.action")
+      assert "%{method: :GET, path: []}" = Keyword.get(metadata, :"raxx.route")
+    end
 
-  test "will raise return error if fails to route simple request" do
-    request = Raxx.request(:GET, "/invalid")
+    test "will raise return error if fails to route simple request" do
+      request = Raxx.request(:GET, "/invalid")
 
-    assert_raise ReturnError, fn ->
-      OriginalRouter.handle_head(request, :state)
+      assert_raise ReturnError, fn ->
+        OriginalRouter.handle_head(request, :state)
+      end
+    end
+
+    test "will raise return error if fails to route streamed request" do
+      request =
+        Raxx.request(:POST, "/invalid")
+        |> Raxx.set_body(true)
+
+      {[], state} = OriginalRouter.handle_head(request, :state)
+      {[], state} = OriginalRouter.handle_data("Bob", state)
+
+      assert_raise ReturnError, fn ->
+        OriginalRouter.handle_tail([], state)
+      end
     end
   end
 
-  test "will raise return error if fails to route streamed request" do
-    request =
-      Raxx.request(:POST, "/invalid")
-      |> Raxx.set_body(true)
+  describe "new routing api with middleware" do
+    # HEAD MIDDLEA
+    defmodule AuthorizationMiddleware do
+      use Raxx.Middleware
 
-    {[], state} = OriginalRouter.handle_head(request, :state)
-    {[], state} = OriginalRouter.handle_data("Bob", state)
+      @impl Raxx.Middleware
+      def process_head(head, :pass, next) do
+        {parts, inner_server} = Server.handle_head(inner_server, request)
+        {parts, :pass, inner_server}
+      end
 
-    assert_raise ReturnError, fn ->
-      OriginalRouter.handle_tail([], state)
+      def process_head(head, :stop, next) do
+        Raxx.response(:forbidden)
+      end
     end
-  end
 
-  # HEAD MIDDLEA
-  defmodule SectionRouter do
-    use Raxx.Router
+    defmodule TestHeaderMiddleware do
+      use Raxx.Middleware
 
-    # Test with HEAD middleware
-    section([], [
-      {%{method: :GET, path: []}, HomePage},
-      {%{method: :GET, path: ["users"]}, UsersPage},
-      {%{method: :GET, path: ["users", _id]}, UserPage},
-      {%{method: :POST, path: ["users"]}, CreateUser},
-      {%{method: :GET, path: ["invalid"]}, InvalidReturn},
-      {%{method: :POST, path: ["invalid"]}, InvalidReturn},
-      {_, NotFoundPage}
-    ])
+      @impl Raxx.Middleware
+      def process_head(request, state, inner_server) do
+        {parts, inner_server} = Server.handle_head(inner_server, request)
+        parts = add_header(parts, state)
+        {parts, state, inner_server}
+      end
 
-    # Test with Auth middleware and HEAD
+      @impl Raxx.Middleware
+      def process_data(data, state, inner_server) do
+        {parts, inner_server} = Server.handle_data(inner_server, data)
+        parts = add_header(parts, state)
+        {parts, state, inner_server}
+      end
+
+      @impl Raxx.Middleware
+      def process_tail(tail, state, inner_server) do
+        {parts, inner_server} = Server.handle_tail(inner_server, tail)
+        parts = add_header(parts, state)
+        {parts, state, inner_server}
+      end
+
+      @impl Raxx.Middleware
+      def process_info(message, state, inner_server) do
+        {parts, inner_server} = Server.handle_info(inner_server, message)
+        parts = add_header(parts, state)
+        {parts, state, inner_server}
+      end
+
+      def add_header(_, _vale) do
+      end
+    end
+
+    defmodule SectionRouter do
+      use Raxx.Router
+
+      # Test with HEAD middleware
+      section([{TestHeaderMiddleware, "bonus"}], [
+        {%{method: :GET, path: []}, HomePage}
+      ])
+
+      section(&private/1, [
+        {%{method: :GET, path: ["users"]}, UsersPage},
+        {%{method: :GET, path: ["users", _id]}, UserPage},
+        {%{method: :POST, path: ["users"]}, CreateUser},
+        {%{method: :GET, path: ["invalid"]}, InvalidReturn},
+        {%{method: :POST, path: ["invalid"]}, InvalidReturn},
+        {_, NotFoundPage}
+      ])
+
+      def private(state) do
+        [{AuthorizationMiddleware, state.authorization}]
+      end
+
+      # MOVE ALL TESTS here
+      # check auth config
+      # check header
+      # Test with Auth middleware and HEAD
+    end
   end
 end

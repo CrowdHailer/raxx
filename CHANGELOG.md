@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Next
+## [0.17.3](https://github.com/CrowdHailer/raxx/tree/0.17.3) - 2018-11-22
 
 ### Added
 

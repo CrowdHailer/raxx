@@ -127,12 +127,12 @@ defmodule Raxx.Router do
 
   If all settings for a middleware can be decided at compile-time then a list is preferable.
   """
-  defmacro section(stack, routes) do
+  defmacro section(middlewares, routes) do
     state = quote do: state
 
-    middlewares =
+    resolved_middlewares =
       quote do
-        case unquote(stack) do
+        case unquote(middlewares) do
           middlewares when is_list(middlewares) ->
             middlewares
 
@@ -146,7 +146,7 @@ defmodule Raxx.Router do
         def route(unquote(match), unquote(state)) do
           # Should this verify_implementation for the action/middlewares
           # Perhaps Stack.new should do it
-          Raxx.Stack.new(unquote(middlewares), {unquote(action), unquote(state)})
+          Raxx.Stack.new(unquote(resolved_middlewares), {unquote(action), unquote(state)})
         end
       end
     end

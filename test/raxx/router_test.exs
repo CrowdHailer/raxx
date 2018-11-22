@@ -166,65 +166,86 @@ defmodule Raxx.RouterTest do
     end
   end
 
+  defmodule AuthorizationMiddleware do
+    use Raxx.Middleware
+    alias Raxx.Server
+
+    @impl Raxx.Middleware
+    def process_head(request, :pass, next) do
+      {parts, next} = Server.handle_head(next, request)
+      {parts, :pass, next}
+    end
+
+    def process_head(_request, :stop, next) do
+      {[Raxx.response(:forbidden)], :stop, next}
+    end
+  end
+
+  defmodule TestHeaderMiddleware do
+    use Raxx.Middleware
+    alias Raxx.Server
+
+    @impl Raxx.Middleware
+    def process_head(request, state, inner_server) do
+      {parts, inner_server} = Server.handle_head(inner_server, request)
+      parts = add_header(parts, state)
+      {parts, state, inner_server}
+    end
+
+    @impl Raxx.Middleware
+    def process_data(data, state, inner_server) do
+      {parts, inner_server} = Server.handle_data(inner_server, data)
+      parts = add_header(parts, state)
+      {parts, state, inner_server}
+    end
+
+    @impl Raxx.Middleware
+    def process_tail(tail, state, inner_server) do
+      {parts, inner_server} = Server.handle_tail(inner_server, tail)
+      parts = add_header(parts, state)
+      {parts, state, inner_server}
+    end
+
+    @impl Raxx.Middleware
+    def process_info(message, state, inner_server) do
+      {parts, inner_server} = Server.handle_info(inner_server, message)
+      parts = add_header(parts, state)
+      {parts, state, inner_server}
+    end
+
+    def add_header([response = %Raxx.Response{} | rest], state) do
+      response = Raxx.set_header(response, "x-test", state)
+      [response | rest]
+    end
+
+    def add_header(parts, _state) when is_list(parts) do
+      parts
+    end
+  end
+
+  describe "custom route function in router" do
+    defmodule CustomRouter do
+      use Raxx.Router
+
+      @impl Raxx.Router
+      def route(%{path: []}, config) do
+        Raxx.Stack.new([{TestHeaderMiddleware, "run-time"}], {HomePage, config})
+      end
+
+      def route(_request, _config) do
+        {NotFound, :state}
+      end
+    end
+
+    test "will route to homepage" do
+      request = Raxx.request(:GET, "/")
+      {[response], _state} = CustomRouter.handle_head(request, %{authorization: :pass})
+      assert "Home page" == response.body
+      assert "run-time" == Raxx.get_header(response, "x-test")
+    end
+  end
+
   describe "new routing api with middleware" do
-    # HEAD MIDDLEA
-    defmodule AuthorizationMiddleware do
-      use Raxx.Middleware
-      alias Raxx.Server
-
-      @impl Raxx.Middleware
-      def process_head(request, :pass, next) do
-        {parts, next} = Server.handle_head(next, request)
-        {parts, :pass, next}
-      end
-
-      def process_head(_request, :stop, next) do
-        {[Raxx.response(:forbidden)], :stop, next}
-      end
-    end
-
-    defmodule TestHeaderMiddleware do
-      use Raxx.Middleware
-      alias Raxx.Server
-
-      @impl Raxx.Middleware
-      def process_head(request, state, inner_server) do
-        {parts, inner_server} = Server.handle_head(inner_server, request)
-        parts = add_header(parts, state)
-        {parts, state, inner_server}
-      end
-
-      @impl Raxx.Middleware
-      def process_data(data, state, inner_server) do
-        {parts, inner_server} = Server.handle_data(inner_server, data)
-        parts = add_header(parts, state)
-        {parts, state, inner_server}
-      end
-
-      @impl Raxx.Middleware
-      def process_tail(tail, state, inner_server) do
-        {parts, inner_server} = Server.handle_tail(inner_server, tail)
-        parts = add_header(parts, state)
-        {parts, state, inner_server}
-      end
-
-      @impl Raxx.Middleware
-      def process_info(message, state, inner_server) do
-        {parts, inner_server} = Server.handle_info(inner_server, message)
-        parts = add_header(parts, state)
-        {parts, state, inner_server}
-      end
-
-      def add_header([response = %Raxx.Response{} | rest], state) do
-        response = Raxx.set_header(response, "x-test", state)
-        [response | rest]
-      end
-
-      def add_header(parts, _state) when is_list(parts) do
-        parts
-      end
-    end
-
     defmodule SectionRouter do
       use Raxx.Router
 

@@ -61,18 +61,38 @@ defmodule Raxx.RouterTest do
   end
 
   describe "original routing API" do
-    defmodule OriginalRouter do
-      use Raxx.Server
+    @describetag :deprecations
+    setup do
+      # the setup makes sure the code that causes warnings only
+      # gets compiled if the deprecations tests are run
+      original_router_module_code = """
+      defmodule OriginalRouter do
+        alias Raxx.RouterTest.HomePage
+        alias Raxx.RouterTest.UsersPage
+        alias Raxx.RouterTest.UserPage
+        alias Raxx.RouterTest.CreateUser
+        alias Raxx.RouterTest.InvalidReturn
+        alias Raxx.RouterTest.NotFoundPage
 
-      use Raxx.Router, [
-        {%{method: :GET, path: []}, HomePage},
-        {%{method: :GET, path: ["users"]}, UsersPage},
-        {%{method: :GET, path: ["users", _id]}, UserPage},
-        {%{method: :POST, path: ["users"]}, CreateUser},
-        {%{method: :GET, path: ["invalid"]}, InvalidReturn},
-        {%{method: :POST, path: ["invalid"]}, InvalidReturn},
-        {_, NotFoundPage}
-      ]
+        use Raxx.Server
+
+        use Raxx.Router, [
+          {%{method: :GET, path: []}, HomePage},
+          {%{method: :GET, path: ["users"]}, UsersPage},
+          {%{method: :GET, path: ["users", _id]}, UserPage},
+          {%{method: :POST, path: ["users"]}, CreateUser},
+          {%{method: :GET, path: ["invalid"]}, InvalidReturn},
+          {%{method: :POST, path: ["invalid"]}, InvalidReturn},
+          {_, NotFoundPage}
+        ]
+      end
+      """
+
+      if !Code.ensure_loaded?(OriginalRouter) do
+        Code.compile_string(original_router_module_code, "nofile")
+      end
+
+      {:ok, %{}}
     end
 
     test "will route to homepage" do

@@ -14,7 +14,8 @@ defmodule Raxx.Mixfile do
       ],
       description: description(),
       docs: [extras: ["README.md"], main: "readme", assets: ["assets"]],
-      package: package()
+      package: package(),
+      aliases: aliases()
     ]
   end
 
@@ -44,6 +45,12 @@ defmodule Raxx.Mixfile do
       maintainers: ["Peter Saxton"],
       licenses: ["Apache 2.0"],
       links: %{"GitHub" => "https://github.com/crowdhailer/raxx"}
+    ]
+  end
+
+  defp aliases do
+    [
+      test: ["test --exclude deprecations"]
     ]
   end
 end

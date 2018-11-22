@@ -9,7 +9,6 @@ env:
 before_script:
   - mix local.hex --force && mix deps.get
 script:
-  - mix compile
   - mix test --trace --include deprecations
   - mix format --check-formatted
   - mix dialyzer --halt-exit-status

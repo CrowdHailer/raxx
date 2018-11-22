@@ -264,6 +264,8 @@ defmodule Raxx.RouterTest do
       ])
 
       def private(state) do
+        send(self(), :i_just_ran)
+
         [
           {TestHeaderMiddleware, "run-time"},
           {AuthorizationMiddleware, state.authorization}
@@ -353,11 +355,13 @@ defmodule Raxx.RouterTest do
       {[response], _state} = SectionRouter.handle_head(request, %{authorization: :pass})
       assert 200 == response.status
       assert "run-time" == Raxx.get_header(response, "x-test")
+      assert_receive :i_just_ran
 
       request = Raxx.request(:GET, "/users")
       {[response], _state} = SectionRouter.handle_head(request, %{authorization: :stop})
       assert 403 == response.status
       assert "run-time" == Raxx.get_header(response, "x-test")
+      assert_receive :i_just_ran
     end
   end
 end

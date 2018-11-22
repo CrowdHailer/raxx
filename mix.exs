@@ -4,7 +4,7 @@ defmodule Raxx.Mixfile do
   def project do
     [
       app: :raxx,
-      version: "0.17.2",
+      version: "0.17.3",
       elixir: "~> 1.6",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -14,7 +14,8 @@ defmodule Raxx.Mixfile do
       ],
       description: description(),
       docs: [extras: ["README.md"], main: "readme", assets: ["assets"]],
-      package: package()
+      package: package(),
+      aliases: aliases()
     ]
   end
 
@@ -44,6 +45,12 @@ defmodule Raxx.Mixfile do
       maintainers: ["Peter Saxton"],
       licenses: ["Apache 2.0"],
       links: %{"GitHub" => "https://github.com/crowdhailer/raxx"}
+    ]
+  end
+
+  defp aliases do
+    [
+      test: ["test --exclude deprecations"]
     ]
   end
 end

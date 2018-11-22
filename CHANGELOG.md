@@ -4,10 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Next
+## [0.17.3](https://github.com/CrowdHailer/raxx/tree/0.17.3) - 2018-11-22
 
 ### Added
 
+- `Raxx.Router.section/2` for defining routes that have a middleware stack.
 - Using macro for `Raxx.Middleware` that adds default implementations for each callback.
 
 ## [0.17.2](https://github.com/CrowdHailer/raxx/tree/0.17.2) - 2018-11-13

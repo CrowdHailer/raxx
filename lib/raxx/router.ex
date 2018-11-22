@@ -1,34 +1,62 @@
 defmodule Raxx.Router do
   @moduledoc """
-  Simple router for Raxx applications.
+  Routing for Raxx applications.
 
-  A router is a list of associations between a request pattern and controller module.
-  `Raxx.Router` needs to be used after `Raxx.Server`,
-  it is an extension to a standard Raxx.Server.
+  Routes are defined as a match and an action module.
+  Standard Elixir pattern matching is used to apply the match to an incoming request.
+  An action module another implementation of `Raxx.Server`
 
-  Each controller module that is passed requests from `Raxx.Router` are also standalone `Raxx.Server`s.
-
-  *`Raxx.Router` is a deliberatly low level interface that can act as a base for more sophisticated routers.
-  `Raxx.Blueprint` part of the [tokumei project](https://hexdocs.pm/tokumei/Raxx.Blueprint.html) is one example.
-
+  Sections group routes that all have the same middleware.
+  Middleware in a section maybe defined as a list,
+  this is useful when all configuration is known at compile-time.
+  Alternativly an arity 1 function can be used.
+  This can be used when middleware require runtime configuration.
+  The argument passed to this function is server initial state.
 
   ## Examples
 
       defmodule MyRouter do
-        use Raxx.Server
+        use Raxx.Router
 
-        use Raxx.Router, [
+        section [{Raxx.Logger, level: :debug}], [
+          {%{method: :GET, path: ["ping"]}, Ping},
+        ]
+
+        section &web/1, [
           {%{method: :GET, path: []}, HomePage},
           {%{method: :GET, path: ["users"]}, UsersPage},
           {%{method: :GET, path: ["users", _id]}, UserPage},
           {%{method: :POST, path: ["users"]}, CreateUser},
           {_, NotFoundPage}
         ]
+
+        def web(state) do
+          [
+            {Raxx.Logger, level: state.log_level},
+            {MyMiddleware, foo: state.foo}
+          ]
+        end
       end
+
+  *The original API is kept for backwards compatibility.
+  See [previous docs](https://hexdocs.pm/raxx/0.17.2/Raxx.Router.html) for details.*
+
+  *If the sections DSL does not work for an application it is possible to instead just implement a `route/2` function.*
   """
+
+  @callback route(Raxx.Request.t(), term) :: Raxx.Stack.t()
 
   @doc false
   defmacro __using__(actions) when is_list(actions) do
+    # DEBT Remove this for 1.0 release
+    if actions != [] do
+      :elixir_errors.warn(__ENV__.line, __ENV__.file, """
+      Routes should not be passed as arguments to `use Raxx.Router`.
+          Instead make use of the `section/2` macro.
+          See documentation in `Raxx.Router` for details
+      """)
+    end
+
     routes =
       for {match, controller} <- actions do
         {resolved_module, []} = Module.eval_quoted(__CALLER__, controller)
@@ -40,34 +68,86 @@ defmodule Raxx.Router do
         match_string = Macro.to_string(match)
 
         quote do
-          def handle_head(request = unquote(match), state) do
+          def route(request = unquote(match), state) do
             Logger.metadata("raxx.action": unquote(controller_string))
             Logger.metadata("raxx.route": unquote(match_string))
 
             middlewares = []
-            stack = Raxx.Stack.new(middlewares, {unquote(controller), state})
-
-            {outbound, stack} = Raxx.Server.handle_head(stack, request)
-            {outbound, stack}
+            Raxx.Stack.new(middlewares, {unquote(controller), state})
           end
         end
       end
 
     quote location: :keep do
-      @impl Raxx.Server
+      if Enum.member?(Module.get_attribute(__MODULE__, :behaviour), Raxx.Server) do
+        %{file: file, line: line} = __ENV__
+
+        :elixir_errors.warn(__ENV__.line, __ENV__.file, """
+        The module `#{inspect(__MODULE__)}` already included the behaviour `Raxx.Server`.
+            This is probably use to `use Raxx.Server`,
+            this is no longer necessary when implementing a router.
+        """)
+      else
+        @behaviour Raxx.Server
+      end
+
+      import unquote(__MODULE__)
+      @behaviour unquote(__MODULE__)
+
       unquote(routes)
+
+      @impl Raxx.Server
+      def handle_head(request, state) do
+        stack = route(request, state)
+        Raxx.Server.handle_head(stack, request)
+      end
 
       @impl Raxx.Server
       def handle_data(data, stack) do
         Raxx.Server.handle_data(stack, data)
       end
 
+      @impl Raxx.Server
       def handle_tail(trailers, stack) do
         Raxx.Server.handle_tail(stack, trailers)
       end
 
+      @impl Raxx.Server
       def handle_info(message, stack) do
         Raxx.Server.handle_info(stack, message)
+      end
+    end
+  end
+
+  @doc """
+  Define a set of routes with a common set of middlewares applied to them.
+
+  The first argument may be a list of middlewares;
+  or a function that accepts one argument, the initial state, and returns a list of middleware.
+
+  If all settings for a middleware can be decided at compile-time then a list is preferable.
+  """
+  defmacro section(middlewares, routes) do
+    state = quote do: state
+
+    resolved_middlewares =
+      quote do
+        case unquote(middlewares) do
+          middlewares when is_list(middlewares) ->
+            middlewares
+
+          stack_function when is_function(stack_function, 1) ->
+            stack_function.(unquote(state))
+        end
+      end
+
+    for {match, action} <- routes do
+      quote do
+        def route(unquote(match), unquote(state)) do
+          # Should this verify_implementation for the action/middlewares
+          # Perhaps Stack.new should do it
+          Raxx.Stack.new(unquote(resolved_middlewares), {unquote(action), unquote(state)})
+        end
       end
     end
   end

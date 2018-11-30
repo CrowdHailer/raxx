@@ -31,7 +31,7 @@ defmodule Raxx.View do
       # => %Raxx.Response{
       #      status: 200,
       #      headers: [{"content-type", "text/html"}],
-      #      body: "<h1>Greetings</h1>\n<p>Hello, Alice</p>"
+      #      body: "<h1>Greetings</h1>\n<p>Hello, Bob</p>"
       #    }
 
   ## Options

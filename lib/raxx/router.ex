@@ -131,14 +131,14 @@ defmodule Raxx.Router do
     state = quote do: state
 
     resolved_middlewares =
-      quote do
-        case unquote(middlewares) do
-          middlewares when is_list(middlewares) ->
-            middlewares
+      case middlewares do
+        middlewares when is_list(middlewares) ->
+          middlewares
 
-          stack_function when is_function(stack_function, 1) ->
-            stack_function.(unquote(state))
-        end
+        _ ->
+          quote do
+            unquote(middlewares).(unquote(state))
+          end
       end
 
     for {match, action} <- routes do

@@ -4,18 +4,25 @@ defmodule Raxx.ContextTest do
   alias Raxx.Context
 
   describe "section functions" do
-    test "get_section returns default values if the value is not present" do
-      assert :default == Context.get_section(:foo, :default)
-      assert nil == Context.get_section(:foo, nil)
+    test "retrieve returns default values if the value is not present" do
+      assert :default == Context.retrieve(:foo, :default)
+      assert nil == Context.retrieve(:foo, nil)
     end
 
-    test "get_section returns an empty map as the default default value" do
-      assert %{} == Context.get_section(:foo)
+    test "retrieve returns nil as the default default value" do
+      assert nil == Context.retrieve(:foo)
     end
 
-    test "get_section returns the most recently set section value" do
-      IO.inspect Context.put_section(:foo, 1)
+    test "retrieve returns the most recently set section value" do
+      Context.set(:foo, 1)
+      assert 1 == Context.retrieve(:foo)
+      Context.set(:foo, 2)
+      assert 2 == Context.retrieve(:foo)
+    end
 
+    test "set returns the previous section value" do
+      assert nil == Context.set(:foo, 1)
+      assert 1 == Context.set(:foo, 2)
     end
   end
 end

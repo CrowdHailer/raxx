@@ -21,51 +21,76 @@ defmodule Raxx.Context do
 
   @type section_name :: term()
 
-  # section zone
+  @opaque t :: map()
 
-  @spec set(section_name, term) :: term
+  @spec set(section_name, term) :: term | nil
   def set(section_name, value) do
-    previous_value = put_tagged(section_name, value)
-    previous_value
+    Process.put(tag(section_name), value)
   end
 
-  # retrieve?
+  @spec delete(section_name) :: term | nil
+  def delete(section_name) do
+    Process.delete(tag(section_name))
+  end
+
   @spec retrieve(section_name, default :: term) :: term
   def retrieve(section_name, default \\ nil) do
-    get_tagged(section_name, default)
+    Process.get(tag(section_name), default)
   end
 
-  def update_section() do
+  @spec restore_snapshot(t()) :: :ok
+  def restore_snapshot(context) when is_map(context) do
+    # TODO remove the keys that shouldn't be in the process dictionary anymore
+    context
+    |> Enum.each(fn {k, v} -> Process.put(tag(k), v) end)
+
+    :ok
   end
 
-  ## section manipulation zone
-  @spec initialise(section_name, term) :: term
-  def initialise(section_name, value) do
+  @spec get_snapshot() :: t()
+  def get_snapshot() do
+    Process.get()
+    |> Enum.filter(fn {k, _v} -> tagged_key?(k) end)
+    |> Enum.map(fn {k, v} -> {strip_tag(k), v} end)
+    |> Map.new()
   end
 
-  @spec get(section_name, term, term) :: term
-  def get(section_name, key, default \\ nil) do
-  end
+  # ## section manipulation zone
+  # @spec initialise(section_name, term) :: term
+  # def initialise(section_name, value) do
+  # end
 
-  @spec put(section_name, term, term) :: map | struct
-  def put(section_name, key, value) do
-  end
+  # @spec get(section_name, term, term) :: term
+  # def get(section_name, key, default \\ nil) do
+  # end
 
-  @spec replace!(section_name, term, term) :: map | struct
-  def replace!(section_name, key, value) do
-  end
+  # @spec put(section_name, term, term) :: map | struct
+  # def put(section_name, key, value) do
+  # end
 
-  @spec update(section_name, term, (term -> term)) :: map | struct
-  def update(_section_name, _initial, _fun) do
-  end
+  # @spec replace!(section_name, term, term) :: map | struct
+  # def replace!(section_name, key, value) do
+  # end
+
+  # @spec update(section_name, term, (term -> term)) :: map | struct
+  # def update(_section_name, _initial, _fun) do
+  # end
 
   ## Private functions
 
-  defp put_tagged(key, value) do
-    Process.put({__MODULE__, key}, value)
+  defp tagged_key?({__MODULE__, _}) do
+    true
   end
 
-  defp get_tagged(key, default) do
-    Process.get({__MODULE__, key}, default)
+  defp tagged_key?(_) do
+    false
+  end
+
+  defp strip_tag({__MODULE__, key}) do
+    key
+  end
+
+  defp tag(key) do
+    {__MODULE__, key}
   end
 end

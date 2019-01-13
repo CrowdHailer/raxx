@@ -3,6 +3,8 @@ defmodule Raxx.ContextTest do
 
   alias Raxx.Context
 
+  @moduletag :context
+
   test "retrieve returns default values if the value is not present" do
     assert :default == Context.retrieve(:foo, :default)
     assert nil == Context.retrieve(:foo, nil)
@@ -35,6 +37,14 @@ defmodule Raxx.ContextTest do
     Process.put(:baz, 11)
 
     assert %{foo: 1, bar: 2} == Context.get_snapshot()
+  end
+
+  test "restore_snapshot/1 doesn't affect 'normal' process dictionary values" do
+    empty_snapshot = Context.get_snapshot()
+    Process.put("this", "that")
+
+    assert :ok = Context.restore_snapshot(empty_snapshot)
+    assert "that" == Process.get("this")
   end
 
   test "delete/1 deletes the given section from the context (but nothing else)" do

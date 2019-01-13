@@ -3,6 +3,8 @@ defmodule Raxx.Context.ServerContextTest do
 
   alias Raxx.Context.ServerContext
 
+  @moduletag :context
+
   @localhost {127, 0, 0, 1}
   @google_dns {8, 8, 8, 8}
 

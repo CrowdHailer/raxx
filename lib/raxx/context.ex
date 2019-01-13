@@ -20,11 +20,19 @@ defmodule Raxx.Context do
 
   @spec restore_snapshot(t()) :: :ok
   def restore_snapshot(context) when is_map(context) do
-    # TODO remove the keys that shouldn't be in the process dictionary anymore
-    context
-    |> Enum.each(fn {k, v} -> Process.put(tag(k), v) end)
+    new_context_tuples =
+      context
+      |> Enum.map(fn {k, v} -> {tag(k), v} end)
 
-    :ok
+    current_context_keys =
+      Process.get_keys()
+      |> Enum.filter(&tagged_key?/1)
+
+    new_keys = Enum.map(new_context_tuples, fn {k, _v} -> k end)
+    keys_to_remove = current_context_keys -- new_keys
+
+    Enum.each(keys_to_remove, &Process.delete/1)
+    Enum.each(new_context_tuples, fn {k, v} -> Process.put(k, v) end)
   end
 
   @spec get_snapshot() :: t()

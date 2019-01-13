@@ -1,24 +1,4 @@
 defmodule Raxx.Context do
-  # defmodule ServerContext do
-  #   defstruct remote_ip: nil,
-  #             schema: nil,
-  #             properties: %{}
-
-  #   @type t :: %__MODULE__{}
-  # end
-
-  # ## Server Context zone
-
-  # @spec get_server_context() :: ServerContext.t()
-  # def get_server_context() do
-  #   get_tagged(ServerContext, %ServerContext{})
-  # end
-
-  # @spec put_server_context(ServerContext.t()) :: ServerContext.t()
-  # def put_server_context(%ServerContext{} = server_context) do
-  #   put_tagged(ServerContext, server_context)
-  # end
-
   @type section_name :: term()
 
   @opaque t :: map()
@@ -75,8 +55,6 @@ defmodule Raxx.Context do
   # @spec update(section_name, term, (term -> term)) :: map | struct
   # def update(_section_name, _initial, _fun) do
   # end
-
-  ## Private functions
 
   defp tagged_key?({__MODULE__, _}) do
     true

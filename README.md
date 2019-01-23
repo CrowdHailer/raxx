@@ -14,17 +14,6 @@
 See [Raxx.Kit](https://github.com/CrowdHailer/raxx_kit) for a project generator that helps you set up
 a web project based on [Raxx](https://github.com/CrowdHailer/raxx)/[Ace](https://github.com/CrowdHailer/Ace).
 
-## Simple client
-
-```elixir
-request = Raxx.request(:GET, "http://example.com")
-|> Raxx.set_header("accept", "application/json")
-
-{:ok, response} = Raxx.SimpleClient.send_sync(request, 2000)
-```
-
-See `Raxx.SimpleClient` for full documentation.
-
 ## Simple server
 
 #### 1. Defining a server

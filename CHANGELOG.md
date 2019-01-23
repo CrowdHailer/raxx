@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.x
+
+### Removed
+
+- `Raxx.SimpleClient`.
+
 ## [0.17.6](https://github.com/CrowdHailer/raxx/tree/0.17.6) - 2019-02-05
 
 ### Removed

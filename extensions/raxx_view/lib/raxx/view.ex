@@ -136,6 +136,7 @@ defmodule Raxx.View do
 
     quote do
       import EExHTML
+      import unquote(__MODULE__), only: [partial: 3, partial: 4]
 
       if unquote(layout_template) do
         @external_resource unquote(layout_template)
@@ -154,6 +155,29 @@ defmodule Raxx.View do
         # NOTE from eex_html >= 0.2.0 the content will already be wrapped as safe.
         EExHTML.raw(unquote(compiled))
       end
+    end
+  end
+
+  @doc """
+  Generate template partials from eex templates.
+  """
+  defmacro partial(name, file, arguments, options \\ []) do
+    {private, options} = Keyword.pop(options, :private, false)
+    type = if private, do: :defp, else: :def
+    file = Path.expand(file, Path.dirname(__CALLER__.file))
+    {_, options} = Keyword.pop(options, :engine, false)
+    options = options ++ [engine: EExHTML.Engine]
+
+    quote do
+      require EEx
+
+      EEx.function_from_file(
+        unquote(type),
+        unquote(name),
+        unquote(file),
+        unquote(arguments),
+        unquote(options)
+      )
     end
   end
 

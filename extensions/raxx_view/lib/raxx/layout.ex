@@ -87,6 +87,9 @@ defmodule Raxx.Layout do
     layout_template = Path.expand(layout_template, Path.dirname(__CALLER__.file))
 
     quote do
+      import EExHTML
+      import Raxx.View, only: [partial: 3, partial: 4]
+
       defmacro __using__(options) do
         imports = unquote(imports)
         layout_template = unquote(layout_template)

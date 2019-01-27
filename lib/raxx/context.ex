@@ -92,27 +92,6 @@ defmodule Raxx.Context do
     |> Map.new()
   end
 
-  # ## section manipulation zone
-  # @spec initialise(section_name, term) :: term
-  # def initialise(section_name, value) do
-  # end
-
-  # @spec get(section_name, term, term) :: term
-  # def get(section_name, key, default \\ nil) do
-  # end
-
-  # @spec put(section_name, term, term) :: map | struct
-  # def put(section_name, key, value) do
-  # end
-
-  # @spec replace!(section_name, term, term) :: map | struct
-  # def replace!(section_name, key, value) do
-  # end
-
-  # @spec update(section_name, term, (term -> term)) :: map | struct
-  # def update(_section_name, _initial, _fun) do
-  # end
-
   defp tagged_key?({__MODULE__, _}) do
     true
   end

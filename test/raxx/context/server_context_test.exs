@@ -8,11 +8,11 @@ defmodule Raxx.Context.ServerContextTest do
   @localhost {127, 0, 0, 1}
   @google_dns {8, 8, 8, 8}
 
-  @server_context_1 %ServerContext{remote_ip_address: @localhost, properties: %{foo: :bar}}
-  @server_context_2 %ServerContext{remote_ip_address: @google_dns, properties: %{baz: :ban}}
+  @server_context_1 %{remote_ip_address: @localhost, properties: %{foo: :bar}}
+  @server_context_2 %{remote_ip_address: @google_dns, properties: %{baz: :ban}}
 
   test "with no server context set, retrieve/0 will return a default structure" do
-    assert %ServerContext{} == ServerContext.retrieve()
+    assert %{} == ServerContext.retrieve()
   end
 
   test "set/1 and retrieve/0" do

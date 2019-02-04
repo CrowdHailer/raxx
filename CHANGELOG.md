@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 
 - `Raxx.BasicAuth` see the BasicAuthentication extension in `Raxx.Kit`
-- `Raxx.SimpleClient`.
+- `Raxx.SimpleClient` no longer supported.
+- `Raxx.RequestID` no longer supported.
 
 ## [0.17.6](https://github.com/CrowdHailer/raxx/tree/0.17.6) - 2019-02-05
 

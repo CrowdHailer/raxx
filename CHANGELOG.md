@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `mount` field from `Raxx.Request`
 - `Raxx.BasicAuth` see the BasicAuthentication extension in `Raxx.Kit`
+- `Raxx.Session.SignedCookie` no longer supported, to be added as extension.
 - `Raxx.SimpleClient` no longer supported.
 - `Raxx.RequestID` no longer supported.
 

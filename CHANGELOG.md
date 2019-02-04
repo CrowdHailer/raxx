@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
+- `mount` field from `Raxx.Request`
 - `Raxx.BasicAuth` see the BasicAuthentication extension in `Raxx.Kit`
 - `Raxx.SimpleClient` no longer supported.
 - `Raxx.RequestID` no longer supported.

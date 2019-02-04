@@ -2,104 +2,61 @@ defmodule Raxx.Logger do
   @moduledoc """
   Middleware for basic logging in the format:
 
-      GET /index.html
-      Sent 200 in 572ms
-
-  May be used in any `Raxx.Server` module.
-
-      use Raxx.Logger, level: :debug
+      GET /index.html Sent 200 in 572ms
 
   ## Options
 
     - `:level` - The log level this middleware will use for request and response information.
       Default is `:info`.
   """
+  @behaviour Raxx.Middleware
+  alias Raxx.Server
+
   require Logger
 
-  defmacro __using__(options) do
-    {options, []} = Module.eval_quoted(__CALLER__, options)
-    level = Keyword.get(options, :level, :info)
+  @enforce_keys [:level, :start, :request]
+  defstruct @enforce_keys
 
-    quote do
-      @raxx_logger_level unquote(level)
-      @before_compile unquote(__MODULE__)
-    end
+  def setup(options) do
+    level = Keyword.fetch!(options, :level)
+    %__MODULE__{level: level, start: nil, request: nil}
   end
 
-  defmacro __before_compile__(_env) do
-    quote do
-      defoverridable Raxx.Server
-
-      @impl Raxx.Server
-      def handle_head(head, config) do
-        # NOTE Raxx servers can be nested, app metadata should not be overwritten.
-        if !Keyword.has_key?(Logger.metadata(), :"raxx.app") do
-          Logger.metadata("raxx.app": __MODULE__)
-        end
-
-        Logger.metadata("raxx.scheme": head.scheme)
-        Logger.metadata("raxx.authority": head.authority)
-        Logger.metadata("raxx.method": head.method)
-
-        # NOTE path segments are preserved as a list because formatting as url would assume canonical url
-        Logger.metadata("raxx.path": inspect(head.path))
-        Logger.metadata("raxx.query": inspect(head.query))
-        unquote(__MODULE__).process_head(head, @raxx_logger_level)
-
-        super(head, config)
-        |> unquote(__MODULE__).process_response(@raxx_logger_level)
-      end
-
-      @impl Raxx.Server
-      def handle_data(data, config) do
-        super(data, config)
-        |> unquote(__MODULE__).process_response(@raxx_logger_level)
-      end
-
-      @impl Raxx.Server
-      def handle_tail(tail, config) do
-        super(tail, config)
-        |> unquote(__MODULE__).process_response(@raxx_logger_level)
-      end
-
-      @impl Raxx.Server
-      def handle_info(message, config) do
-        super(message, config)
-        |> unquote(__MODULE__).process_response(@raxx_logger_level)
-      end
-    end
+  def process_head(request, state, next) do
+    state = %{state | start: System.monotonic_time(), request: request}
+    {parts, next} = Server.handle_head(next, request)
+    :ok = handle_parts(parts, state)
+    {parts, state, next}
   end
 
-  @doc false
-  def process_head(head, level) do
-    Logger.log(level, fn ->
-      Process.put(unquote(__MODULE__), %{start: System.monotonic_time()})
-      [Atom.to_string(head.method), ?\s, Raxx.normalized_path(head)]
-    end)
+  def process_data(data, state, next) do
+    {parts, next} = Server.handle_data(next, data)
+    :ok = handle_parts(parts, state)
+    {parts, state, next}
   end
 
-  @doc false
-  def process_response(response = %Raxx.Response{}, level) do
-    log_response(response, level)
-    response
+  def process_tail(tail, state, next) do
+    {parts, next} = Server.handle_tail(next, tail)
+    :ok = handle_parts(parts, state)
+    {parts, state, next}
   end
 
-  def process_response(reaction = {[response = %Raxx.Response{} | _parts], _state}, level) do
-    log_response(response, level)
-    reaction
+  def process_info(info, state, next) do
+    {parts, next} = Server.handle_info(next, info)
+    :ok = handle_parts(parts, state)
+    {parts, state, next}
   end
 
-  def process_response(reaction, _level) do
-    reaction
-  end
-
-  defp log_response(response, level) do
-    Logger.log(level, fn ->
-      %{start: start} = Process.get(__MODULE__)
+  defp handle_parts([response = %Raxx.Response{} | _], state) do
+    Logger.log(state.level, fn ->
       stop = System.monotonic_time()
-      diff = System.convert_time_unit(stop - start, :native, :microsecond)
+      diff = System.convert_time_unit(stop - state.start, :native, :microsecond)
 
       [
+        Atom.to_string(state.request.method),
+        ?\s,
+        Raxx.normalized_path(state.request),
+        ?\s,
         response_type(response),
         ?\s,
         Integer.to_string(response.status),
@@ -107,6 +64,10 @@ defmodule Raxx.Logger do
         formatted_diff(diff)
       ]
     end)
+  end
+
+  defp handle_parts(parts, _state) when is_list(parts) do
+    :ok
   end
 
   defp formatted_diff(diff) when diff > 1000, do: [diff |> div(1000) |> Integer.to_string(), "ms"]

@@ -7,6 +7,7 @@ defmodule Raxx.LoggerTest do
     use Raxx.Logger
   end
 
+  @tag :skip
   test "Request and response information is logged" do
     request = Raxx.request(:GET, "http://example.com:1234/foo?bar=value")
 
@@ -19,6 +20,7 @@ defmodule Raxx.LoggerTest do
     assert String.contains?(log, "Sent 404 in")
   end
 
+  @tag :skip
   test "Request context is added to logger metadata" do
     request = Raxx.request(:GET, "http://example.com:1234/foo?bar=value")
 

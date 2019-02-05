@@ -41,7 +41,7 @@ defmodule Raxx.SimpleServer do
   """
   @callback handle_request(Raxx.Request.t(), state()) :: Raxx.Response.t()
 
-  use Raxx.View, template: "simple_server.html.eex", arguments: [:module]
+  # use Raxx.View, template: "simple_server.html.eex", arguments: [:module]
 
   @eight_MB 8 * 1024 * 1024
 
@@ -55,6 +55,7 @@ defmodule Raxx.SimpleServer do
 
       @behaviour Raxx.Server
 
+      # DEBT remove impl, then ignore compile warnings from this block
       @impl Raxx.Server
       def handle_head(request = %{body: false}, state) do
         response = __MODULE__.handle_request(%{request | body: ""}, state)
@@ -102,13 +103,13 @@ defmodule Raxx.SimpleServer do
         {[], state}
       end
 
-      @impl Raxx.SimpleServer
-      def handle_request(_, _) do
-        response(:not_found)
-        |> Raxx.SimpleServer.render(__MODULE__)
-      end
-
-      defoverridable unquote(__MODULE__)
+      # @impl Raxx.SimpleServer
+      # def handle_request(_, _) do
+      #   response(:not_found)
+      #   |> Raxx.SimpleServer.render(__MODULE__)
+      # end
+      #
+      # defoverridable unquote(__MODULE__)
     end
   end
 end

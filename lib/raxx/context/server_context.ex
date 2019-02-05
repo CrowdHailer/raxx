@@ -1,6 +1,6 @@
 defmodule Raxx.Context.ServerContext do
   @typedoc """
-  `"http1.1" | "http2"`
+  `"http1.1" | "http2.0"`
   """
   @type http_version :: String.t()
   @type transport :: :tls | :tcp

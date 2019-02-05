@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [master](https://github.com/CrowdHailer/raxx/tree/master) - 2019-XX-XX
+
+### Added
+
+- `Raxx.Context` and `Raxx.ServerContext` for passing contextual information about the request/response.
+
 ## [0.17.5](https://github.com/CrowdHailer/raxx/tree/0.17.5) - 2019-02-04
 
 ### Removed

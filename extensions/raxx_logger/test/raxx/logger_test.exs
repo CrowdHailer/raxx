@@ -4,29 +4,43 @@ defmodule Raxx.LoggerTest do
 
   defmodule DefaultServer do
     use Raxx.SimpleServer
-    use Raxx.Logger
+
+    @impl Raxx.SimpleServer
+    def handle_request(_request, _state) do
+      response(:no_content)
+    end
   end
 
-  @tag :skip
-  test "Request and response information is logged" do
+  setup %{} do
+    stack =
+      Raxx.Stack.new(
+        [
+          {Raxx.Logger, level: :info}
+        ],
+        {DefaultServer, nil}
+      )
+
+    {:ok, stack: stack}
+  end
+
+  test "Request and response information is logged", %{stack: stack} do
     request = Raxx.request(:GET, "http://example.com:1234/foo?bar=value")
 
     log =
       capture_log(fn ->
-        DefaultServer.handle_head(request, :state)
+        Raxx.Server.handle_head(stack, request)
       end)
 
     assert String.contains?(log, "GET /foo?bar=value")
-    assert String.contains?(log, "Sent 404 in")
+    assert String.contains?(log, "Sent 204 in")
   end
 
-  @tag :skip
-  test "Request context is added to logger metadata" do
+  test "Request context is added to logger metadata", %{stack: stack} do
     request = Raxx.request(:GET, "http://example.com:1234/foo?bar=value")
 
     _log =
       capture_log(fn ->
-        DefaultServer.handle_head(request, :state)
+        Raxx.Server.handle_head(stack, request)
       end)
 
     metadata = Logger.metadata()

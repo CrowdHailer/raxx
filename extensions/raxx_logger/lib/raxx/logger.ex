@@ -22,8 +22,24 @@ defmodule Raxx.Logger do
     %__MODULE__{level: level, start: nil, request: nil}
   end
 
-  def process_head(request, state, next) do
+  def process_head(request, options, next) when is_list(options) do
+    process_head(request, setup(options), next)
+  end
+
+  def process_head(request, state = %__MODULE__{}, next) do
     state = %{state | start: System.monotonic_time(), request: request}
+
+    if !Keyword.has_key?(Logger.metadata(), :"raxx.app") do
+      {server, _} = Raxx.Stack.get_server(next)
+      Logger.metadata("raxx.app": server)
+    end
+
+    Logger.metadata("raxx.scheme": request.scheme)
+    Logger.metadata("raxx.authority": request.authority)
+    Logger.metadata("raxx.method": request.method)
+    Logger.metadata("raxx.path": inspect(request.path))
+    Logger.metadata("raxx.query": inspect(request.query))
+
     {parts, next} = Server.handle_head(next, request)
     :ok = handle_parts(parts, state)
     {parts, state, next}

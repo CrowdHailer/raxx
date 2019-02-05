@@ -6,6 +6,7 @@ defmodule Raxx.ServerTest do
   defmodule EchoServer do
     use Raxx.SimpleServer
 
+    @impl true
     def handle_request(%{body: body}, _) do
       response(:ok)
       |> set_body(inspect(body))
@@ -29,28 +30,33 @@ defmodule Raxx.ServerTest do
 
   defmodule DefaultServer do
     use Raxx.SimpleServer
+
+    @impl Raxx.SimpleServer
+    def handle_request(_, _) do
+      response(:no_content)
+    end
   end
 
-  test "default response is returned for the root page" do
-    request = Raxx.request(:GET, "/")
-    response = DefaultServer.handle_request(request, :state)
-    assert String.contains?("#{response.body}", "DefaultServer")
-    assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
-    assert 404 = response.status
-  end
-
-  test "default response is returned for a streamed request" do
-    request =
-      Raxx.request(:POST, "/")
-      |> Raxx.set_body(true)
-
-    {[], state} = DefaultServer.handle_head(request, :state)
-    {[], state} = DefaultServer.handle_data("Hello, World!", state)
-    response = DefaultServer.handle_tail([], state)
-    assert String.contains?("#{response.body}", "DefaultServer")
-    assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
-    assert 404 = response.status
-  end
+  # test "default response is returned for the root page" do
+  #   request = Raxx.request(:GET, "/")
+  #   response = DefaultServer.handle_request(request, :state)
+  #   assert String.contains?("#{response.body}", "DefaultServer")
+  #   assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
+  #   assert 404 = response.status
+  # end
+  #
+  # test "default response is returned for a streamed request" do
+  #   request =
+  #     Raxx.request(:POST, "/")
+  #     |> Raxx.set_body(true)
+  #
+  #   {[], state} = DefaultServer.handle_head(request, :state)
+  #   {[], state} = DefaultServer.handle_data("Hello, World!", state)
+  #   response = DefaultServer.handle_tail([], state)
+  #   assert String.contains?("#{response.body}", "DefaultServer")
+  #   assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
+  #   assert 404 = response.status
+  # end
 
   test "handle_info logs error" do
     logs =
@@ -62,7 +68,7 @@ defmodule Raxx.ServerTest do
     assert String.contains?(logs, ":foo")
   end
 
-  test "default server will not butter more than 8MB into one request" do
+  test "default server will not buffer more than 8MB into one request" do
     request =
       Raxx.request(:POST, "/")
       |> Raxx.set_body(true)
@@ -78,6 +84,11 @@ defmodule Raxx.ServerTest do
 
   defmodule BigServer do
     use Raxx.SimpleServer, maximum_body_length: 12 * 1024 * 1024
+
+    @impl Raxx.SimpleServer
+    def handle_request(_, _) do
+      response(:no_content)
+    end
   end
 
   test "Server max body size can be configured" do

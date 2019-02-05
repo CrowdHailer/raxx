@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.17.5](https://github.com/CrowdHailer/raxx/tree/0.17.5) - 2019-02-04
+
+### Removed
+
+- `Raxx.Logger` extracted to separate extension project,
+  use `{:raxx_logger, "~> 0.1.0"}` for backwards compatable api.
+
+## [0.17.4](https://github.com/CrowdHailer/raxx/tree/0.17.4) - 2019-01-06
+
+### Fixed
+
+- Dialyzer warning from `Raxx.Router.section/2` macro fixed.
+
 ## [0.17.3](https://github.com/CrowdHailer/raxx/tree/0.17.3) - 2018-11-22
 
 ### Added

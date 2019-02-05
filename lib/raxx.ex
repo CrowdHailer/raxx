@@ -1,3 +1,13 @@
+if !Code.ensure_loaded?(Raxx.Logger) && !Application.get_env(:raxx, :silence_logger_warning) do
+  :elixir_errors.warn(__ENV__.line, __ENV__.file, """
+  `Raxx.Logger` has been extracted from the core raxx package, instead add as a dependency.
+
+          {:raxx_logger, "~> 0.1.0"}
+
+      This warning will be removed in the next breaking release of the raxx package.
+  """)
+end
+
 defmodule Raxx do
   @moduledoc """
   Tooling to work with HTTP.

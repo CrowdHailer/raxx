@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- `Raxx.Context` and `Raxx.ServerContext` for passing contextual information about the request/response.
+- `Raxx.Context` for passing contextual information about the request/response.
 
 ## [0.17.5](https://github.com/CrowdHailer/raxx/tree/0.17.5) - 2019-02-04
 

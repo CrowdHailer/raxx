@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## next
+## [master](https://github.com/CrowdHailer/raxx/tree/master) - 2019-XX-XX
 
 ### Removed
 
 - `Raxx.View` and `Raxx.Layout` extracted to separate extension project,
   use `{:raxx_view, "~> 0.1.0"}` for backwards compatable api.
+
+### Added
+
+- `Raxx.Context` for passing contextual information about the request/response.
 
 ## [0.17.5](https://github.com/CrowdHailer/raxx/tree/0.17.5) - 2019-02-04
 

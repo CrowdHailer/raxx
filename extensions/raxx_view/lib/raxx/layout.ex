@@ -88,7 +88,7 @@ defmodule Raxx.Layout do
 
     quote do
       import EExHTML
-      import Raxx.View, only: [partial: 3, partial: 4]
+      import Raxx.View, only: [partial: 2, partial: 3]
 
       defmacro __using__(options) do
         imports = unquote(imports)

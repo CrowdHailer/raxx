@@ -4,11 +4,12 @@ defmodule RaxxView.MixProject do
   def project do
     [
       app: :raxx_view,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
+      docs: [extras: ["README.md"], main: "readme"],
       package: package()
     ]
   end
@@ -28,7 +29,7 @@ defmodule RaxxView.MixProject do
 
   defp description do
     """
-    Generate views from `.eex` template files for Raxx applications.
+    Generate HTML views from `.eex` template files for Raxx web applications.
     """
   end
 

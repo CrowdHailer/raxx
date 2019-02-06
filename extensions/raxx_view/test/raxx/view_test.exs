@@ -72,4 +72,36 @@ defmodule Raxx.ViewTest do
     String.split("#{text}", ~r/\R/)
     |> Enum.reject(fn line -> line == "" end)
   end
+
+  defmodule DefaultTemplatePartial do
+    import Raxx.View
+
+    partial(:partial, [:var])
+
+    defp private do
+      "Default"
+    end
+  end
+
+  defmodule RelativeTemplatePartial do
+    import Raxx.View
+
+    partial(:partial, [:var], template: "other.html.eex")
+
+    defp private do
+      "Relative"
+    end
+  end
+
+  test "Arguments and private funcations are available in the partial template" do
+    assert ["5", "Default"] = lines("#{DefaultTemplatePartial.partial("5")}")
+  end
+
+  test "HTML content in a partial is escaped" do
+    assert ["5", "Default"] = lines("#{DefaultTemplatePartial.partial("5")}")
+  end
+
+  test "Partial template path can be relative to calling file" do
+    assert ["5", "Relative"] = lines("#{RelativeTemplatePartial.partial("5")}")
+  end
 end

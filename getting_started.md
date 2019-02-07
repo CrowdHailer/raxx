@@ -349,7 +349,7 @@ end
 ```
 
 ## Layouts
-Try Raxx.Layout
+Try Raxx.View.Layout
 
 ## Partials
 
@@ -384,7 +384,7 @@ defmodule MyApp.WWW.Actions.SignUp do
 end
 ```
 
-By default any layout modules, that use `Raxx.Layout`, will be imported in to views derrived from them.
+By default any layout modules, that use `Raxx.View.Layout`, will be imported in to views derrived from them.
 
 ## Assets
 After creating a HTML view static assets are a good next section

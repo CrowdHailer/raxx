@@ -1,4 +1,4 @@
-defmodule Raxx.LayoutTest do
+defmodule Raxx.View.LayoutTest do
   use ExUnit.Case
 
   defmodule Helpers do
@@ -8,7 +8,7 @@ defmodule Raxx.LayoutTest do
   end
 
   defmodule DefaultLayout do
-    use Raxx.Layout, imports: [__MODULE__, Helpers]
+    use Raxx.View.Layout, imports: [__MODULE__, Helpers]
 
     def layout_function() do
       "layout_function"

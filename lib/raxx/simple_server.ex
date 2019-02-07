@@ -41,8 +41,6 @@ defmodule Raxx.SimpleServer do
   """
   @callback handle_request(Raxx.Request.t(), state()) :: Raxx.Response.t()
 
-  # use Raxx.View, template: "simple_server.html.eex", arguments: [:module]
-
   @eight_MB 8 * 1024 * 1024
 
   defmacro __using__(options) do
@@ -55,8 +53,6 @@ defmodule Raxx.SimpleServer do
 
       @behaviour Raxx.Server
 
-      # DEBT remove impl, then ignore compile warnings from this block
-      @impl Raxx.Server
       def handle_head(request = %{body: false}, state) do
         response = __MODULE__.handle_request(%{request | body: ""}, state)
 
@@ -70,7 +66,6 @@ defmodule Raxx.SimpleServer do
         {[], {request, [], state}}
       end
 
-      @impl Raxx.Server
       def handle_data(data, {request, iodata_buffer, state}) do
         iodata_buffer = [data | iodata_buffer]
 
@@ -81,7 +76,6 @@ defmodule Raxx.SimpleServer do
         end
       end
 
-      @impl Raxx.Server
       def handle_tail([], {request, iodata_buffer, state}) do
         body = :erlang.iolist_to_binary(Enum.reverse(iodata_buffer))
         response = __MODULE__.handle_request(%{request | body: body}, state)
@@ -92,7 +86,6 @@ defmodule Raxx.SimpleServer do
         end
       end
 
-      @impl Raxx.Server
       def handle_info(message, state) do
         require Logger
 
@@ -102,14 +95,6 @@ defmodule Raxx.SimpleServer do
 
         {[], state}
       end
-
-      # @impl Raxx.SimpleServer
-      # def handle_request(_, _) do
-      #   response(:not_found)
-      #   |> Raxx.SimpleServer.render(__MODULE__)
-      # end
-      #
-      # defoverridable unquote(__MODULE__)
     end
   end
 end

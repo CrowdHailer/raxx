@@ -25,8 +25,6 @@ defmodule Raxx.Mixfile do
 
   defp deps do
     [
-      # TODO remove once sessions are in separate repo.
-      {:cookie, "~> 0.1.0"},
       {:eex_html, "~> 0.1.1 or ~> 0.2.0"},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev},

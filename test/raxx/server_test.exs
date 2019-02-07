@@ -6,7 +6,7 @@ defmodule Raxx.ServerTest do
   defmodule EchoServer do
     use Raxx.SimpleServer
 
-    @impl true
+    @impl Raxx.SimpleServer
     def handle_request(%{body: body}, _) do
       response(:ok)
       |> set_body(inspect(body))
@@ -36,27 +36,6 @@ defmodule Raxx.ServerTest do
       response(:no_content)
     end
   end
-
-  # test "default response is returned for the root page" do
-  #   request = Raxx.request(:GET, "/")
-  #   response = DefaultServer.handle_request(request, :state)
-  #   assert String.contains?("#{response.body}", "DefaultServer")
-  #   assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
-  #   assert 404 = response.status
-  # end
-  #
-  # test "default response is returned for a streamed request" do
-  #   request =
-  #     Raxx.request(:POST, "/")
-  #     |> Raxx.set_body(true)
-  #
-  #   {[], state} = DefaultServer.handle_head(request, :state)
-  #   {[], state} = DefaultServer.handle_data("Hello, World!", state)
-  #   response = DefaultServer.handle_tail([], state)
-  #   assert String.contains?("#{response.body}", "DefaultServer")
-  #   assert String.contains?("#{response.body}", "@impl Raxx.SimpleServer")
-  #   assert 404 = response.status
-  # end
 
   test "handle_info logs error" do
     logs =

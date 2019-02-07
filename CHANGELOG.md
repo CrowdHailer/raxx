@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.x
+
+### Removed
+
+- Warnings to include `raxx_logger` and `raxx_view`.
+- `mount` field from `Raxx.Request`.
+- `Raxx.BasicAuth` see the BasicAuthentication extension in `Raxx.Kit`.
+- `Raxx.Session.SignedCookie` no longer supported, to be added as extension.
+- `Raxx.SimpleClient` no longer supported.
+- `Raxx.RequestID` no longer supported.
+
 ## [0.17.6](https://github.com/CrowdHailer/raxx/tree/0.17.6) - 2019-02-05
 
 ### Removed

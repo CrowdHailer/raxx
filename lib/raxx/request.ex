@@ -17,7 +17,6 @@ defmodule Raxx.Request do
   | **scheme** | `http` or `https`, depending on the transport used. |
   | **authority** | The location of the hosting server, as a binary. e.g. `www.example.com`. Plus an optional port number, separated from the hostname by a colon |
   | **method** | The HTTP request method, such as `:GET` or `:POST`, as an atom. This cannot ever be `nil`. It is always uppercase. |
-  | **mount** | The segments of the request URL's “path”, that have already been matched. Same as rack path_info. This may be an empty array, if the requested URL targets the application root. |
   | **path** | The remainder of the request URL's “path”, split into segments. It designates the virtual “location” of the request's target within the application. This may be an empty array, if the requested URL targets the application root. |
   | **raw_path** | The request URL's "path" |
   | **query** | the URL query string. |
@@ -43,7 +42,6 @@ defmodule Raxx.Request do
           scheme: scheme,
           authority: binary,
           method: method,
-          mount: [binary],
           path: [binary],
           raw_path: binary,
           query: binary | nil,
@@ -54,7 +52,6 @@ defmodule Raxx.Request do
   defstruct scheme: nil,
             authority: nil,
             method: nil,
-            mount: [],
             path: [],
             raw_path: "",
             query: nil,

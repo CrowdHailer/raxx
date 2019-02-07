@@ -216,8 +216,3 @@ defmodule MyApp do
   ]
 end
 ```
-
-#### Logger
-
-The `Raxx.Logger` can be used in any raxx server module to add basic logs.
-The format of the logs matches the format of the basic Plug logger.

@@ -158,18 +158,10 @@ defmodule Raxx.Server do
   """
   @callback handle_info(any(), state()) :: next
 
-  # use Raxx.View, template: "server.html.eex", arguments: [:module]
-
   defmacro __using__(_options) do
     quote do
       @behaviour unquote(__MODULE__)
       import Raxx
-
-      # @impl unquote(__MODULE__)
-      # def handle_head(_request, _state) do
-      #   response(:not_found)
-      #   |> Raxx.Server.render(__MODULE__)
-      # end
 
       @impl unquote(__MODULE__)
       def handle_data(data, state) do

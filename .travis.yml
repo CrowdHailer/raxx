@@ -7,11 +7,15 @@ otp_release:
 env:
   - MIX_ENV=test
 before_script:
-  - mix local.hex --force && mix deps.get
+  - mix local.hex --force
+  - mix deps.get
+  - for dir in ./extensions/*; do ( cd "$dir" && mix deps.get ); done
 script:
   - mix test --trace --include deprecations
   - mix format --check-formatted
   - mix dialyzer --halt-exit-status
+  - for dir in ./extensions/*; do ( cd "$dir" && mix test ); done
+  - for dir in ./extensions/*; do ( cd "$dir" && mix format --check-formatted ); done
 cache:
   directories:
     - _build

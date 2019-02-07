@@ -115,7 +115,7 @@ Layouts can be used to define views that share layouts and possibly helpers.
 
 ```elixir
 defmodule MyApp.Layout do
-  use Raxx.Layout,
+  use Raxx.View.Layout,
     layout: "layout.html.eex"
 
   def display_date(datetime = %DateTime{}) do

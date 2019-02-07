@@ -4,7 +4,7 @@ defmodule Raxx.View do
 
   Using this module will add the functions `html` and `render` to a module.
 
-  To create layouts that can be reused across multiple pages check out `Raxx.Layout`.
+  To create layouts that can be reused across multiple pages check out `Raxx.View.Layout`.
 
   ## Example
 

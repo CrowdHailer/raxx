@@ -4,15 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.18.1](https://github.com/CrowdHailer/raxx/tree/0.18.1) - 2019-02-19
 
 ### Changed
 
-- Raxx.redirect/2 no longer adds a HTML body. The body can now be set with an option.
+- `Raxx.redirect/2` no longer adds a HTML body. The body can now be set with an option.
 
 ### Removed
 
-- EExHTML is no longer a dependency
+- EExHTML is no longer a dependency.
 
 ## [0.18.0](https://github.com/CrowdHailer/raxx/tree/0.18.0) - 2019-02-07
 

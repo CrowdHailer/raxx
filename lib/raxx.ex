@@ -54,6 +54,12 @@ defmodule Raxx do
   """
   @type part :: Raxx.Request.t() | Raxx.Response.t() | Raxx.Data.t() | Raxx.Tail.t()
 
+  @typedoc """
+  The response status that can be parsed to e.g. response/1.
+  This is either an integer status code like 404 or an atom that refers to a reason phrase in RFC7231 like :not_found
+  """
+  @type status :: Raxx.Response.status_code() | atom
+
   @doc """
   Construct a `Raxx.Request`.
 
@@ -185,7 +191,7 @@ defmodule Raxx do
       iex> response(200).body
       false
   """
-  @spec response(Raxx.Response.status_code() | atom) :: Raxx.Response.t()
+  @spec response(status) :: Raxx.Response.t()
   def response(status_code) when is_integer(status_code) do
     struct(Raxx.Response, status: status_code, headers: [], body: false)
   end
@@ -756,6 +762,8 @@ defmodule Raxx do
   Create a response to redirect client to the given url.
 
   Response status can be set using the `:status` option.
+  The body can be set with the `:body` option.
+  Content-type header can be set with the `:content_type` option.
 
   ## Examples
     iex> redirect("/foo")
@@ -763,17 +771,24 @@ defmodule Raxx do
     "/foo"
 
     iex> redirect("/foo")
-    ...> |> get_header("content-type")
-    "text/html"
-
-    iex> redirect("/foo")
     ...> |> Map.get(:body)
-    ...> |> String.Chars.to_string()
-    ~s(<html><body>This resource has moved <a href="/foo">here</a>.</body></html>)
+    false
 
     iex> redirect("/foo")
     ...> |> Map.get(:status)
     303
+
+    iex> redirect("/foo", body: "Redirecting...")
+    ...> |> Map.get(:body)
+    "Redirecting..."
+
+    iex> redirect("/foo", body: "Redirecting...")
+    ...> |> get_header("content-type")
+    nil
+
+    iex> redirect("/foo", body: "Redirecting...", content_type: "text/html")
+    ...> |> get_header("content-type")
+    "text/html"
 
     iex> redirect("/foo", status: 301)
     ...> |> Map.get(:status)
@@ -791,14 +806,23 @@ defmodule Raxx do
   Complication with such functionality are discussed here - https://github.com/phoenixframework/phoenix/pull/1402
   Sinatra has a very complete test suite including a back implementation - https://github.com/sinatra/sinatra/blob/9bd0d40229f76ff60d81c01ad2f4b1a8e6f31e05/test/helpers_test.rb#L183
   """
+  @spec redirect(String.t(), status: status, body: body, content_type: String.t()) ::
+          Raxx.Response.t()
   def redirect(url, opts \\ []) do
     status = Keyword.get(opts, :status, :see_other)
+    body = Keyword.get(opts, :body, nil)
+    content_type = Keyword.get(opts, :content_type, nil)
 
     response(status)
     |> set_header("location", url)
-    |> set_header("content-type", "text/html")
-    |> set_body(redirect_page(url).data)
+    |> set_redirect_body(body)
+    |> set_redirect_content_type(content_type)
   end
+
+  defp set_redirect_body(response, nil), do: response
+  defp set_redirect_body(response, val), do: set_body(response, val)
+  defp set_redirect_content_type(response, nil), do: response
+  defp set_redirect_content_type(response, val), do: set_header(response, "content-type", val)
 
   @doc """
   Put headers that improve browser security.
@@ -852,11 +876,6 @@ defmodule Raxx do
     |> set_header("x-content-type-options", "nosniff")
     |> set_header("x-download-options", "noopen")
     |> set_header("x-permitted-cross-domain-policies", "none")
-  end
-
-  defp redirect_page(url) do
-    import EExHTML
-    ~E"<html><body>This resource has moved <a href=\"<%= url %>\">here</a>.</body></html>"
   end
 
   @doc """

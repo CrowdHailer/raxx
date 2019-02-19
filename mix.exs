@@ -25,7 +25,6 @@ defmodule Raxx.Mixfile do
 
   defp deps do
     [
-      {:eex_html, "~> 0.1.1 or ~> 0.2.0"},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:benchee, "~> 0.13.2", only: [:dev, :test]}

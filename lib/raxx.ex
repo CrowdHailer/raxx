@@ -54,6 +54,12 @@ defmodule Raxx do
   """
   @type part :: Raxx.Request.t() | Raxx.Response.t() | Raxx.Data.t() | Raxx.Tail.t()
 
+  @typedoc """
+  The response status that can be parsed to e.g. response/1.
+  This is either an integer status code like 404 or an atom that refers to a reason phrase in RFC7231 like :not_found
+  """
+  @type status :: Raxx.Response.status_code() | atom
+
   @doc """
   Construct a `Raxx.Request`.
 
@@ -185,7 +191,7 @@ defmodule Raxx do
       iex> response(200).body
       false
   """
-  @spec response(Raxx.Response.status_code() | atom) :: Raxx.Response.t()
+  @spec response(status) :: Raxx.Response.t()
   def response(status_code) when is_integer(status_code) do
     struct(Raxx.Response, status: status_code, headers: [], body: false)
   end

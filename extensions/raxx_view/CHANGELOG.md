@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.3](https://github.com/CrowdHailer/raxx/tree/0.18.0) - 2019-03-03
+
+### Added
+
+- Specific dependency on `eex_html`, needed because no longer a dependency of `raxx`.
+
 ## [0.1.2](https://github.com/CrowdHailer/raxx/tree/0.18.0) - 2019-02-07
 
 ### Deprecated

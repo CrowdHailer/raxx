@@ -47,7 +47,7 @@ defmodule Raxx.Mixfile do
 
   defp aliases do
     [
-      test: ["test --exclude deprecations"]
+      test: ["test --exclude deprecations --exclude benchmarks"]
     ]
   end
 end

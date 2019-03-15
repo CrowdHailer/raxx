@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## next
+
+### Removed
+
+- Warnings given when using `Raxx.Server` and `Raxx.Router` in the same module.
+- Warnings given for implementing `handle_request/2` in a module using `Raxx.Server`.
+
 ## [0.18.1](https://github.com/CrowdHailer/raxx/tree/0.18.1) - 2019-02-19
 
 ### Changed

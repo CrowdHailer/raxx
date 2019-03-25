@@ -208,15 +208,6 @@ defmodule Raxx.RouterTest do
       assert "Not found" == response.body
     end
 
-    @tag :skip
-    test "adds the action module to logger metadata" do
-      request = Raxx.request(:GET, "/")
-      _ = SectionRouter.handle_head(request, %{authorization: :pass})
-      metadata = Logger.metadata()
-      assert "Raxx.RouterTest.HomePage" = Keyword.get(metadata, :"raxx.action")
-      assert "%{method: :GET, path: []}" = Keyword.get(metadata, :"raxx.route")
-    end
-
     test "will raise return error if fails to route simple request" do
       request = Raxx.request(:GET, "/invalid")
 

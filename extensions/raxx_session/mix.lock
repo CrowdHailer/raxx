@@ -1,0 +1,5 @@
+%{
+  "cookie": {:hex, :cookie, "0.1.1", "89438362ee0f0ed400e9f076d617d630f82d682e3fbcf767072a46a6e1ed5781", [:mix], [], "hexpm"},
+  "plug_crypto": {:hex, :plug_crypto, "1.0.0", "18e49317d3fa343f24620ed22795ec29d4a5e602d52d1513ccea0b07d8ea7d4d", [:mix], [], "hexpm"},
+  "raxx": {:hex, :raxx, "0.18.1", "ae84242e035fc367cb0bd3a49349482040a259ed1504cc030045c20bdd85b307", [:mix], [], "hexpm"},
+}

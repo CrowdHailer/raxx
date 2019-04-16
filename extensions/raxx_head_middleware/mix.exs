@@ -19,7 +19,7 @@ defmodule RaxxHeadMiddleware.MixProject do
 
   defp deps do
     [
-      {:raxx, "~> 0.18.0"},
+      {:raxx, "~> 0.18.0 or ~> 1.0"},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end

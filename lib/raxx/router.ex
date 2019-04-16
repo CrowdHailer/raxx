@@ -37,64 +37,17 @@ defmodule Raxx.Router do
           ]
         end
       end
-
-  *The original API is kept for backwards compatibility.
-  See [previous docs](https://hexdocs.pm/raxx/0.17.2/Raxx.Router.html) for details.*
-
   *If the sections DSL does not work for an application it is possible to instead just implement a `route/2` function.*
   """
 
   @callback route(Raxx.Request.t(), term) :: Raxx.Stack.t()
 
   @doc false
-  defmacro __using__(actions) when is_list(actions) do
-    # DEBT Remove this for 1.0 release
-    if actions != [] do
-      :elixir_errors.warn(__ENV__.line, __ENV__.file, """
-      Routes should not be passed as arguments to `use Raxx.Router`.
-          Instead make use of the `section/2` macro.
-          See documentation in `Raxx.Router` for details
-      """)
-    end
-
-    routes =
-      for {match, controller} <- actions do
-        {resolved_module, []} = Module.eval_quoted(__CALLER__, controller)
-
-        Raxx.Server.verify_implementation!(resolved_module)
-
-        # NOTE use resolved module to include any aliasing
-        controller_string = inspect(resolved_module)
-        match_string = Macro.to_string(match)
-
-        quote do
-          def route(request = unquote(match), state) do
-            Logger.metadata("raxx.action": unquote(controller_string))
-            Logger.metadata("raxx.route": unquote(match_string))
-
-            middlewares = []
-            Raxx.Stack.new(middlewares, {unquote(controller), state})
-          end
-        end
-      end
-
+  defmacro __using__([]) do
     quote location: :keep do
-      if Enum.member?(Module.get_attribute(__MODULE__, :behaviour), Raxx.Server) do
-        %{file: file, line: line} = __ENV__
-
-        :elixir_errors.warn(__ENV__.line, __ENV__.file, """
-        The module `#{inspect(__MODULE__)}` already included the behaviour `Raxx.Server`.
-            This is probably use to `use Raxx.Server`,
-            this is no longer necessary when implementing a router.
-        """)
-      else
-        @behaviour Raxx.Server
-      end
-
+      @behaviour Raxx.Server
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
-
-      unquote(routes)
 
       @impl Raxx.Server
       def handle_head(request, state) do

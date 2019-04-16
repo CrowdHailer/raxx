@@ -190,6 +190,10 @@ defmodule Raxx do
 
       iex> response(200).body
       false
+
+      # works for custom status codes
+      iex> response(299).status
+      299
   """
   @spec response(status) :: Raxx.Response.t()
   def response(status_code) when is_integer(status_code) do
@@ -212,8 +216,6 @@ defmodule Raxx do
       {code, reason_phrase}
     end)
 
-  statuses = statuses ++ Application.get_env(:raxx, :extra_statuses, [])
-
   for {status_code, reason_phrase} <- statuses do
     reason =
       reason_phrase
@@ -228,12 +230,6 @@ defmodule Raxx do
 
   @doc """
   The RFC7231 specified reason phrase for each known HTTP status code.
-  Extra reason phrases can be defined in raxx config under extra_status.
-
-  For example.
-
-      config :raxx,
-        :extra_statuses, ["422", "Unprocessable Entity"]
 
   ## Examples
 
@@ -243,14 +239,18 @@ defmodule Raxx do
       iex> reason_phrase(500)
       "Internal Server Error"
 
-      iex> reason_phrase(422)
-      "Unprocessable Entity"
+      iex> reason_phrase(999)
+      nil
   """
-  @spec reason_phrase(integer) :: String.t()
+  @spec reason_phrase(integer) :: String.t() | nil
   for {status_code, reason_phrase} <- statuses do
     def reason_phrase(unquote(status_code)) do
       unquote(reason_phrase)
     end
+  end
+
+  def reason_phrase(_) do
+    nil
   end
 
   @doc """

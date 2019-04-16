@@ -21,7 +21,8 @@ defmodule RaxxSession.MixProject do
     [
       {:raxx, "~> 0.18.1"},
       {:cookie, "~> 0.1.1"},
-      {:plug_crypto, "~> 1.0"}
+      {:plug_crypto, "~> 1.0"},
+      {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
 end

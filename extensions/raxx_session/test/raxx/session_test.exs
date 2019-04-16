@@ -14,6 +14,16 @@ defmodule Raxx.SessionTest do
         Raxx.Session.config(key: "my_app_session")
       end)
     end
+
+    test "valid store configuration is required" do
+      assert_raise(ArgumentError, ~r/:secret_key_base/, fn ->
+        Raxx.Session.config(
+          key: "my_app_session",
+          store: Raxx.Session.SignedCookie,
+          salt: "smelling"
+        )
+      end)
+    end
   end
 
   describe "default configuration" do
@@ -39,8 +49,11 @@ defmodule Raxx.SessionTest do
       cookie_string = Raxx.get_header(response, "set-cookie")
       cookie = SetCookie.parse(cookie_string)
       assert cookie.key == "my_app_session"
-      # TODO assert attributes
       session_cookie = cookie.value
+
+      assert map_size(cookie.attributes) == 2
+      assert cookie.attributes.path == "/"
+      assert cookie.attributes.http_only == true
 
       request =
         Raxx.request(:GET, "/")
@@ -55,9 +68,13 @@ defmodule Raxx.SessionTest do
       cookie_string = Raxx.get_header(response, "set-cookie")
       cookie = SetCookie.parse(cookie_string)
       assert cookie.key == "my_app_session"
+      assert "" = cookie.value
+
+      assert map_size(cookie.attributes) == 4
+      assert cookie.attributes.path == "/"
+      assert cookie.attributes.http_only == true
       assert cookie.attributes.expires == "Thu, 01 Jan 1970 00:00:00 GMT"
       assert cookie.attributes.max_age == "0"
-      assert "" = cookie.value
     end
 
     test "request without cookies returns no session", %{config: config} do
@@ -83,6 +100,64 @@ defmodule Raxx.SessionTest do
         |> Raxx.set_header("cookie", Cookie.serialize({"my_app_session", session_cookie}))
 
       assert {:error, _} = Raxx.Session.fetch(request, config)
+    end
+  end
+
+  describe "set cookie options" do
+    setup %{} do
+      config =
+        Raxx.Session.config(
+          key: "my_app_session",
+          store: Raxx.Session.SignedCookie,
+          secret_key_base: "squirrel",
+          salt: "epsom",
+          domain: "other.example",
+          max_age: 123_456_789,
+          path: "some/path",
+          secure: true,
+          # Not sure it's possible to set http_only for false
+          http_only: true,
+          extra: "interesting"
+        )
+
+      {:ok, config: config}
+    end
+
+    test "custom options are sent in the response", %{config: config} do
+      response =
+        Raxx.response(:ok)
+        |> Raxx.Session.put(%{"user" => "other"}, config)
+
+      cookie_string = Raxx.get_header(response, "set-cookie")
+      cookie = SetCookie.parse(cookie_string)
+
+      assert map_size(cookie.attributes) == 7
+      assert cookie.attributes.domain == "other.example"
+      assert cookie.attributes.max_age == "123456789"
+      assert cookie.attributes.path == "some/path"
+      assert cookie.attributes.secure == true
+      assert cookie.attributes.http_only == true
+      assert cookie.attributes.extra == "interesting"
+    end
+
+    # path and domain options not properly handled in cookie library
+    @tag :skip
+    test "appropriate custom options are sent when dropping session", %{config: config} do
+      response =
+        Raxx.response(:ok)
+        |> Raxx.Session.drop(config)
+
+      cookie_string = Raxx.get_header(response, "set-cookie")
+      cookie = SetCookie.parse(cookie_string)
+
+      IO.inspect(cookie.attributes)
+      assert map_size(cookie.attributes) == 7
+      assert cookie.attributes.domain == "other.example"
+      assert cookie.attributes.max_age == "123456789"
+      assert cookie.attributes.path == "some/path"
+      assert cookie.attributes.secure == true
+      assert cookie.attributes.http_only == true
+      assert cookie.attributes.extra == "interesting"
     end
   end
 end

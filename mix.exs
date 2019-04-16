@@ -4,7 +4,7 @@ defmodule Raxx.Mixfile do
   def project do
     [
       app: :raxx,
-      version: "0.18.1",
+      version: "1.0.0",
       elixir: "~> 1.6",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -47,7 +47,7 @@ defmodule Raxx.Mixfile do
 
   defp aliases do
     [
-      test: ["test --exclude deprecations"]
+      test: ["test --exclude deprecations --exclude benchmarks"]
     ]
   end
 end

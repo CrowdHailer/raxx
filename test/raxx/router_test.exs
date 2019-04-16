@@ -60,112 +60,6 @@ defmodule Raxx.RouterTest do
     end
   end
 
-  describe "original routing API" do
-    @describetag :deprecations
-    setup do
-      # the setup makes sure the code that causes warnings only
-      # gets compiled if the deprecations tests are run
-      original_router_module_code = """
-      defmodule OriginalRouter do
-        alias Raxx.RouterTest.HomePage
-        alias Raxx.RouterTest.UsersPage
-        alias Raxx.RouterTest.UserPage
-        alias Raxx.RouterTest.CreateUser
-        alias Raxx.RouterTest.InvalidReturn
-        alias Raxx.RouterTest.NotFoundPage
-
-        use Raxx.Server
-
-        use Raxx.Router, [
-          {%{method: :GET, path: []}, HomePage},
-          {%{method: :GET, path: ["users"]}, UsersPage},
-          {%{method: :GET, path: ["users", _id]}, UserPage},
-          {%{method: :POST, path: ["users"]}, CreateUser},
-          {%{method: :GET, path: ["invalid"]}, InvalidReturn},
-          {%{method: :POST, path: ["invalid"]}, InvalidReturn},
-          {_, NotFoundPage}
-        ]
-      end
-      """
-
-      if !Code.ensure_loaded?(OriginalRouter) do
-        Code.compile_string(original_router_module_code, "nofile")
-      end
-
-      {:ok, %{}}
-    end
-
-    test "will route to homepage" do
-      request = Raxx.request(:GET, "/")
-      {[response], _state} = OriginalRouter.handle_head(request, :state)
-      assert "Home page" == response.body
-    end
-
-    test "will route to fixed segment" do
-      request = Raxx.request(:GET, "/users")
-      {[response], _state} = OriginalRouter.handle_head(request, :state)
-      assert "Users page" == response.body
-    end
-
-    test "will route to variable segment path" do
-      request = Raxx.request(:GET, "/users/34")
-      {[response], _state} = OriginalRouter.handle_head(request, :state)
-      assert "User page 34" == response.body
-    end
-
-    test "will route on method" do
-      request = Raxx.request(:POST, "/users")
-      {[response], _state} = OriginalRouter.handle_head(request, :state)
-      assert "User created " == response.body
-    end
-
-    test "will forward whole request to controller" do
-      request =
-        Raxx.request(:POST, "/users")
-        |> Raxx.set_body(true)
-
-      {[], state} = OriginalRouter.handle_head(request, :state)
-      {[], state} = OriginalRouter.handle_data("Bob", state)
-      {[response], _state} = OriginalRouter.handle_tail([], state)
-      assert "User created Bob" == response.body
-    end
-
-    test "will route on catch all" do
-      request = Raxx.request(:GET, "/random")
-      {[response], _state} = OriginalRouter.handle_head(request, :state)
-      assert "Not found" == response.body
-    end
-
-    test "adds the action module to logger metadata" do
-      request = Raxx.request(:GET, "/")
-      _ = OriginalRouter.handle_head(request, :state)
-      metadata = Logger.metadata()
-      assert "Raxx.RouterTest.HomePage" = Keyword.get(metadata, :"raxx.action")
-      assert "%{method: :GET, path: []}" = Keyword.get(metadata, :"raxx.route")
-    end
-
-    test "will raise return error if fails to route simple request" do
-      request = Raxx.request(:GET, "/invalid")
-
-      assert_raise ReturnError, fn ->
-        OriginalRouter.handle_head(request, :state)
-      end
-    end
-
-    test "will raise return error if fails to route streamed request" do
-      request =
-        Raxx.request(:POST, "/invalid")
-        |> Raxx.set_body(true)
-
-      {[], state} = OriginalRouter.handle_head(request, :state)
-      {[], state} = OriginalRouter.handle_data("Bob", state)
-
-      assert_raise ReturnError, fn ->
-        OriginalRouter.handle_tail([], state)
-      end
-    end
-  end
-
   defmodule AuthorizationMiddleware do
     use Raxx.Middleware
     alias Raxx.Server
@@ -312,15 +206,6 @@ defmodule Raxx.RouterTest do
       request = Raxx.request(:GET, "/random")
       {[response], _state} = SectionRouter.handle_head(request, %{authorization: :pass})
       assert "Not found" == response.body
-    end
-
-    @tag :skip
-    test "adds the action module to logger metadata" do
-      request = Raxx.request(:GET, "/")
-      _ = SectionRouter.handle_head(request, %{authorization: :pass})
-      metadata = Logger.metadata()
-      assert "Raxx.RouterTest.HomePage" = Keyword.get(metadata, :"raxx.action")
-      assert "%{method: :GET, path: []}" = Keyword.get(metadata, :"raxx.route")
     end
 
     test "will raise return error if fails to route simple request" do

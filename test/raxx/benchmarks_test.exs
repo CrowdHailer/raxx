@@ -4,10 +4,9 @@ defmodule Raxx.BenchmarksTest do
   @moduledoc """
   To run the benchmarks do
 
-      mix test --only benchmark --include skip
+      mix test --only benchmarks
   """
-  @moduletag :skip
-  @moduletag :benchmark
+  @moduletag :benchmarks
 
   # some benchmarks take more than the default timeout of minute
   @moduletag timeout: 10 * 60 * 1_000

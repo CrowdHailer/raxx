@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 
 - Config option for `:extra_statuses` removed.
+- `Raxx.reason_phrase/1` returns `nil` for unknown status code.
 - Warnings given when using `Raxx.Server` and `Raxx.Router` in the same module.
 - Warnings given for implementing `handle_request/2` in a module using `Raxx.Server`.
 

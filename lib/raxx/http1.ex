@@ -750,7 +750,7 @@ defmodule Raxx.HTTP1 do
       "HTTP/1.1 ",
       Integer.to_string(status),
       " ",
-      Raxx.reason_phrase(status),
+      Raxx.reason_phrase(status) || "",
       @crlf
     ]
   end

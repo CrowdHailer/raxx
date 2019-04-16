@@ -238,12 +238,19 @@ defmodule Raxx do
 
       iex> reason_phrase(500)
       "Internal Server Error"
+
+      iex> reason_phrase(999)
+      nil
   """
-  @spec reason_phrase(integer) :: String.t()
+  @spec reason_phrase(integer) :: String.t() | nil
   for {status_code, reason_phrase} <- statuses do
     def reason_phrase(unquote(status_code)) do
       unquote(reason_phrase)
     end
+  end
+
+  def reason_phrase(_) do
+    nil
   end
 
   @doc """

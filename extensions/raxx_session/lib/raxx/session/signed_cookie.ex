@@ -24,7 +24,9 @@ defmodule Raxx.Session.SignedCookie do
     secret_key_base ||
       raise ArgumentError, "#{__MODULE__} requires the :secret_key_base option to be set"
 
-    {salt, options} = Keyword.pop(options, :salt)
+    validate_secret_key_base(secret_key_base)
+
+    {salt, _options} = Keyword.pop(options, :salt)
     salt || raise ArgumentError, "#{__MODULE__} requires the :salt option to be set"
 
     %__MODULE__{secret_key_base: secret_key_base, salt: salt}

@@ -32,7 +32,7 @@ defmodule Raxx.SessionTest do
         Raxx.Session.config(
           key: "my_app_session",
           store: Raxx.Session.SignedCookie,
-          secret_key_base: "squirrel",
+          secret_key_base: String.duplicate("squirrel", 8),
           salt: "epsom"
         )
 
@@ -109,7 +109,7 @@ defmodule Raxx.SessionTest do
         Raxx.Session.config(
           key: "my_app_session",
           store: Raxx.Session.SignedCookie,
-          secret_key_base: "squirrel",
+          secret_key_base: String.duplicate("squirrel", 8),
           salt: "epsom",
           domain: "other.example",
           max_age: 123_456_789,
@@ -140,8 +140,6 @@ defmodule Raxx.SessionTest do
       assert cookie.attributes.extra == "interesting"
     end
 
-    # path and domain options not properly handled in cookie library
-    @tag :skip
     test "appropriate custom options are sent when dropping session", %{config: config} do
       response =
         Raxx.response(:ok)
@@ -150,10 +148,10 @@ defmodule Raxx.SessionTest do
       cookie_string = Raxx.get_header(response, "set-cookie")
       cookie = SetCookie.parse(cookie_string)
 
-      IO.inspect(cookie.attributes)
       assert map_size(cookie.attributes) == 7
       assert cookie.attributes.domain == "other.example"
-      assert cookie.attributes.max_age == "123456789"
+      assert cookie.attributes.expires == "Thu, 01 Jan 1970 00:00:00 GMT"
+      assert cookie.attributes.max_age == "0"
       assert cookie.attributes.path == "some/path"
       assert cookie.attributes.secure == true
       assert cookie.attributes.http_only == true

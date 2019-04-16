@@ -101,6 +101,6 @@ defmodule Raxx.Session do
   """
   def drop(response, config = %__MODULE__{}) do
     # Needs to delete from store if we are doing that
-    Raxx.set_header(response, "set-cookie", SetCookie.expire(config.key))
+    Raxx.set_header(response, "set-cookie", SetCookie.expire(config.key, config.cookie_options))
   end
 end

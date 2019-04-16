@@ -190,6 +190,10 @@ defmodule Raxx do
 
       iex> response(200).body
       false
+
+      # works for custom status codes
+      iex> response(299).status
+      299
   """
   @spec response(status) :: Raxx.Response.t()
   def response(status_code) when is_integer(status_code) do

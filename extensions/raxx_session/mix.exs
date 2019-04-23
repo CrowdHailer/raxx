@@ -19,7 +19,7 @@ defmodule RaxxSession.MixProject do
 
   defp deps do
     [
-      {:raxx, "~> 0.18.1"},
+      {:raxx, "~> 1.0"},
       {:cookie, "~> 0.1.1"},
       {:plug_crypto, "~> 1.0"},
       {:ex_doc, ">= 0.0.0", only: :dev}

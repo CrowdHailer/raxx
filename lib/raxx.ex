@@ -392,8 +392,15 @@ defmodule Raxx do
       iex> request(:GET, "https://www.example.com/hello")
       ...> |> request_port()
       443
+
+      iex> request(:GET, "http://www.example.com/hello")
+      ...> |> request_port(%{http: 8080})
+      8080
   """
+  @spec request_port(Raxx.Request.t(), %{optional(atom) => :inet.port_number()}) ::
+          :inet.port_number()
   defdelegate request_port(request), to: Raxx.Request, as: :port
+  defdelegate request_port(request, default_ports), to: Raxx.Request, as: :port
 
   @doc """
   Add a query value to a request

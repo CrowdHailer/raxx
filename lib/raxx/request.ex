@@ -67,14 +67,17 @@ defmodule Raxx.Request do
     hd(String.split(authority, ":"))
   end
 
+  @spec port(t, %{optional(atom) => :inet.port_number()}) :: :inet.port_number()
   def port(%__MODULE__{scheme: scheme, authority: authority}, default_ports \\ @default_ports) do
     case String.split(authority, ":") do
       [_host] ->
         Map.get(default_ports, scheme)
 
       [_host, port_string] ->
-        {port, _} = Integer.parse(port_string)
-        port
+        case Integer.parse(port_string) do
+          {port, _} when port in 0..65535 ->
+            port
+        end
     end
   end
 end

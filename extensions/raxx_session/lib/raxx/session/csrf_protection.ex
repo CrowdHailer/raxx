@@ -3,35 +3,35 @@ defmodule Raxx.Session.CSRFProtection do
   @token_size 16
   @encoded_token_size 24
   @double_encoded_token_size 32
-  #   # TODO configure key
-  #   # TODO error for not a map
-  # Move because it's not part of protection??
+
   def safe_request?(%{method: method}) when method in @unprotected_methods, do: true
   def safe_request?(_), do: false
 
-  def verify(%{}, nil), do: {:error, :csrf_missing}
+  def verify(_, nil), do: {:error, :csrf_missing}
 
-  def verify(session = %{}, user_token) when is_binary(user_token) do
-    if valid_csrf_token?(session._csrf_token, user_token) do
+  def verify(session, user_token) when is_binary(user_token) do
+    if valid_csrf_token?(session_token(session), user_token) do
       {:ok, session}
     end
   end
 
-  def get_csrf_token(nil), do: get_csrf_token(%{})
-
   def get_csrf_token(session = %{}) do
-    case Map.fetch(session, :_csrf_token) do
-      {:ok, key} ->
-        # TODO check key, raise error
-        {key, session}
+    case session_token(session) do
+      # If not the right size then _csrf_token field has been modified
+      csrf_token when is_binary(csrf_token) and byte_size(csrf_token) == @encoded_token_size ->
+        user_token = mask(csrf_token)
+        {user_token, session}
 
-      :error ->
+      nil ->
         csrf_token = generate_token()
         session = Map.put(session, :_csrf_token, csrf_token)
         user_token = mask(csrf_token)
         {user_token, session}
     end
   end
+
+  defp session_token(nil), do: nil
+  defp session_token(session = %{}), do: Map.get(session, :_csrf_token)
 
   defp valid_csrf_token?(
          <<csrf_token::@encoded_token_size-binary>>,
@@ -52,7 +52,3 @@ defmodule Raxx.Session.CSRFProtection do
     Base.encode64(:crypto.strong_rand_bytes(@token_size))
   end
 end
-
-#
-# # If you want to check session in handle head and csrf is in body use unprotected and know what your doing
-# # plug doesn't let you do this because protect middleware will wait for body

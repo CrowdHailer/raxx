@@ -17,6 +17,8 @@ defmodule Raxx.Session.CSRFProtection do
     end
   end
 
+  def get_csrf_token(nil), do: get_csrf_token(%{})
+
   def get_csrf_token(session = %{}) do
     case Map.fetch(session, :_csrf_token) do
       {:ok, key} ->

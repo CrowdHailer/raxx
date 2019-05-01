@@ -1,9 +1,9 @@
 defmodule Raxx.Session do
   @moduledoc """
-  Working with sessions in Raxx applications.
 
-  A session is extracted from a request using `fetch/2`.
-  They can be updated or dropped by using `put/3` or `drop/2` on a response.
+  A session is extracted from a request using `extract/2`.
+  An updated session is sent the the client using `embed/3` or a response
+  To expire a session use `expire/2` on a response.
 
   ## Configuration
 
@@ -50,15 +50,39 @@ defmodule Raxx.Session do
     %__MODULE__{key: key, store: store, cookie_options: cookie_options}
   end
 
-  # get, fetch that just drops error, not a deep API
+  # get, extract that just expires error, not a deep API
+
   @doc """
-  Fetch a session from a request.
+  Extract a session from a request.
 
   Returns `{:ok, nil}` if session cookie is not set.
   When session cookie is set but cannot be decoded or is tampered with an error will be returned.
   """
-  def fetch(request, config = %__MODULE__{}) do
+
+  def extract(request, config = %__MODULE__{}) do
+    extract(request, Raxx.get_header(request, "x-csrf-token"), config)
+  end
+
+  def extract(request, user_token, config = %__MODULE__{}) do
+    case unprotected_extract(request, config) do
+      {:ok, session} ->
+        if __MODULE__.CSRFProtection.safe_request?(request) do
+          {:ok, session}
+        else
+          __MODULE__.CSRFProtection.verify(session, user_token)
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defdelegate get_csrf_token(session), to: __MODULE__.CSRFProtection
+
+  # session works with any type
+  defp unprotected_extract(request, config = %__MODULE__{}) do
     case fetch_cookie(request, config.key) do
+      # pass nil through, might want to set up an id
       {:ok, nil} ->
         {:ok, nil}
 
@@ -85,7 +109,7 @@ defmodule Raxx.Session do
 
   The whole session object must be passed to this function.
   """
-  def put(response, session, config = %__MODULE__{}) do
+  def embed(response, session, config = %__MODULE__{}) do
     store = %store_mod{} = config.store
     session_string = store_mod.put(session, store)
 
@@ -99,8 +123,39 @@ defmodule Raxx.Session do
   @doc """
   Instruct a client to end a session.
   """
-  def drop(response, config = %__MODULE__{}) do
+  def expire(response, config = %__MODULE__{}) do
     # Needs to delete from store if we are doing that
     Raxx.set_header(response, "set-cookie", SetCookie.expire(config.key, config.cookie_options))
+  end
+
+  @doc """
+  Add a message into a sessions flash.
+
+  Any key can be used for the message, however `:info` and `:error` are common.
+  """
+  def put_flash(session, key, message) when is_atom(key) and is_binary(message) do
+    session = session || %{}
+    flash = Map.get(session, :_flash, %{})
+    Map.put(session, :_flash, Map.put(flash, key, message))
+  end
+
+  @doc """
+  Returns all the flash messages in a users session.
+
+  This will be a map of `%{key => message}` set using `put_flash/3`.
+  The returned session will have no flash messages.
+  Remember this session must be embedded in the response otherwise flashes will be seen twice.
+  """
+  def pop_flash(session) do
+    session = session || %{}
+    Map.pop(session, :_flash, %{})
+  end
+
+  @doc """
+  Extract and discard all flash messages in a users session.
+  """
+  def clear_flash(session) do
+    {_flash, session} = pop_flash(session)
+    session
   end
 end

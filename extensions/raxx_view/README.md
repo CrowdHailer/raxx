@@ -2,7 +2,7 @@
 
 **Generate HTML views from `.eex` template files for Raxx web applications.**
 
-[![Hex pm](http://img.shields.io/hexpm/v/raxx.svg?style=flat)](https://hex.pm/packages/raxx_view)
+[![Hex pm](http://img.shields.io/hexpm/v/raxx_view.svg?style=flat)](https://hex.pm/packages/raxx_view)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 - [Install from hex.pm](https://hex.pm/packages/raxx_view)

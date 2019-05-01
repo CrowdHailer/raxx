@@ -125,4 +125,17 @@ defmodule Raxx.Session do
     # Needs to delete from store if we are doing that
     Raxx.set_header(response, "set-cookie", SetCookie.expire(config.key, config.cookie_options))
   end
+
+  def put_flash(session, key, message) when is_atom(key) and is_binary(message) do
+    flash = Map.get(session, :_flash, %{})
+    Map.put(session, :_flash, Map.put(flash, key, message))
+  end
+
+  def pop_flash(session, key) when is_atom(key) do
+    Map.pop(session, :_flash, %{})
+  end
+
+  def clear_flash(session) do
+    Map.delete(session, :_flash)
+  end
 end

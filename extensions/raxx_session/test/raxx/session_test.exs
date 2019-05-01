@@ -39,7 +39,7 @@ defmodule Raxx.SessionTest do
       {:ok, config: config}
     end
 
-    test "can put, fetch and expire a session", %{config: config} do
+    test "can fetch an unprotected session from safe request", %{config: config} do
       session = %{"user" => "friend"}
 
       response =
@@ -60,7 +60,57 @@ defmodule Raxx.SessionTest do
         |> Raxx.set_header("cookie", Cookie.serialize({"my_app_session", session_cookie}))
 
       assert {:ok, ^session} = Raxx.Session.fetch(request, config)
+    end
 
+    test "can fetch a protected session from unsafe request", %{config: config} do
+      session = %{"user" => "friend"}
+      {token, session} = Raxx.Session.get_csrf_token(session)
+
+      response =
+        Raxx.response(:ok)
+        |> Raxx.Session.put(session, config)
+
+      cookie_string = Raxx.get_header(response, "set-cookie")
+      cookie = SetCookie.parse(cookie_string)
+      assert cookie.key == "my_app_session"
+      session_cookie = cookie.value
+
+      assert map_size(cookie.attributes) == 2
+      assert cookie.attributes.path == "/"
+      assert cookie.attributes.http_only == true
+
+      request =
+        Raxx.request(:POST, "/")
+        |> Raxx.set_header("x-csrf-token", token)
+        |> Raxx.set_header("cookie", Cookie.serialize({"my_app_session", session_cookie}))
+
+      assert {:ok, ^session} = Raxx.Session.fetch(request, config)
+    end
+
+    test "cant fetch an unprotected session from unsafe request", %{config: config} do
+      session = %{"user" => "friend"}
+
+      response =
+        Raxx.response(:ok)
+        |> Raxx.Session.put(session, config)
+
+      cookie_string = Raxx.get_header(response, "set-cookie")
+      cookie = SetCookie.parse(cookie_string)
+      assert cookie.key == "my_app_session"
+      session_cookie = cookie.value
+
+      assert map_size(cookie.attributes) == 2
+      assert cookie.attributes.path == "/"
+      assert cookie.attributes.http_only == true
+
+      request =
+        Raxx.request(:POST, "/")
+        |> Raxx.set_header("cookie", Cookie.serialize({"my_app_session", session_cookie}))
+
+      assert {:error, :csrf_missing} = Raxx.Session.fetch(request, config)
+    end
+
+    test "can expire a session", %{config: config} do
       response =
         Raxx.response(:ok)
         |> Raxx.Session.drop(config)

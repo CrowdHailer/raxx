@@ -57,8 +57,30 @@ defmodule Raxx.Session do
   Returns `{:ok, nil}` if session cookie is not set.
   When session cookie is set but cannot be decoded or is tampered with an error will be returned.
   """
+
   def fetch(request, config = %__MODULE__{}) do
+    fetch(request, Raxx.get_header(request, "x-csrf-token"), config)
+  end
+
+  def fetch(request, user_token, config = %__MODULE__{}) do
+    case unprotected_fetch(request, config) do
+      {:ok, session} ->
+        if __MODULE__.CSRFProtection.safe_request?(request) do
+          {:ok, session}
+        else
+          __MODULE__.CSRFProtection.verify(session, user_token)
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defdelegate get_csrf_token(session), to: __MODULE__.CSRFProtection
+
+  defp unprotected_fetch(request, config = %__MODULE__{}) do
     case fetch_cookie(request, config.key) do
+      # pass nil through, might want to set up an id
       {:ok, nil} ->
         {:ok, nil}
 

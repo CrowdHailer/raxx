@@ -59,6 +59,7 @@ defmodule Raxx.View.Layout do
   defmacro __using__(options) do
     {options, []} = Module.eval_quoted(__CALLER__, options)
     {imports, options} = Keyword.pop_first(options, :imports)
+    {layout_optional, options} = Keyword.pop_first(options, :optional)
 
     imports =
       case imports do
@@ -86,13 +87,14 @@ defmodule Raxx.View.Layout do
 
     layout_template = Path.expand(layout_template, Path.dirname(__CALLER__.file))
 
-    quote do
+    quote location: :keep do
       import EExHTML
       import Raxx.View, only: [partial: 2, partial: 3]
 
       defmacro __using__(options) do
         imports = unquote(imports)
         layout_template = unquote(layout_template)
+        layout_optional = unquote(layout_optional)
 
         imports =
           for i <- imports do
@@ -101,9 +103,17 @@ defmodule Raxx.View.Layout do
             end
           end
 
-        quote do
+        {view_optional, options} = Keyword.pop(options, :optional)
+        optional_arguments = Keyword.merge(layout_optional, view_optional)
+
+        quote location: :keep do
           unquote(imports)
-          use Raxx.View, Keyword.merge([layout: unquote(layout_template)], unquote(options))
+
+          use Raxx.View,
+              Keyword.merge(
+                [layout: unquote(layout_template), optional: unquote(optional_arguments)],
+                unquote(options)
+              )
         end
       end
     end

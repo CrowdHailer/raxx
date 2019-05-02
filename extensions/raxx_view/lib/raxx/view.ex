@@ -82,6 +82,7 @@ defmodule Raxx.View do
     {options, []} = Module.eval_quoted(__CALLER__, options)
 
     {arguments, options} = Keyword.pop_first(options, :arguments, [])
+    {optional_arguments, options} = Keyword.pop_first(options, :optional, [])
 
     {page_template, options} =
       Keyword.pop_first(options, :template, Raxx.View.template_for(__CALLER__.file))
@@ -105,6 +106,20 @@ defmodule Raxx.View do
       end
 
     arguments = Enum.map(arguments, fn a when is_atom(a) -> {a, [line: 1], nil} end)
+
+    optional_bindings =
+      for {arg, _value} when is_atom(arg) <- optional_arguments do
+        {arg, {arg, [], nil}}
+      end
+
+    optional_bindings = {:%{}, [], optional_bindings}
+
+    optional_values =
+      for {arg, value} when is_atom(arg) <- optional_arguments do
+        {arg, value}
+      end
+
+    optional_values = {:%{}, [], optional_values}
 
     compiled_page = EEx.compile_file(page_template, engine: EExHTML.Engine)
 
@@ -145,13 +160,24 @@ defmodule Raxx.View do
 
       @external_resource unquote(page_template)
       @file unquote(page_template)
-      def render(request, unquote_splicing(arguments)) do
+      def render(request, unquote_splicing(arguments), optional) do
         request
         |> Raxx.set_header("content-type", "text/html")
-        |> Raxx.set_body(html(unquote_splicing(arguments)).data)
+        |> Raxx.set_body(html(unquote_splicing(arguments), optional).data)
       end
 
-      def html(unquote_splicing(arguments)) do
+      def html(unquote_splicing(arguments), optional \\ []) do
+        optional =
+          case Keyword.split(optional, Map.keys(unquote(optional_values))) do
+            {optional, []} ->
+              optional
+
+            {_, unexpected} ->
+              raise ArgumentError,
+                    "Unexpect optional variables '#{Enum.join(Keyword.keys(unexpected), ", ")}'"
+          end
+
+        unquote(optional_bindings) = Enum.into(optional, unquote(optional_values))
         # NOTE from eex_html >= 0.2.0 the content will already be wrapped as safe.
         EExHTML.raw(unquote(compiled))
       end

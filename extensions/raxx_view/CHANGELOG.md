@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.5](https://github.com/CrowdHailer/raxx/tree/1.0.0) - 2019-05-02
+
+### Added
+
+- Both `Raxx.View` and `Raxx.View.Layout` have `:optional` for variables with default values.
+
 ## [0.1.4](https://github.com/CrowdHailer/raxx/tree/1.0.0) - 2019-04-16
 
 ### Added

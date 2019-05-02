@@ -15,7 +15,7 @@ defmodule Raxx.Session.CSRFProtection do
     end
   end
 
-  def get_csrf_token(session = %{}) do
+  def get_csrf_token(session) do
     case session_token(session) do
       # If not the right size then _csrf_token field has been modified
       csrf_token when is_binary(csrf_token) and byte_size(csrf_token) == @encoded_token_size ->
@@ -24,7 +24,7 @@ defmodule Raxx.Session.CSRFProtection do
 
       nil ->
         csrf_token = generate_token()
-        session = Map.put(session, :_csrf_token, csrf_token)
+        session = Map.put(session || %{}, :_csrf_token, csrf_token)
         user_token = mask(csrf_token)
         {user_token, session}
     end

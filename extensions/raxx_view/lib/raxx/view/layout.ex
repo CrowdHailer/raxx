@@ -87,7 +87,7 @@ defmodule Raxx.View.Layout do
 
     layout_template = Path.expand(layout_template, Path.dirname(__CALLER__.file))
 
-    quote location: :keep do
+    quote do
       import EExHTML
       import Raxx.View, only: [partial: 2, partial: 3]
 
@@ -106,7 +106,7 @@ defmodule Raxx.View.Layout do
         {view_optional, options} = Keyword.pop(options, :optional)
         optional_arguments = Keyword.merge(layout_optional, view_optional)
 
-        quote location: :keep do
+        quote do
           unquote(imports)
 
           use Raxx.View,

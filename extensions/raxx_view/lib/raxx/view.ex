@@ -177,7 +177,6 @@ defmodule Raxx.View do
                     "Unexpect optional variables '#{Enum.join(Keyword.keys(unexpected), ", ")}'"
           end
 
-        # Might want to handle unexpected keys
         unquote(optional_bindings) = Enum.into(optional, unquote(optional_values))
         # NOTE from eex_html >= 0.2.0 the content will already be wrapped as safe.
         EExHTML.raw(unquote(compiled))

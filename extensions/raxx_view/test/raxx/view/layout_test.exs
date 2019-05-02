@@ -10,7 +10,7 @@ defmodule Raxx.View.LayoutTest do
   defmodule DefaultLayout do
     use Raxx.View.Layout,
       imports: [__MODULE__, Helpers],
-      optional: [foo: "foo", bar: "foo"]
+      optional: [foo: "foo", bar: "foo", nested: %{inner: "inner"}]
 
     def layout_function() do
       "layout_function"
@@ -25,12 +25,13 @@ defmodule Raxx.View.LayoutTest do
   end
 
   test "List of imports are available in template" do
-    assert ["foobar", "7", "layout_function", "helper_function"] =
+    assert ["foobar", "inner", "7", "layout_function", "helper_function"] =
              lines("#{DefaultLayoutExample.html(3, 4)}")
   end
 
+  # Inner checks that non primitive values can be set as defaults
   test "optional arguments can be overwritten in layout" do
-    assert ["bazbaz", "7", "layout_function", "helper_function"] =
+    assert ["bazbaz", "inner", "7", "layout_function", "helper_function"] =
              lines("#{DefaultLayoutExample.html(3, 4, foo: "baz", bar: "baz")}")
   end
 

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.7](https://github.com/CrowdHailer/raxx/tree/1.0.0) - 2019-05-02
+
+### Fixed
+
+- Escape values provided as optional variables in templates, so that non primitive values can be used.
+
 ## [0.1.6](https://github.com/CrowdHailer/raxx/tree/1.0.0) - 2019-05-02
 
 ### Fixed

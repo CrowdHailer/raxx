@@ -94,7 +94,7 @@ defmodule Raxx.View.Layout do
       defmacro __using__(options) do
         imports = unquote(imports)
         layout_template = unquote(layout_template)
-        layout_optional = unquote(layout_optional)
+        layout_optional = unquote(Macro.escape(layout_optional))
 
         imports =
           for i <- imports do
@@ -104,14 +104,17 @@ defmodule Raxx.View.Layout do
           end
 
         {view_optional, options} = Keyword.pop(options, :optional, [])
-        optional_arguments = Keyword.merge(layout_optional, view_optional)
+        optional_arguments = Macro.escape(Keyword.merge(layout_optional, view_optional))
 
         quote do
           unquote(imports)
 
           use Raxx.View,
               Keyword.merge(
-                [layout: unquote(layout_template), optional: unquote(optional_arguments)],
+                [
+                  layout: unquote(layout_template),
+                  optional: unquote(optional_arguments)
+                ],
                 unquote(options)
               )
         end

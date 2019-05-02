@@ -116,7 +116,7 @@ defmodule Raxx.View do
 
     optional_values =
       for {arg, value} when is_atom(arg) <- optional_arguments do
-        {arg, value}
+        {arg, Macro.escape(value)}
       end
 
     optional_values = {:%{}, [], optional_values}

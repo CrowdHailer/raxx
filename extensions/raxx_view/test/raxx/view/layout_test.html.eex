@@ -1,2 +1,3 @@
 <%= foo %><%= bar %>
 <%= __content__ %>
+<%= __ENV__.file %>:<%= __ENV__.line %>

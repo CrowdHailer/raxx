@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.6](https://github.com/CrowdHailer/raxx/tree/1.0.0) - 2019-05-02
+
+### Fixed
+
+- Fix bug so that `:optional` argument doesn't have to be provided in layout.
+
 ## [0.1.5](https://github.com/CrowdHailer/raxx/tree/1.0.0) - 2019-05-02
 
 ### Added

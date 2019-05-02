@@ -160,7 +160,7 @@ defmodule Raxx.View do
 
       @external_resource unquote(page_template)
       @file unquote(page_template)
-      def render(request, unquote_splicing(arguments), optional) do
+      def render(request, unquote_splicing(arguments), optional \\ []) do
         request
         |> Raxx.set_header("content-type", "text/html")
         |> Raxx.set_body(html(unquote_splicing(arguments), optional).data)

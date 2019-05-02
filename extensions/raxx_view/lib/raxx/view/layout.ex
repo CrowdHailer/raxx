@@ -59,7 +59,7 @@ defmodule Raxx.View.Layout do
   defmacro __using__(options) do
     {options, []} = Module.eval_quoted(__CALLER__, options)
     {imports, options} = Keyword.pop_first(options, :imports)
-    {layout_optional, options} = Keyword.pop_first(options, :optional)
+    {layout_optional, options} = Keyword.pop_first(options, :optional, [])
 
     imports =
       case imports do
@@ -103,7 +103,7 @@ defmodule Raxx.View.Layout do
             end
           end
 
-        {view_optional, options} = Keyword.pop(options, :optional)
+        {view_optional, options} = Keyword.pop(options, :optional, [])
         optional_arguments = Keyword.merge(layout_optional, view_optional)
 
         quote do

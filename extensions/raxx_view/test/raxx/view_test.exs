@@ -29,7 +29,11 @@ defmodule Raxx.ViewTest do
              lines("#{DefaultTemplate.html("foo", opt: "overwrite")}")
   end
 
-  # TODO check if unexpected arguments are given
+  test "Unexpected optional arguments are an error" do
+    assert_raise ArgumentError, "Unexpect optional variables 'random'", fn ->
+      DefaultTemplate.html("foo", random: "random")
+    end
+  end
 
   test "HTML content is escaped" do
     assert "&lt;p&gt;" = hd(lines("#{DefaultTemplate.html("<p>")}"))

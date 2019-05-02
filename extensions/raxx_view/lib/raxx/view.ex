@@ -167,6 +167,16 @@ defmodule Raxx.View do
       end
 
       def html(unquote_splicing(arguments), optional \\ []) do
+        optional =
+          case Keyword.split(optional, Map.keys(unquote(optional_values))) do
+            {optional, []} ->
+              optional
+
+            {_, unexpected} ->
+              raise ArgumentError,
+                    "Unexpect optional variables '#{Enum.join(Keyword.keys(unexpected), ", ")}'"
+          end
+
         # Might want to handle unexpected keys
         unquote(optional_bindings) = Enum.into(optional, unquote(optional_values))
         # NOTE from eex_html >= 0.2.0 the content will already be wrapped as safe.

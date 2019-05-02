@@ -25,13 +25,18 @@ defmodule Raxx.View.LayoutTest do
   end
 
   test "List of imports are available in template" do
-    assert ["foobar", "7", "layout_function", "helper_function"] =
+    assert ["foobar", "7", "layout_function", "helper_function" | _] =
              lines("#{DefaultLayoutExample.html(3, 4)}")
   end
 
   test "optional arguments can be overwritten in layout" do
-    assert ["bazbaz", "7", "layout_function", "helper_function"] =
-             lines("#{DefaultLayoutExample.html(3, 4, foo: "baz", bar: "baz")}")
+    assert ["bazbaz" | _] = lines("#{DefaultLayoutExample.html(3, 4, foo: "baz", bar: "baz")}")
+  end
+
+  test "File and line information is correct" do
+    assert [_, _, _, _, view_file, layout_file] = lines("#{DefaultLayoutExample.html(3, 4)}")
+    assert Path.join(__DIR__, "/layout_test_example.html.eex") <> ":4" == view_file
+    assert Path.join(__DIR__, "/layout_test.html.eex") <> ":3" == layout_file
   end
 
   defp lines(text) do

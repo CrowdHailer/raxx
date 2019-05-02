@@ -1,3 +1,4 @@
 <%= x + y %>
 <%= layout_function() %>
 <%= helper_function() %>
+<%= __ENV__.file %>:<%= __ENV__.line %>

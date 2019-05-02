@@ -2,12 +2,13 @@ defmodule Raxx.ViewTest do
   use ExUnit.Case
 
   defmodule DefaultTemplate do
-    use Raxx.View, arguments: [:var]
+    use Raxx.View, arguments: [:var], optional: [opt: "opt"]
     defp private(), do: "DefaultTemplate"
   end
 
   defmodule WithLayout do
-    use Raxx.View, arguments: [:var], layout: "view_test_layout.html.eex"
+    use Raxx.View, arguments: [:var], optional: [opt: "opt"], layout: "view_test_layout.html.eex"
+
     defp private(), do: "WithLayout"
   end
 
@@ -20,8 +21,15 @@ defmodule Raxx.ViewTest do
   end
 
   test "Arguments and private module functions are available in templated" do
-    assert ["foo", "DefaultTemplate"] = lines("#{DefaultTemplate.html("foo")}")
+    assert ["foo", "opt", "DefaultTemplate"] = lines("#{DefaultTemplate.html("foo")}")
   end
+
+  test "Optional arguments can be overwritten" do
+    assert ["foo", "overwrite", "DefaultTemplate"] =
+             lines("#{DefaultTemplate.html("foo", opt: "overwrite")}")
+  end
+
+  # TODO check if unexpected arguments are given
 
   test "HTML content is escaped" do
     assert "&lt;p&gt;" = hd(lines("#{DefaultTemplate.html("<p>")}"))
@@ -34,14 +42,14 @@ defmodule Raxx.ViewTest do
   test "Render will set content-type and body" do
     response =
       Raxx.response(:ok)
-      |> DefaultTemplate.render("bar")
+      |> DefaultTemplate.render("bar", opt: "overwrite")
 
-    assert ["bar", "DefaultTemplate"] = lines(response.body)
-    assert [{"content-type", "text/html"}, {"content-length", "20"}] = response.headers
+    assert ["bar", "overwrite", "DefaultTemplate"] = lines(response.body)
+    assert [{"content-type", "text/html"}, {"content-length", "30"}] = response.headers
   end
 
   test "View can be rendered within a layout" do
-    assert ["LAYOUT", "baz", "WithLayout"] = lines("#{WithLayout.html("baz")}")
+    assert ["LAYOUT", "baz", "opt", "WithLayout"] = lines("#{WithLayout.html("baz")}")
   end
 
   test "Default template can changed" do

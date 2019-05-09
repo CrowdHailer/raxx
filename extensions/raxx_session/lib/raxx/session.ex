@@ -83,7 +83,8 @@ defmodule Raxx.Session do
   defdelegate get_csrf_token(session), to: __MODULE__.CSRFProtection
 
   # session works with any type
-  defp unprotected_extract(request, config = %__MODULE__{}) do
+  @doc false
+  def unprotected_extract(request, config = %__MODULE__{}) do
     case fetch_cookie(request, config.key) do
       # pass nil through, might want to set up an id
       {:ok, nil} ->

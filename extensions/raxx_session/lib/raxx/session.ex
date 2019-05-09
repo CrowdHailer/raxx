@@ -65,6 +65,9 @@ defmodule Raxx.Session do
 
   def extract(request, user_token, config = %__MODULE__{}) do
     case unprotected_extract(request, config) do
+      {:ok, nil} ->
+        {:ok, nil}
+
       {:ok, session} ->
         if __MODULE__.CSRFProtection.safe_request?(request) do
           {:ok, session}

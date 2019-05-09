@@ -110,6 +110,11 @@ defmodule Raxx.SessionTest do
       assert {:error, :csrf_missing} = Raxx.Session.extract(request, config)
     end
 
+    test "protection is not checked when there is no session", %{config: config} do
+      request = Raxx.request(:POST, "/")
+      assert {:ok, nil} = Raxx.Session.extract(request, config)
+    end
+
     test "can expire a session", %{config: config} do
       response =
         Raxx.response(:ok)

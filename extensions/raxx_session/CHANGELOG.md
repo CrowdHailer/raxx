@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- new store `Raxx.Session.EncryptedCookie`, compatible with Plug sessions
+- new store `Raxx.Session.EncryptedCookie`, compatible with Plug sessions.
 
 ## [0.2.3](#) - 2019-05-09
 

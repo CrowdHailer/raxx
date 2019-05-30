@@ -1,5 +1,5 @@
 defmodule Raxx.SessionTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Raxx.Session
 
   describe "configuration" do

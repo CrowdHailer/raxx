@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## next
+
+### Added
+
+- new store `Raxx.Session.EncryptedCookie`, compatible with Plug sessions
+
 ## [0.2.3](#) - 2019-05-09
 
 ### Added

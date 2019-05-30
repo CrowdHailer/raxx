@@ -3,15 +3,16 @@ defmodule Raxx.Session.SignedCookie do
   Stores the session in a signed cookie.
 
   **Note: the contents of the cookie can be viewed by the client,
-  an encrypted cookie store must be used to hide data from client.**
+  an encrypted cookie store must be used to hide data from client.
+  See `Raxx.Session.EncryptedCookie`.**
 
   This module is not normally used directly.
   Instead see `Raxx.Session` and use this module as the `:store` option.
 
   ## Options
 
-    - `:secret_key_base` - used to generate the signing key
-    - `:salt` - a salt used with `secret_key_base` to generate a key for signing/verifying a cookie.
+  - `:secret_key_base` - used to generate the signing key
+  - `:salt` - a salt used with `secret_key_base` to generate a key for signing/verifying a cookie.
 
   TODO support key generation options, currently sensible defaults are used.
   """
@@ -48,7 +49,7 @@ defmodule Raxx.Session.SignedCookie do
     end
   end
 
-  def put(session, config) do
+  def put(session, config = %__MODULE__{}) do
     binary = :erlang.term_to_binary(session)
     Plug.Crypto.MessageVerifier.sign(binary, key(config))
   end

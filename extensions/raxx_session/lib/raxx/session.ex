@@ -10,7 +10,7 @@ defmodule Raxx.Session do
   All session functions take a configuration as a parameter.
   To check configuration only one it is best to configure a session, and it's store, at startup.
 
-  When using the `SignedCookie` store then sessions are compatible with sessions from plug applications.
+  When using the `SignedCookie` or `EncryptedCookie` store then sessions are compatible with sessions from plug applications.
 
   ## Options
 

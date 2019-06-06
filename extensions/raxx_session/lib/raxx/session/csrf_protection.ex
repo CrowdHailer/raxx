@@ -10,8 +10,15 @@ defmodule Raxx.Session.CSRFProtection do
   def verify(_, nil), do: {:error, :csrf_missing}
 
   def verify(session, user_token) when is_binary(user_token) do
-    if valid_csrf_token?(session_token(session), user_token) do
-      {:ok, session}
+    case valid_csrf_token?(session_token(session), user_token) do
+      {:ok, true} ->
+        {:ok, session}
+
+      {:ok, false} ->
+        {:error, :csrf_check_failed}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -38,9 +45,25 @@ defmodule Raxx.Session.CSRFProtection do
          <<user_token::@double_encoded_token_size-binary, mask::@encoded_token_size-binary>>
        ) do
     case Base.decode64(user_token) do
-      {:ok, user_token} -> Plug.Crypto.masked_compare(csrf_token, user_token, mask)
-      :error -> false
+      {:ok, user_token} ->
+        {:ok, Plug.Crypto.masked_compare(csrf_token, user_token, mask)}
+        # Put as error not false
+        # :error -> false
     end
+  end
+
+  defp valid_csrf_token?(
+         <<_csrf_token::@encoded_token_size-binary>>,
+         _
+       ) do
+    {:error, :invalid_csrf_token}
+  end
+
+  defp valid_csrf_token?(
+         nil,
+         _
+       ) do
+    {:error, :csrf_check_missing}
   end
 
   defp mask(token) do

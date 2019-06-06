@@ -110,6 +110,83 @@ defmodule Raxx.SessionTest do
       assert {:error, :csrf_missing} = Raxx.Session.extract(request, config)
     end
 
+    test "can't extract session with invalid csrf token", %{config: config} do
+      session = %{"user" => "friend"}
+      {_token, session} = Raxx.Session.get_csrf_token(session)
+
+      response =
+        Raxx.response(:ok)
+        |> Raxx.Session.embed(session, config)
+
+      cookie_string = Raxx.get_header(response, "set-cookie")
+      cookie = SetCookie.parse(cookie_string)
+      assert cookie.key == "my_app_session"
+      session_cookie = cookie.value
+
+      assert map_size(cookie.attributes) == 2
+      assert cookie.attributes.path == "/"
+      assert cookie.attributes.http_only == true
+
+      request =
+        Raxx.request(:POST, "/")
+        |> Raxx.set_header("x-csrf-token", "too-short")
+        |> Raxx.set_header("cookie", Cookie.serialize({"my_app_session", session_cookie}))
+
+      assert {:error, :invalid_csrf_token} = Raxx.Session.extract(request, config)
+    end
+
+    test "can't extract session with incorrect csrf token", %{config: config} do
+      session = %{"user" => "friend"}
+      {_token, session} = Raxx.Session.get_csrf_token(session)
+
+      response =
+        Raxx.response(:ok)
+        |> Raxx.Session.embed(session, config)
+
+      cookie_string = Raxx.get_header(response, "set-cookie")
+      cookie = SetCookie.parse(cookie_string)
+      assert cookie.key == "my_app_session"
+      session_cookie = cookie.value
+
+      assert map_size(cookie.attributes) == 2
+      assert cookie.attributes.path == "/"
+      assert cookie.attributes.http_only == true
+
+      {incorrect_token, _other_session} = Raxx.Session.get_csrf_token(%{})
+
+      request =
+        Raxx.request(:POST, "/")
+        |> Raxx.set_header("x-csrf-token", incorrect_token)
+        |> Raxx.set_header("cookie", Cookie.serialize({"my_app_session", session_cookie}))
+
+      assert {:error, :csrf_check_failed} = Raxx.Session.extract(request, config)
+    end
+
+    test "can't extract session with incorrect csrf checkin in session", %{config: config} do
+      session = %{"user" => "friend"}
+      {token, _session} = Raxx.Session.get_csrf_token(session)
+
+      response =
+        Raxx.response(:ok)
+        |> Raxx.Session.embed(session, config)
+
+      cookie_string = Raxx.get_header(response, "set-cookie")
+      cookie = SetCookie.parse(cookie_string)
+      assert cookie.key == "my_app_session"
+      session_cookie = cookie.value
+
+      assert map_size(cookie.attributes) == 2
+      assert cookie.attributes.path == "/"
+      assert cookie.attributes.http_only == true
+
+      request =
+        Raxx.request(:POST, "/")
+        |> Raxx.set_header("x-csrf-token", token)
+        |> Raxx.set_header("cookie", Cookie.serialize({"my_app_session", session_cookie}))
+
+      assert {:error, :csrf_check_missing} = Raxx.Session.extract(request, config)
+    end
+
     test "protection is not checked when there is no session", %{config: config} do
       request = Raxx.request(:POST, "/")
       assert {:ok, nil} = Raxx.Session.extract(request, config)

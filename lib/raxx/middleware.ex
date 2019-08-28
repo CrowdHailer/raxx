@@ -95,8 +95,21 @@ defmodule Raxx.Middleware do
   call through using `Raxx.Server`'s `handle_*` helper functions and return
   the `inner_server` unmodified.
 
-  NOTE: As you can see in the above example, the middleware can even modify
-  the `info` messages sent to the server and is responsible for forwarding them.
+  ## Gotchas
+
+  ### Info messages forwarding
+
+  As you can see in the above example, the middleware can even modify
+  the `info` messages sent to the server and is responsible for forwarding them
+  to the inner servers.
+
+  ### Iodata contents
+
+  While much of the time the request body, response body and data chunks will
+  be represented with binaries, they can be represented
+  as [`iodata`](https://hexdocs.pm/elixir/typespecs.html#built-in-types).
+
+  A robust middleware should handle that.
   """
 
   @typedoc """

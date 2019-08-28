@@ -9,7 +9,7 @@ defmodule Raxx.Data do
   Container for a section of an HTTP message.
   """
   @type t :: %__MODULE__{
-          data: binary
+          data: iodata
         }
 
   @enforce_keys [:data]

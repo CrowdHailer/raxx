@@ -38,7 +38,7 @@ defmodule Raxx do
   The body of a Raxx message.
 
   The body can be:
-  - part of the message (`binary`).
+  - included in the message (as `iodata`).
   - empty (`false`).
   - present but unknown (`true`).
   """

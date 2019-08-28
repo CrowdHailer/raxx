@@ -3,7 +3,7 @@ defmodule Raxx.HTTP1 do
   Toolkit for parsing and serializing requests to HTTP/1.1 format.
 
   The majority of functions return iolists and not compacted binaries.
-  To efficiently turn a list into a binart use `:erlang.iolist_to_binary/1`
+  To efficiently turn a list into a binary use `IO.iodata_to_binary/1`
 
   ## Notes
 
@@ -52,7 +52,7 @@ defmodule Raxx.HTTP1 do
       iex> request = Raxx.request(:GET, "http://example.com/path?qs")
       ...> |> Raxx.set_header("accept", "text/plain")
       ...> {head, body} =  Raxx.HTTP1.serialize_request(request)
-      ...> :erlang.iolist_to_binary(head)
+      ...> IO.iodata_to_binary(head)
       "GET /path?qs HTTP/1.1\r\nhost: example.com\r\naccept: text/plain\r\n\r\n"
       iex> body
       {:complete, ""}
@@ -61,7 +61,7 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.set_header("content-type", "text/plain")
       ...> |> Raxx.set_body(true)
       ...> {head, body} =  Raxx.HTTP1.serialize_request(request)
-      ...> :erlang.iolist_to_binary(head)
+      ...> IO.iodata_to_binary(head)
       "POST / HTTP/1.1\r\nhost: example.com\r\ntransfer-encoding: chunked\r\ncontent-type: text/plain\r\n\r\n"
       iex> body
       :chunked
@@ -70,7 +70,7 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.set_header("content-length", "13")
       ...> |> Raxx.set_body(true)
       ...> {head, body} =  Raxx.HTTP1.serialize_request(request)
-      ...> :erlang.iolist_to_binary(head)
+      ...> IO.iodata_to_binary(head)
       "POST / HTTP/1.1\r\nhost: example.com\r\ncontent-length: 13\r\n\r\n"
       iex> body
       {:bytes, 13}
@@ -83,13 +83,13 @@ defmodule Raxx.HTTP1 do
       iex> request = Raxx.request(:GET, "http://example.com/")
       ...> |> Raxx.set_header("accept", "text/plain")
       ...> {head, _body} =  Raxx.HTTP1.serialize_request(request, connection: :close)
-      ...> :erlang.iolist_to_binary(head)
+      ...> IO.iodata_to_binary(head)
       "GET / HTTP/1.1\r\nhost: example.com\r\nconnection: close\r\naccept: text/plain\r\n\r\n"
 
       iex> request = Raxx.request(:GET, "http://example.com/")
       ...> |> Raxx.set_header("accept", "text/plain")
       ...> {head, _body} =  Raxx.HTTP1.serialize_request(request, connection: :keepalive)
-      ...> :erlang.iolist_to_binary(head)
+      ...> IO.iodata_to_binary(head)
       "GET / HTTP/1.1\r\nhost: example.com\r\nconnection: keep-alive\r\naccept: text/plain\r\n\r\n"
   """
   @spec serialize_request(Raxx.Request.t(), [{:connection, connection_status}]) ::
@@ -386,7 +386,7 @@ defmodule Raxx.HTTP1 do
   end
 
   @doc ~S"""
-  Serialize a response to an iolist
+  Serialize a response to iodata
 
   Because of HEAD requests we should keep body separate
   ## Examples
@@ -395,7 +395,7 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.set_header("content-type", "text/plain")
       ...> |> Raxx.set_body("Hello, World!")
       ...> {head, body} =  Raxx.HTTP1.serialize_response(response)
-      ...> :erlang.iolist_to_binary(head)
+      ...> IO.iodata_to_binary(head)
       "HTTP/1.1 200 OK\r\ncontent-type: text/plain\r\ncontent-length: 13\r\n\r\n"
       iex> body
       {:complete, "Hello, World!"}
@@ -405,7 +405,7 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.set_header("content-type", "text/plain")
       ...> |> Raxx.set_body(true)
       ...> {head, body} =  Raxx.HTTP1.serialize_response(response)
-      ...> :erlang.iolist_to_binary(head)
+      ...> IO.iodata_to_binary(head)
       "HTTP/1.1 200 OK\r\ncontent-length: 13\r\ncontent-type: text/plain\r\n\r\n"
       iex> body
       {:bytes, 13}
@@ -414,7 +414,7 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.set_header("content-type", "text/plain")
       ...> |> Raxx.set_body(true)
       ...> {head, body} =  Raxx.HTTP1.serialize_response(response)
-      ...> :erlang.iolist_to_binary(head)
+      ...> IO.iodata_to_binary(head)
       "HTTP/1.1 200 OK\r\ntransfer-encoding: chunked\r\ncontent-type: text/plain\r\n\r\n"
       iex> body
       :chunked
@@ -429,7 +429,7 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.set_header("foo", "bar")
       ...> |> Raxx.HTTP1.serialize_response()
       ...> |> elem(0)
-      ...> |> :erlang.iolist_to_binary()
+      ...> |> IO.iodata_to_binary()
       "HTTP/1.1 204 No Content\r\nfoo: bar\r\n\r\n"
 
   ### *https://tools.ietf.org/html/rfc7230#section-6.1*
@@ -442,14 +442,14 @@ defmodule Raxx.HTTP1 do
       ...> |> Raxx.set_header("foo", "bar")
       ...> |> Raxx.HTTP1.serialize_response(connection: :close)
       ...> |> elem(0)
-      ...> |> :erlang.iolist_to_binary()
+      ...> |> IO.iodata_to_binary()
       "HTTP/1.1 204 No Content\r\nconnection: close\r\nfoo: bar\r\n\r\n"
 
       iex> Raxx.response(204)
       ...> |> Raxx.set_header("foo", "bar")
       ...> |> Raxx.HTTP1.serialize_response(connection: :keepalive)
       ...> |> elem(0)
-      ...> |> :erlang.iolist_to_binary()
+      ...> |> IO.iodata_to_binary()
       "HTTP/1.1 204 No Content\r\nconnection: keep-alive\r\nfoo: bar\r\n\r\n"
   """
   @spec serialize_response(Raxx.Response.t(), [{:connection, connection_status}]) ::

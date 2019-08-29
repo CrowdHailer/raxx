@@ -12,7 +12,7 @@ defmodule Raxx.Server do
 
   **Send complete response as soon as request headers are received.**
 
-      defmodule SimpleServer do
+      defmodule HelloServer do
         use Raxx.Server
 
         def handle_head(%Raxx.Request{method: :GET, path: []}, _state) do
@@ -32,8 +32,8 @@ defmodule Raxx.Server do
           {[], {:file, device}}
         end
 
-        def handle_data(body, state = {:file, device}) do
-          IO.write(device, body)
+        def handle_data(body_chunk, state = {:file, device}) do
+          IO.write(device, body_chunk)
           {[], state}
         end
 
@@ -81,7 +81,7 @@ defmodule Raxx.Server do
 
   The body of a Raxx message (Raxx.Request or `Raxx.Response`) may be one of three types:
 
-  - `io_list` - This is the complete body for the message.
+  - `iodata` - This is the complete body for the message.
   - `:false` - There **is no** body, for example `:GET` requests never have a body.
   - `:true` - There **is** a body, it can be processed as it is received
 

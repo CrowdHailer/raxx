@@ -1,10 +1,12 @@
 language: elixir
-elixir:
-  - 1.7.4
-  - 1.8.1
-otp_release:
-  - 20.3
-  - 21.3
+matrix:
+  include:
+    - otp_release: 20.3
+      elixir: 1.7.4
+    - otp_release: 21.3
+      elixir: 1.8.1
+    - otp_release: 22.0
+      elixir: 1.8.2
 env:
   - MIX_ENV=test
 before_script:

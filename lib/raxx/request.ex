@@ -63,10 +63,12 @@ defmodule Raxx.Request do
     https: 443
   }
 
+  # TODO docs
   def host(%__MODULE__{authority: authority}) do
     hd(String.split(authority, ":"))
   end
 
+  # TODO docs
   @spec port(t, %{optional(atom) => :inet.port_number()}) :: :inet.port_number()
   def port(%__MODULE__{scheme: scheme, authority: authority}, default_ports \\ @default_ports) do
     case String.split(authority, ":") do
@@ -79,5 +81,28 @@ defmodule Raxx.Request do
             port
         end
     end
+  end
+
+  # TODO docs
+  @spec uri(t) :: URI.t()
+  def uri(%__MODULE__{} = request) do
+    scheme =
+      case request.scheme do
+        nil -> nil
+        atom when is_atom(atom) -> Atom.to_string(atom)
+      end
+
+    %URI{
+      authority: request.authority,
+      host: Raxx.request_host(request),
+      path: request.raw_path,
+      port: port(request),
+      query: request.query,
+      scheme: scheme,
+      # you can't provide userinfo in a http request url (anymore)
+      # pulling it out of Authorization headers would go agains the
+      # main use-case for this function
+      userinfo: nil
+    }
   end
 end

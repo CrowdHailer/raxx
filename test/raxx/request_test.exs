@@ -62,6 +62,15 @@ defmodule Raxx.RequestTest do
       assert uri.port == 4321
     end
 
-    # TODO test for the userinfo
+    test "the uri won't contain userinfo" do
+      url = "https://example.com/"
+
+      request =
+        Raxx.request(:GET, url)
+        |> Raxx.set_header("authorization", "Basic YWxhZGRpbjpvcGVuc2VzYW1l")
+
+      uri = Request.uri(request)
+      assert uri.userinfo == nil
+    end
   end
 end

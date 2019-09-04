@@ -63,12 +63,23 @@ defmodule Raxx.Request do
     https: 443
   }
 
-  # TODO docs
+  @doc """
+  Return the host value for the request.
+
+  The `t:Raxx.Request.t/0` struct contains `authority` field, which
+  may contain the port number. This function returns the host value which
+  won't include the port number.
+  """
   def host(%__MODULE__{authority: authority}) do
     hd(String.split(authority, ":"))
   end
 
-  # TODO docs
+  @doc """
+  Return the port number used for the request.
+
+  If no port number is explicitly specified in the request url, the 
+  default one for the scheme is used.
+  """
   @spec port(t, %{optional(atom) => :inet.port_number()}) :: :inet.port_number()
   def port(%__MODULE__{scheme: scheme, authority: authority}, default_ports \\ @default_ports) do
     case String.split(authority, ":") do
@@ -83,7 +94,14 @@ defmodule Raxx.Request do
     end
   end
 
-  # TODO docs
+  @doc """
+  Returns an `URI` struct corresponding to the url used in the provided request.
+
+  **NOTE**: the `userinfo` field of the `URI` will always be `nil`, even if there
+  is `Authorization` header basic auth information contained in the request.
+
+  The `fragment` will also be `nil`, as the servers don't have access to it.
+  """
   @spec uri(t) :: URI.t()
   def uri(%__MODULE__{} = request) do
     scheme =
@@ -100,7 +118,7 @@ defmodule Raxx.Request do
       query: request.query,
       scheme: scheme,
       # you can't provide userinfo in a http request url (anymore)
-      # pulling it out of Authorization headers would go agains the
+      # pulling it out of Authorization headers would go against the
       # main use-case for this function
       userinfo: nil
     }

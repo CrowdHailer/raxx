@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Current
 
+### Added
+
+- `Raxx.Request.uri/1` and docs for `Raxx.Request` module.
+
 ### Changed
 
 - Usage of `iodata` made more explicit in the docs.

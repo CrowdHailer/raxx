@@ -300,17 +300,22 @@ defmodule Raxx do
       true
 
       iex> response(:ok)
+      ...> |> set_body(["Hello, ", "World", "!"])
+      ...> |> complete?()
+      true
+
+      iex> response(:ok)
       ...> |> set_body(true)
       ...> |> complete?()
       false
   """
   @spec complete?(message()) :: boolean
-  def complete?(%{body: body}) when is_binary(body) do
-    true
+  def complete?(%{body: true}) do
+    false
   end
 
-  def complete?(%{body: body}) do
-    !body
+  def complete?(%{body: _body}) do
+    true
   end
 
   @doc """

@@ -421,3 +421,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Replace simple interface with a streaming interface through `Raxx.Server`.
   See full [article](https://hexdocs.pm/tokumei/interface-design-for-http-streaming.html#content).
 - Build messages with `Raxx` module instead or `Raxx.Request` and `Raxx.Response`.
+
+## Current
+
+### Fixed
+
+ - `Raxx.complete?/1` returns `true` for an `iolist` `body`

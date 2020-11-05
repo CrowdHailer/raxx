@@ -343,7 +343,7 @@ defmodule Raxx.Server do
 
   defp fetch_behaviours(module) do
     case Code.ensure_compiled(module) do
-      {:module, module} ->
+      {:module, _module} ->
         behaviours =
           module.module_info[:attributes]
           |> Keyword.take([:behaviour])

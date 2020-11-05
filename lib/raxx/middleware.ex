@@ -196,12 +196,12 @@ defmodule Raxx.Middleware do
   @spec is_implemented?(module) :: boolean
   def is_implemented?(module) when is_atom(module) do
     # taken from Raxx.Server
-    if Code.ensure_compiled?(module) do
-      module.module_info[:attributes]
-      |> Keyword.get(:behaviour, [])
-      |> Enum.member?(__MODULE__)
-    else
-      false
+    case Code.ensure_compiled(module) do
+      {:module, module} ->
+        module.module_info[:attributes]
+        |> Keyword.get(:behaviour, [])
+        |> Enum.member?(__MODULE__)
+      _ -> false
     end
   end
 end
